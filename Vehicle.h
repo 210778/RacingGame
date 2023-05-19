@@ -32,8 +32,6 @@ class Vehicle : public GameObject
     float gravity_;  //重力
     float speedLimit_;  //加速度の制限
 
-    //ここらはメモ
-
     //ハンドル関係
     float handleRotate_;    //ハンドルの回転（単位：度）90゜～ -90゜くらい？
     float handleRotateMax_; //ハンドルの限界
@@ -42,6 +40,9 @@ class Vehicle : public GameObject
     float turnAdjust_;
     float driveAdjust_;
     float handleAdjust_;
+
+    float slideHandleRotateAdd_; //滑るときのハンドル速度の追加
+    float slideHandleAngleLimitAdd_; //滑るときのハンドル角度の追加
 
     float wheelSpeed_;  //タイヤの回転　地面につくと減少する代わりに加速度を加算　アクセルで増加か
     XMVECTOR wheelDirection_; //使うかは不明
@@ -134,6 +135,12 @@ public:
     //変更したい角度の絶対値が最大角度の絶対値を超えていたら丸め込む
     void AngleLimit(float& angle, const float limit);
 
+    //まとめたほうがいいかも
+    void VehicleCollide();
+
     //接地
     void Landing();
+
+    //壁との接触
+    void CollideWall();
 };

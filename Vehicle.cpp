@@ -27,15 +27,16 @@ using std::string;
 Vehicle::Vehicle(GameObject* parent)
     :GameObject(parent, "Vehicle"), hModel_(-1), hGroundModel_(-1)
     , acceleration_({ 0, 0, 0, 0 }), vehicleSize_(2, 2, 4)
-    , moveSPD_(0.01f/*0.05f*/), rotateSPD_(2), jumpForce_(1.0f)
+    , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10), wheelSpeed_(0), wheelDirection_({ 0, 0, 0, 0 })
-    , handleRotate_(0)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 0.8f)
+    , handleRotate_(0), slideHandleAngleLimitAdd_(1.1f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 0.99f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
     , rayStartHeight(1.0f)
     , turnAdjust_(0.05f), driveAdjust_(20), handleAdjust_(0.95f)
+    , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
     , pMarker(nullptr), pTachometer(nullptr)
@@ -232,25 +233,22 @@ void Vehicle::Update()
 
     //ハンドルの操作
     handleFlag_ = false;
-    const float ALPHA = 0.5f;
     if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
     {
-        Debug::Log("\n\nA key has pusshed.\n\n");
-
         handleFlag_ = true;
         //滑ってると曲がりやすい
         if (slideFlag_)
-            handleRotate_ -= rotateSPD_;
+            handleRotate_ -= rotateSPD_ * slideHandleRotateAdd_;
         else
-            handleRotate_ -= rotateSPD_ * ALPHA;
+            handleRotate_ -= rotateSPD_;
     }
     if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT))
     {
         handleFlag_ = true;
         if (slideFlag_)
-            handleRotate_ += rotateSPD_;
+            handleRotate_ += rotateSPD_ * slideHandleRotateAdd_;
         else
-            handleRotate_ += rotateSPD_ * ALPHA;
+            handleRotate_ += rotateSPD_;
     }
 
     //ハンドル角度制限
@@ -258,7 +256,7 @@ void Vehicle::Update()
     {
         //曲がりやすい
         if (slideFlag_)
-            AngleLimit(handleRotate_, handleRotateMax_ * 1.1f);
+            AngleLimit(handleRotate_, handleRotateMax_ * slideHandleAngleLimitAdd_);
         else
             AngleLimit(handleRotate_, handleRotateMax_);
     }
@@ -299,19 +297,8 @@ void Vehicle::Update()
     //上昇下降
     if (Input::IsKeyDown(DIK_M))
     {
-        if (true)//landingFlag_
+        if (landingFlag_)
         {
-            /*
-            //フロートにしとく
-            XMFLOAT3 floAcc;
-            XMStoreFloat3(&floAcc, acceleration_);
-            floAcc.y = jumpForce_;
-            floAcc = XMFLOAT3(0, 1, 0);
-            acceleration_ = XMLoadFloat3(&floAcc);
-            */
-
-            //XMFLOAT3 jump(0, jumpForce_, 0);
-            //acceleration_ += XMLoadFloat3(&jump);
             acceleration_ += {0.0f,jumpForce_,0.0f,0.0f};
         }
     }
@@ -647,7 +634,6 @@ void Vehicle::Landing()
         Model::RayCast(hModel, &data);  //レイを発射
 
         
-
         //レイが当たったら
         if (data.hit)
         {
@@ -691,12 +677,7 @@ void Vehicle::Landing()
             landingFlag_ = true;
         }
 
-
-        //壁との
-        //前方に衝突
-        //Ground* pGround = (Ground*)FindObject("Ground");    //ステージオブジェクトを探す
-        //hGroundModel_ = pGround->GetModelHandle();    //モデル番号を取得
-
+        //壁
         RayCastData wallData;
         wallData.start = transform_.position_;   //レイの発射位置
         wallData.start.y += vehicleSizeHalf_.y;
@@ -782,6 +763,17 @@ void Vehicle::Landing()
     {
         transform_.scale_.y = 1.1f;
     }
+}
+
+void Vehicle::CollideWall()
+{
+    return;
+}
+
+//地面、壁、敵との衝突をまとめる？？
+void Vehicle::VehicleCollide()
+{
+    return;
 }
 
 #if 0
