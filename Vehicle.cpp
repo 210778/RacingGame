@@ -31,7 +31,7 @@ Vehicle::Vehicle(GameObject* parent)
     , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10), wheelSpeed_(0), wheelDirection_({ 0, 0, 0, 0 })
     , handleRotate_(0), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 0.99f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.01f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
     , rayStartHeight(1.0f)
@@ -93,8 +93,9 @@ A, Dキーで操作
 //初期化
 void Vehicle::Initialize()
 {
-    hModel_ = Model::Load("model\\CarRed2.fbx");//"Assets\\model\\□□□.fbx"
+    //hModel_ = Model::Load("model\\CarRed2.fbx");//"Assets\\model\\□□□.fbx"
     //hModel_ = Model::Load("model\\Ground12.fbx");
+    hModel_ = Model::Load("model\\Car1_blue.fbx");
     assert(hModel_ >= 0);
 
     hImage_ = Image::Load("image\\clearImage.png");
@@ -138,11 +139,28 @@ void Vehicle::Initialize()
 
     //炎
     pParticle = Instantiate<Particle>(this);
+
+    //ボーン
+    XMFLOAT3 vehicleBottom = Model::GetBonePosition(hModel_, "car1_bottom");
+    XMFLOAT3 vehicleTop = Model::GetBonePosition(hModel_, "car1_top");
+    XMFLOAT3 vehicleLeft = Model::GetBonePosition(hModel_, "car1_left");
+    XMFLOAT3 vehicleRear = Model::GetBonePosition(hModel_, "car1_rear");
+    XMFLOAT3 vehicleWheelFR = Model::GetBonePosition(hModel_, "car1_wheelFR");
+
+
+    //XMFLOAT3 shotPos = Model::GetBonePosition(hModel_, "ShotPos");
+    //XMFLOAT3 CannonRoot = Model::GetBonePosition(hModel_, "CannonRoot");
+
+    int wheelModel = Model::Load("model\\wheel1.fbx");
+    assert(wheelModel >= 0);
+    XMFLOAT3 wheelPos = Model::GetBonePosition(wheelModel, "wheel1_center");
+    XMFLOAT3 wheelBotPos = Model::GetBonePosition(wheelModel, "wheel1_bottom");
 }
 
 //更新
 void Vehicle::Update()
 {
+    if (Input::IsKey(DIK_C))
     {
         static unsigned int rainbowTimer = 0;
         static const int colorSpeed = 2;
@@ -152,43 +170,39 @@ void Vehicle::Update()
 
         XMFLOAT4 HSV((rainbowTimer % 360) * operand, 1.0, 1.0, 0.5);//色相、彩度、明度、アルファ
         XMVECTOR vecRainbowRGB = XMColorHSVToRGB(XMLoadFloat4(&HSV));
+  
+        EmitterData data;
 
+        //炎
+        data.textureFileName = "image\\PaticleAssets\\CloudA.png";
+        data.position = transform_.position_;
+        data.positionErr = XMFLOAT3(0.1, 0, 0.1);
+        //data.delay = 1;
+        data.number = 2;
+        data.lifeTime = 15;
+        data.gravity = 0.0f;
+        data.dir = XMFLOAT3(0, 1, 0);
+        data.dirErr = XMFLOAT3(20, 0, 20);
+        data.speed = 0.75f;
+        data.speedErr = 0.2;
+        data.size = XMFLOAT2(5, 5);
+        data.sizeErr = XMFLOAT2(0.4, 0.4);
+        data.scale = XMFLOAT2(0.8, 0.8);
+        XMStoreFloat4(&data.color, vecRainbowRGB);
+        data.deltaColor = XMFLOAT4(0, 0, 0, -0.02);
+        pParticle->Start(data);
 
-        if (Input::IsKey(DIK_C))
-        {
-            EmitterData data;
-
-            //炎
-            data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-            data.position = transform_.position_;
-            data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-            //data.delay = 1;
-            data.number = 2;
-            data.lifeTime = 15;
-            data.gravity = 0.0f;
-            data.dir = XMFLOAT3(0, 1, 0);
-            data.dirErr = XMFLOAT3(20, 0, 20);
-            data.speed = 0.75f;
-            data.speedErr = 0.2;
-            data.size = XMFLOAT2(5, 5);
-            data.sizeErr = XMFLOAT2(0.4, 0.4);
-            data.scale = XMFLOAT2(0.8, 0.8);
-            XMStoreFloat4(&data.color, vecRainbowRGB);
-            data.deltaColor = XMFLOAT4(0, 0, 0, -0.02);
-            pParticle->Start(data);
-
-            //火の粉
-            data.number = 1;
-            data.positionErr = XMFLOAT3(0.8, 0, 0.8);
-            data.dir = XMFLOAT3(0, 1, 0);
-            data.dirErr = XMFLOAT3(10, 10, 10);
-            data.size = XMFLOAT2(0.5, 0.5);
-            data.scale = XMFLOAT2(0.98, 0.98);
-            data.lifeTime = 30;
-            data.speed = 0.2f;
-            data.gravity = 0.005;
-            pParticle->Start(data);
-        }
+        //火の粉
+        data.number = 1;
+        data.positionErr = XMFLOAT3(0.8, 0, 0.8);
+        data.dir = XMFLOAT3(0, 1, 0);
+        data.dirErr = XMFLOAT3(10, 10, 10);
+        data.size = XMFLOAT2(0.5, 0.5);
+        data.scale = XMFLOAT2(0.98, 0.98);
+        data.lifeTime = 30;
+        data.speed = 0.2f;
+        data.gravity = 0.005;
+        pParticle->Start(data);
     }
 
     //クールタイム
@@ -707,6 +721,22 @@ void Vehicle::Landing()
             //レイが当たったら
             if (rayCar[i].hit)
             {
+                //調整
+                if (data.dist > abs(floAcc.y - gravity_))
+                {
+                    //位置を下げる
+                    floAcc.y -= gravity_;
+                    landingFlag_ = false;
+                }
+                else// if (data.dist < floAcc.y && data.dist > 0 && floAcc.y < 0)
+                {
+                    //下方向の加速度が大きいなら　地面にワープ　落下速度を０
+                    transform_.position_.y -= data.dist;
+                    floAcc.y = 0;
+                    landingFlag_ = true;
+                }
+
+
                 //壁に衝突
                 //移動速度+基礎値
                 //
