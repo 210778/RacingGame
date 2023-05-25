@@ -426,7 +426,8 @@ namespace Direct3D
 
 	//三角形と線分の衝突判定（衝突判定に使用）
 	//https://pheema.hatenablog.jp/entry/ray-triangle-intersection
-	bool Intersect(XMFLOAT3 & start, XMFLOAT3 & direction, XMFLOAT3 & v0, XMFLOAT3 & v1, XMFLOAT3 & v2, float* distance)
+	bool Intersect(XMFLOAT3 & start, XMFLOAT3 & direction, XMFLOAT3 & v0, XMFLOAT3 & v1, XMFLOAT3 & v2
+					,float* distance, XMFLOAT3& end)
 	{
 		// 微小な定数([M?ller97] での値)
 		constexpr float kEpsilon = 1e-6f;
@@ -474,6 +475,11 @@ namespace Direct3D
 		}
 
 		*distance = t;
+
+		//命中地点の位置を取得
+		//P = v0 + e01*u + e02*v
+		XMStoreFloat3(&end, XMLoadFloat3(&v0) + edge1 * u + edge2 * v);
+
 		return true;
 	}
 

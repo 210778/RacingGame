@@ -419,7 +419,7 @@ void FbxParts::Draw(Transform& transform)
 		cb.speculer = pMaterial_[i].specular;
 		cb.shininess = pMaterial_[i].shininess;
 		cb.cameraPosition = XMFLOAT4(Camera::GetPositionFloat().x, Camera::GetPositionFloat().y, Camera::GetPositionFloat().z, 0);
-		cb.lightDirection = XMFLOAT4(1, -1, 1, 0);
+		cb.lightDirection = XMFLOAT4(1, -1, 1, 0);//XMFLOAT4(1, -1, 1, 0);
 		cb.isTexture = pMaterial_[i].pTexture != nullptr;
 
 		Direct3D::pContext_->Map(pConstantBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &pdata);	// GPUからのリソースアクセスを一時止める
@@ -560,7 +560,7 @@ void FbxParts::RayCast(RayCastData * data)
 			BOOL  hit = FALSE;
 			float dist = 0.0f;
 
-			hit = Direct3D::Intersect(data->start, data->dir, ver[0], ver[1], ver[2], &dist);
+			hit = Direct3D::Intersect(data->start, data->dir, ver[0], ver[1], ver[2], &dist, data->end);
 
 
 			//命中
@@ -569,7 +569,7 @@ void FbxParts::RayCast(RayCastData * data)
 				data->hit = TRUE;
 				data->dist = dist;
 
-				//命中したら法線を求められる？？
+				//命中したら法線を求める
 				XMVECTOR vecVer0 = XMLoadFloat3(&ver[0]);
 				XMVECTOR vecVer1 = XMLoadFloat3(&ver[1]);
 				XMVECTOR vecVer2 = XMLoadFloat3(&ver[2]);
@@ -585,7 +585,6 @@ void FbxParts::RayCast(RayCastData * data)
 
 				//ポリゴンにあたって反射するベクトル
 				data->reflection = deflection - (*dot * data->normal * 2.0f);
-
 			}
 		}
 	}
