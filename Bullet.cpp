@@ -20,7 +20,7 @@ Bullet::~Bullet()
 //‰Šú‰»
 void Bullet::Initialize()
 {
-    hModel_ = Model::Load("model\\TestBullet.fbx");
+    hModel_ = Model::Load("model\\EnemyKinoko.fbx");//model\\TestBullet.fbx
     assert(hModel_ >= 0);
 
     transform_.rotate_ = XMFLOAT3(0.0f, 0.0f, 0.0f);

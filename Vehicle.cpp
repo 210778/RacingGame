@@ -31,7 +31,7 @@ Vehicle::Vehicle(GameObject* parent)
     , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10), wheelSpeed_(0), wheelDirection_({ 0, 0, 0, 0 })
     , handleRotate_(0), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.00f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.0f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
     , rayStartHeight(1.0f)
@@ -101,7 +101,7 @@ void Vehicle::Initialize()
     assert(hImage_ >= 0);
 
     transform_.position_ = XMFLOAT3(0.0f, 0.0f, -200.0f);
-    transform_.rotate_ = XMFLOAT3(0.0f, 270.0f, 0.0f);
+    transform_.rotate_   = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
     Viewer* pViewer = Instantiate<Viewer>(this);
     pViewer->SetPosition(transform_.position_);
@@ -812,7 +812,7 @@ void Vehicle::CollideWall(int hModel, int type)
         front = 0,
         right = 1,
         rear = 2,
-        left = 3
+        left = 3,
     } direction;
 
     //前後左右と斜めで分割することにする
@@ -830,7 +830,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
         Model::RayCast(hModel, &wallCollideVertical[i]);  //レイを発射
         //当たったら
-        if (wallCollideVertical[i].hit && i != 0)
+        if (wallCollideVertical[i].hit)
         { 
             XMFLOAT3 floAcc;
             //ベクトルY軸で回転用行列
@@ -846,7 +846,8 @@ void Vehicle::CollideWall(int hModel, int type)
             //方向ごとのプラスマイナス： 1 と -1
             float dirPlusMinus;
             //方向ごとに代入　なんか頭わるいことしてそうな気がする
-            switch (i){
+            switch (i)
+            {
                 //前方、その他
             default:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = Size.toFront_;
@@ -871,6 +872,10 @@ void Vehicle::CollideWall(int hModel, int type)
 
             if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
             {
+                if (i == 1 || i == 3)
+                {
+                    transform_.position_.x = transform_.position_.x;
+                }
                 //衝突する直前で止まった時の壁までの距離
 
                 //ここが問題　iの角度で回転とかすればいいとおもうけど
@@ -882,10 +887,10 @@ void Vehicle::CollideWall(int hModel, int type)
 
                 //平行移動させる
                 float accY = XMVectorGetY(acceleration_);
-                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32;
+                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32 * 1.5f;
                 acceleration_ = XMVectorSetY(acceleration_, accY);
             }
-
+#if 0
             if (wallCollideVertical[i].dist < floAcc.z + vehicleSizeHalf_.z)
             {
                 //衝突する直前で止まった時の壁までの距離
@@ -900,6 +905,7 @@ void Vehicle::CollideWall(int hModel, int type)
                 acceleration_ = wallCollideVertical[i].parallelism * *XMVector3Length(acceleration_).m128_f32;
                 acceleration_ = XMVectorSetY(acceleration_, accY);
             }
+#endif
         }
     }
 
