@@ -1,8 +1,6 @@
 #pragma once
 #include "GameObject.h"
 #include "BillBoard.h"
-#include <list>
-
 
 //エミッター（パーティクルの発生源）を作る時のデータ一覧
 //Start関数の引数として使う
@@ -32,6 +30,7 @@ struct EmitterData
 	{
 		textureFileName = "";
 		position = positionErr = dir = dirErr = XMFLOAT3(0, 0, 0);
+		delay = 0;
 		speed = 0.0f;
 		accel = 1.0f;
 		gravity = 0.0f;

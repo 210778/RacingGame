@@ -1,9 +1,9 @@
 #pragma once
 #include <DirectXMath.h>
-#include <list>
 #include <string>
 #include <vector>
 #include <list>
+#include <array>
 #include <cmath>
 #include <assert.h>
 #include "SphereCollider.h"

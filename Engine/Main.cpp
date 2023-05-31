@@ -1,7 +1,6 @@
 #include <Windows.h>
 #include <stdlib.h>
 #include <assert.h>
-//#include <crtdbg.h>
 #include <time.h>
 
 #include "global.h"
@@ -11,6 +10,20 @@
 #include "Camera.h"
 #include "Input.h"
 #include "Audio.h"
+
+//デバッグ用
+#include <cstdlib>
+#include <crtdbg.h>
+#define _CRTDBG_MAP_ALLOC
+#if 0
+#ifdef _DEBUG
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+// Replace _NORMAL_BLOCK with _CLIENT_BLOCK if you want the
+// allocations to be of _CLIENT_BLOCK type
+#else
+#define DBG_NEW new
+#endif
+#endif
 
 #pragma comment(lib,"Winmm.lib")
 
@@ -26,9 +39,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // エントリーポイント
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-//#if defined(DEBUG) | defined(_DEBUG)
-//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-//#endif
+#if defined(DEBUG) | defined(_DEBUG)
+	// メモリリーク検出
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
 	srand((unsigned)time(NULL));
 	SetCurrentDirectory("Assets");

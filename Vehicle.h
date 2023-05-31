@@ -8,6 +8,7 @@ class Speedometer;
 class Text;
 //class CircuitUnion;
 class Particle;
+class Ground;
 
 //◆◆◆を管理するクラス
 class Vehicle : public GameObject
@@ -97,7 +98,25 @@ class Vehicle : public GameObject
 
     int landingType_; //地面のタイプ
 
-    Particle* pParticle;
+    Particle* pParticle;//エフェクト用
+
+    Ground* pGround;
+
+    struct
+    {
+        float toRight_;   //右端　までの距離
+        float toLeft_;    //左端　までの距離
+        float toFront_;   //前方　までの距離
+        float toRear_;    //後方　までの距離
+        float toTop_;     //上端　までの距離
+        float toCenter_;  //上端までの距離の１／２
+        float rightToLeft_;     //右端　から　左端　までの距離
+        float frontToRear_;     //前方　から　後方　までの距離
+        float toFrontRight_;  //右斜め前　までの距離
+        float toFrontLeft_;   //左斜め前　までの距離
+        float toRearRight_;   //右斜め後ろ　までの距離
+        float toRearLeft_;    //左斜め後ろ　までの距離
+    }Size;
 
 public:
     //コンストラクタ
@@ -135,12 +154,19 @@ public:
     //変更したい角度の絶対値が最大角度の絶対値を超えていたら丸め込む
     void AngleLimit(float& angle, const float limit);
 
-    //まとめたほうがいいかも
+    //壁や床との接触
     void VehicleCollide();
 
-    //接地
-    void Landing();
+    /// <summary>
+    /// 床があるか調べ、落下や接地
+    /// </summary>
+    /// <param name="hModel">モデル番号</param>
+    /// <param name="type">モデルの種類</param>
+    void Landing(int hModel , int type);
 
-    //壁との接触
-    void CollideWall();
+    /// <summary>
+    /// 壁との接触
+    /// </summary>
+    /// <param name="hModel">モデル番号</param>
+    void CollideWall(int hModel, int type);
 };

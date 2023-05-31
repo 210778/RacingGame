@@ -27,4 +27,9 @@ namespace Global
 	void SetIsDrawFps(bool);
 	//キャプションに現在のFPSを表示するかどうか
 	bool GetIsDrawFps();
+
+	//現在のFPS
+	void SetCurrentFPS(int);
+	//現在のFPS
+	int GetCurrentFPS();
 };

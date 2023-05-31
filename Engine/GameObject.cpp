@@ -1,5 +1,4 @@
 #include "gameObject.h"
-#include <assert.h>
 #include "global.h"
 
 //コンストラクタ（親も名前もなし）

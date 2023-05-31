@@ -8,10 +8,10 @@
 //コンストラクタ
 Viewer::Viewer(GameObject* parent)
     :GameObject(parent, "Viewer"), pVehicle(nullptr)
-    , rotateSPD_(1.0), upLim_(70.0), downLim_(90.0)
+    , rotateSPD_(1.0), upLim_(80.0), downLim_(90.0)
     , nearLim_(4.0f), farLim_(120.0f), zoomUp_(0.95f), zoomOut_(1.05f)
     , camFlo_(XMFLOAT3(0.0f, 10.0f, -20.0f)), camX(0.0f)
-    , toFutureLength_(0.1f)
+    , toFutureLength_(0.1f), camTarPlusVec({ 0.0f, 4.0f, 0.0f, 0.0f })
 {
     /*
     , rotateSPD_(1.0), upLim_(55.0), downLim_(110.0)
@@ -79,7 +79,7 @@ void Viewer::Update()
 #else
     //カメラの慣性
     XMVECTOR futurePosition_ = vecPos + vecCam;  //目標の位置
-    XMVECTOR futureTarget_   = vecPos;           //目標の焦点
+    XMVECTOR futureTarget_   = vecPos + camTarPlusVec;           //目標の焦点 + 追加
 
     XMVECTOR presentPosition = Camera::GetPosition();   //現在の位置
     XMVECTOR presentTarget   = Camera::GetTarget();     //現在の焦点

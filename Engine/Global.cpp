@@ -7,6 +7,8 @@ namespace Global
 	int screenHeight_;		//スクリーンの高さ
 	int fpsLimit_;			//FPS（画面更新速度）
 	int isDrawFps_;			//キャプションに現在のFPSを表示するかどうか
+
+	int currentFPS_;	//現在のFPS
 };
 
 //スクリーンの幅
@@ -47,4 +49,15 @@ void Global::SetIsDrawFps(bool value)
 bool Global::GetIsDrawFps()
 {
 	return isDrawFps_;
+}
+
+//現在のFPS
+void Global::SetCurrentFPS(int value)
+{
+	currentFPS_ = value;
+}
+//現在のFPS
+int Global::GetCurrentFPS()
+{
+	return currentFPS_;
 }

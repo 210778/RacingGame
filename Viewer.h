@@ -28,6 +28,8 @@ class Viewer : public GameObject
     //カメラの慣性用
     float toFutureLength_;     //現在位置から未来位置へ移動する速度(割合)
 
+    XMVECTOR camTarPlusVec;    //カメラの焦点に追加するベクトル
+
 public:
     //コンストラクタ
     Viewer(GameObject* parent);

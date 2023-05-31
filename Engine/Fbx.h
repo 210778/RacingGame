@@ -11,7 +11,8 @@ class FbxParts;
 struct RayCastData
 {
 	XMFLOAT3	start;	//レイ発射位置
-	XMFLOAT3	dir;	//レイの向きベクトル
+	XMFLOAT3	dir;	//レイの向きfloat3
+	//XMVECTOR	dir;	//レイの向きベクトル
 	float       dist;	//衝突点までの距離
 	BOOL        hit;	//レイが当たったか
 

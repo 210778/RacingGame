@@ -31,7 +31,7 @@ Vehicle::Vehicle(GameObject* parent)
     , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10), wheelSpeed_(0), wheelDirection_({ 0, 0, 0, 0 })
     , handleRotate_(0), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.02f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.00f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
     , rayStartHeight(1.0f)
@@ -45,15 +45,14 @@ Vehicle::Vehicle(GameObject* parent)
     , hImage_(-1)
     //追加分
     , torque_(1.0f), mass_(1.0f), engineRotate_(0.0f), clutchFlag_(true)
+    , frontVec_({ 0.0, 0.0, 0.0, 0.0 })
     , landingType_(Ground::road)
     , pParticle(nullptr)
+    , pGround(nullptr)
 {
     vehicleSizeHalf_ = XMFLOAT3(vehicleSize_.x * 0.5f, vehicleSize_.y * 0.5f, vehicleSize_.z * 0.5f);
     //三平方の定理で斜めの値を求める
     vehicleSizeOblique_ = sqrt((vehicleSizeHalf_.x * vehicleSizeHalf_.x) + (vehicleSizeHalf_.z * vehicleSizeHalf_.z));
-
-    XMFLOAT3 flo(0, 0, 0);
-    frontVec_ = XMLoadFloat3(&flo);
 }
 
 //デストラクタ
@@ -141,20 +140,44 @@ void Vehicle::Initialize()
     pParticle = Instantiate<Particle>(this);
 
     //ボーン
-    XMFLOAT3 vehicleBottom = Model::GetBonePosition(hModel_, "car1_bottom");
-    XMFLOAT3 vehicleTop = Model::GetBonePosition(hModel_, "car1_top");
-    XMFLOAT3 vehicleLeft = Model::GetBonePosition(hModel_, "car1_left");
-    XMFLOAT3 vehicleRear = Model::GetBonePosition(hModel_, "car1_rear");
+    XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel_, "car1_bottom");
+    XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel_, "car1_top");
+    XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel_, "car1_left");
+    XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel_, "car1_right");
+    XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel_, "car1_rear");
+    XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel_, "car1_front");
     XMFLOAT3 vehicleWheelFR = Model::GetBonePosition(hModel_, "car1_wheelFR");
+    XMFLOAT3 vehicleWheelFL = Model::GetBonePosition(hModel_, "car1_wheelFL");
+    XMFLOAT3 vehicleWheelRR = Model::GetBonePosition(hModel_, "car1_wheelRR");
+    XMFLOAT3 vehicleWheelRL = Model::GetBonePosition(hModel_, "car1_wheelRL");
+    //車両の大きさ計算
+    vehicleSize_.x = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32 + *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
+    vehicleSize_.y = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
+    vehicleSize_.z = *XMVector3Length(XMLoadFloat3(&vehicleFront) * 2).m128_f32 + *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
 
-
-    //XMFLOAT3 shotPos = Model::GetBonePosition(hModel_, "ShotPos");
-    //XMFLOAT3 CannonRoot = Model::GetBonePosition(hModel_, "CannonRoot");
+    Size.toRight_ = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
+    Size.toLeft_  = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32;
+    Size.toFront_ = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32;
+    Size.toRear_  = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
+    Size.toTop_   = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
+    Size.toCenter_ = Size.toTop_ * 0.5f;
+    Size.rightToLeft_ = Size.toRight_ + Size.toLeft_;
+    Size.frontToRear_ = Size.toFront_ + Size.toRear_;
+    Size.toFrontRight_    = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
+    Size.toFrontLeft_     = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
+    Size.toRearRight_     = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
+    Size.toRearLeft_      = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
 
     int wheelModel = Model::Load("model\\wheel1.fbx");
     assert(wheelModel >= 0);
     XMFLOAT3 wheelPos = Model::GetBonePosition(wheelModel, "wheel1_center");
     XMFLOAT3 wheelBotPos = Model::GetBonePosition(wheelModel, "wheel1_bottom");
+
+    //ステージオブジェクトを探す
+    pGround = (Ground*)FindObject("Ground");
+    assert(pGround != nullptr);
+    //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
+    assert(!(pGround->GetCircuitUnion()->parts_.empty()));
 }
 
 //更新
@@ -177,19 +200,19 @@ void Vehicle::Update()
         data.textureFileName = "image\\PaticleAssets\\CloudA.png";
         data.position = transform_.position_;
         data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-        //data.delay = 1;
-        data.number = 2;
+        data.delay = 0;
+        data.number = 1;
         data.lifeTime = 15;
         data.gravity = 0.0f;
         data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(20, 0, 20);
+        data.dirErr = XMFLOAT3(15, 0, 15);
         data.speed = 0.75f;
         data.speedErr = 0.2;
-        data.size = XMFLOAT2(5, 5);
-        data.sizeErr = XMFLOAT2(0.4, 0.4);
-        data.scale = XMFLOAT2(0.8, 0.8);
+        data.size = XMFLOAT2(6, 6);
+        data.sizeErr = XMFLOAT2(0.5, 0.5);
+        data.scale = XMFLOAT2(0.80, 0.80);
         XMStoreFloat4(&data.color, vecRainbowRGB);
-        data.deltaColor = XMFLOAT4(0, 0, 0, -0.02);
+        data.deltaColor = XMFLOAT4(0, 0, 0, -0.04);
         pParticle->Start(data);
 
         //火の粉
@@ -201,7 +224,7 @@ void Vehicle::Update()
         data.scale = XMFLOAT2(0.98, 0.98);
         data.lifeTime = 30;
         data.speed = 0.2f;
-        data.gravity = 0.005;
+        data.gravity = -0.002;
         pParticle->Start(data);
     }
 
@@ -224,6 +247,7 @@ void Vehicle::Update()
         slideFlag_ = true;
     if (Input::IsKeyUp(DIK_SPACE))
         slideFlag_ = false;
+
 
     //接地
     //Landing();
@@ -311,14 +335,14 @@ void Vehicle::Update()
     //上昇下降
     if (Input::IsKeyDown(DIK_M))
     {
-        if (landingFlag_)
+        if (landingFlag_ || true)
         {
             acceleration_ += {0.0f,jumpForce_,0.0f,0.0f};
         }
     }
 
     //
-    if (Input::IsKey(DIK_LSHIFT))
+    if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
     {
         //vecPos -= vecY;
         acceleration_ += vecZ;
@@ -326,34 +350,37 @@ void Vehicle::Update()
         EmitterData data;
 
         //炎
-        data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-        data.position = transform_.position_;
-        data.position.y += vehicleSizeHalf_.y;
-        data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-        data.number = 3;
-        data.lifeTime = 60;
+        //data.textureFileName = "image\\PaticleAssets\\CloudA.png";
+        data.textureFileName = "image\\PaticleAssets\\circle_W.png";
+        data.position = Model::GetBonePosition(hModel_, "car1_rear");
+        data.position.y += Size.toCenter_;
+        data.positionErr = XMFLOAT3(0.2, 0.2, 0.2);
+        data.delay = 0;
+        data.number = 10;
+        data.lifeTime = 30;
         data.gravity = 0.0f;
         //data.dir = XMFLOAT3(0, 1, 0);
         XMStoreFloat3(&data.dir, -vecZ);
-        data.dirErr = XMFLOAT3(30, 30, 30);
-        data.speed = 0.01f;
+        data.dirErr = XMFLOAT3(60, 60, 60);
+        data.speed = 0.1f;
         data.speedErr = 0.0;
-        data.size = XMFLOAT2(1.0, 1.0);
-        data.sizeErr = XMFLOAT2(0.5, 0.5);
-        data.scale = XMFLOAT2(1.075, 1.075);
-        data.color = XMFLOAT4(1, 1, 0, 1);
-        data.deltaColor = XMFLOAT4(0, -0.04, 0, -0.03);
+        data.size = XMFLOAT2(0.8, 0.8);
+        data.sizeErr = XMFLOAT2(0.1, 0.1);
+        data.scale = XMFLOAT2(0.98f, 0.98f);
+        data.color = XMFLOAT4(1, 1, 1, 1);
+        data.deltaColor = XMFLOAT4(0.0, -0.06, -0.12, -0.05);
         pParticle->Start(data);
 
         //火の粉
-        data.number = 3;
+        data.number = 2;
         data.positionErr = XMFLOAT3(0.5, 0.5, 0.5);
-        data.dirErr = XMFLOAT3(50, 50, 50);
-        data.size = XMFLOAT2(0.5, 0.5);
-        data.scale = XMFLOAT2(0.95, 0.95);
-        data.lifeTime = 120;
+        data.dirErr = XMFLOAT3(90, 90, 90);
+        data.size = XMFLOAT2(0.1, 0.1);
+        data.scale = XMFLOAT2(1.0f, 1.0f);
+        data.lifeTime = 60;
         data.speed = 0.1f;
-        data.gravity = 0;
+        data.gravity = 0.0;
+        data.deltaColor = XMFLOAT4(-0.02, -0.02, -0.1, -0.01);
         pParticle->Start(data);
     }
 
@@ -387,8 +414,8 @@ void Vehicle::Update()
     //ハンドルと旋回
     XMMATRIX matHandleRotate = XMMatrixRotationY(XMConvertToRadians(handleRotate_));
     //正面の行列を用意
-    XMVECTOR vecFront = XMVector3Normalize(vecZ);
-    vecFront = XMVector3Normalize(vecFront);//正規化
+    XMVECTOR vecFront = XMVector3NormalizeEst(vecZ);
+    vecFront = XMVector3NormalizeEst(vecFront);//正規化
     frontVec_ = vecFront;
 
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
@@ -416,6 +443,7 @@ void Vehicle::Update()
         XMVECTOR normalAcc = XMVector3Normalize(acceleration_);//正規化
         //進行方向と、車両の正面の、角度
         //これは精度を犠牲にして高速らしい。角度は0 ~ 180 の間なのでなんとか方向を判別したい
+        //XMVector3NormalizeEst は長さが０だとバグるっぽい
         /*
         https://www.hiramine.com/programming/graphics/2d_vectorangle.html
         ２次元の２つのベクトル（ベクトルＡ、ベクトルＢ）の外積 (OA × OB) を求めたとき、外積の値が、
@@ -465,9 +493,9 @@ void Vehicle::Update()
     seconds++;
     if (seconds % 6 == 0 && *XMVector3LengthEst(acceleration_).m128_f32 > 0)
     {
-        Tracker* pTracker = Instantiate<Tracker>(GetParent());
-        pTracker->SetPosition(transform_.position_.x, transform_.position_.y + 1, transform_.position_.z);
-        pTracker->SetScale(0.5, 0.5, 0.5);
+        //Tracker* pTracker = Instantiate<Tracker>(GetParent());
+        //pTracker->SetPosition(transform_.position_.x, transform_.position_.y + 1, transform_.position_.z);
+        //pTracker->SetScale(0.5, 0.5, 0.5);
     }
 #endif
 
@@ -480,7 +508,7 @@ void Vehicle::Update()
     XMStoreFloat3(&transform_.position_, vecPos);
 
     //接地、壁衝突　（移動してきた）
-    Landing();
+    VehicleCollide();
 
 #ifdef _DEBUG
     //テスト 正面にマーカーを設置
@@ -500,7 +528,7 @@ void Vehicle::Update()
     {
         Bullet* pBullet = Instantiate<Bullet>(GetParent());
         XMFLOAT3 BulletPos = transform_.position_;
-        BulletPos.y += vehicleSizeHalf_.y;
+        BulletPos.y += Size.toCenter_;
         pBullet->SetPosition(BulletPos);
 
         float power = bulletPower_;
@@ -650,6 +678,7 @@ void Vehicle::AngleLimit(float& angle, const float limit)
         minusFlag = true;
     }
     //角度の絶対値が最大角度の絶対値を超えていたら最大角度にする
+    //軽量化できるか
     if (fabs(angle) > fabs(limit))
     {
         angle = fabs(limit);
@@ -662,179 +691,105 @@ void Vehicle::AngleLimit(float& angle, const float limit)
     }
 }
 
-//接地 
-void Vehicle::Landing()
+
+//地面、壁、敵との衝突をまとめる？？
+void Vehicle::VehicleCollide()
 {
-    Ground* pGround = nullptr;
-    pGround = (Ground*)FindObject("Ground");    //ステージオブジェクトを探す
-
-    //安全
-    if (pGround->GetCircuitUnion()->parts_.empty())
-        return;
-
     //種類の分だけ
     for (int i = 0; i < pGround->GetCircuitUnion()->parts_.size(); i++)
     {
-        //
-        int hModel = pGround->GetCircuitUnion()->parts_[i].model_;
-
-        RayCastData data;
-        data.start = transform_.position_;   //レイの発射位置
-        data.dir = XMFLOAT3(0, -1, 0);       //レイの方向
-        Model::RayCast(hModel, &data);  //レイを発射
-
+        //地面
+        Landing(pGround->GetCircuitUnion()->parts_[i].model_, pGround->GetCircuitUnion()->parts_[i].type_);
         
-        //レイが当たったら
-        if (data.hit)
+        //壁
+        CollideWall(pGround->GetCircuitUnion()->parts_[i].model_, pGround->GetCircuitUnion()->parts_[i].type_);
+    }
+}
+
+//接地 
+void Vehicle::Landing(int hModel,int type)
+{
+    RayCastData data;
+    data.start = transform_.position_;  //レイの発射位置
+    data.start.y -= 0.1f; //なぜかこれで上手くいく
+    data.dir = XMFLOAT3(0, -1, 0);  //レイの方向
+    Model::RayCast(hModel, &data);  //レイを発射
+        
+    //レイが当たったら
+    if (data.hit)
+    {
+        if (type == Ground::turf)
+            landingType_ = Ground::turf;
+        if (type == Ground::road)
+            landingType_ = Ground::road;
+
+        //フロートにしとく
+        //XMFLOAT3 floAcc;
+        //XMStoreFloat3(&floAcc, acceleration_);
+        //XMVectorGetY(acceleration_);//こっちのほうが軽いか？
+
+        engineRotate_ = data.dist;
+        //XMVectorGetY(acceleration_)
+
+        if (-data.dist > XMVectorGetY(acceleration_) - gravity_)
         {
-            if (pGround->GetCircuitUnion()->parts_[i].type_ == Ground::turf)
-                landingType_ = Ground::turf;
-            if (pGround->GetCircuitUnion()->parts_[i].type_ == Ground::road)
-                landingType_ = Ground::road;
-
-            //フロートにしとく
-            XMFLOAT3 floAcc;
-            XMStoreFloat3(&floAcc, acceleration_);
-
-            if (data.dist > abs(floAcc.y - gravity_))
-            {
-                //位置を下げる
-                floAcc.y -= gravity_;
-                landingFlag_ = false;
-            }
-            else// if (data.dist < floAcc.y && data.dist > 0 && floAcc.y < 0)
-            {
-                //下方向の加速度が大きいなら　地面にワープ　落下速度を０
-                transform_.position_.y -= data.dist;
-                floAcc.y = 0;
-                landingFlag_ = true;
-            }
-            //戻す
-            acceleration_ = XMLoadFloat3(&floAcc);
-        }
-
-        RayCastData ceiling;
-        ceiling.start = transform_.position_;   //レイの発射位置
-
-        ceiling.dir = XMFLOAT3(0, 1, 0);       //真上に発射
-        Model::RayCast(hModel, &ceiling);  //レイを発射
-
-        if (ceiling.hit && ceiling.dist < vehicleSizeHalf_.y)
-        {
-            //その分位置を上げる
-            transform_.position_.y += ceiling.dist;
-            acceleration_ *= {1, 0, 1, 1};
+            //下方向の加速度が大きいなら　地面にワープ　落下速度を０
+            transform_.position_.y -= data.dist;
+            acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
             landingFlag_ = true;
         }
-
-        //壁
-        RayCastData wallData;
-        wallData.start = transform_.position_;   //レイの発射位置
-        wallData.start.y += vehicleSizeHalf_.y;
-
-        //斜め***
-        //z軸からの角度
-        float theta = acos(vehicleSizeHalf_.z / vehicleSizeOblique_);
-
-        XMVECTOR rotVec = frontVec_;
-
-        //配列にする
-        vector<RayCastData> rayCar(4);
-        for (int i = 0; i < rayCar.size(); i++)
+        else
         {
-            rayCar[i].start = transform_.position_;
-            rayCar[i].start.y += vehicleSizeHalf_.y;
-
-            //90度ずつ回転
-            XMMATRIX mat = XMMatrixRotationY(XMConvertToRadians(90 * i));	//Ｙ軸で回転させる行列    
-            rotVec = XMVector3TransformCoord(frontVec_, mat);	//ベクトルを行列で変形
-
-            XMStoreFloat3(&rayCar[i].dir, rotVec);
-
-            Model::RayCast(hModel, &rayCar[i]);  //レイを発射
-            //レイが当たったら
-            if (rayCar[i].hit)
-            {
-
-                //調整           
-                 //フロートにしとく
-                XMFLOAT3 floAcc;
-                //XMStoreFloat3(&floAcc, acceleration_);
-                //加速度を逆回転させたベクトル
-                XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
-                XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY));
-
-                //正面行き、車両を正しい位置にワープさせ、加速度を正しく０にする
-                if (i == 0 && rayCar[i].dist < floAcc.z + vehicleSizeHalf_.z)
-                {
-                    acceleration_ *= {0, 1, 1, 1};
-                    engineRotate_ = rayCar[i].dist;
-                    //engineRotate_ = floAcc.z + vehicleSizeHalf_.z - rayCar[i].dist;
-
-                    XMVECTOR ajustVec = { 0,0,floAcc.z + vehicleSizeHalf_.z - rayCar[i].dist,0 };
-                    XMMATRIX matAjustRotateY = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
-                    XMVector3TransformCoord(ajustVec, matAjustRotateY);
-                    XMFLOAT3 ajustFlo;
-                    XMStoreFloat3(&ajustFlo, ajustVec);
-                    //transform_.position_.x += ajustFlo.x;
-                    //transform_.position_.y += ajustFlo.y;
-                    transform_.position_.z += ajustFlo.z;
-
-                    pMarker->SetPosition(rayCar[i].end);
-                }
-                else// if (data.dist < floAcc.y && data.dist > 0 && floAcc.y < 0)
-                {
-                    //下方向の加速度が大きいなら　地面にワープ　落下速度を０
-                    //transform_.position_.y -= data.dist;
-                    //floAcc.y = 0;
-                    //landingFlag_ = true;
-                }
-
-                //壁に衝突
-                //移動速度+基礎値
-                //
-                float hitSpeed = *XMVector3LengthEst(acceleration_).m128_f32 + moveSPD_ * 2;
-                if ((i == 0 || i == 2) && rayCar[i].dist < vehicleSizeHalf_.z)
-                {
-                    //acceleration_ = rayCar[i].reflection * hitSpeed * -0.35f;
-                }
-                //横からあたると低反発
-                else if ((i == 1 || i == 3) && (rayCar[i].dist < vehicleSizeHalf_.x))
-                {
-                    acceleration_ += rayCar[i].normal * hitSpeed * -0.25f / sideFriction_;
-                }
-            }
+            //位置を下げる
+            acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
+            landingFlag_ = false;
         }
-        //斜め
-        //配列にする
-        vector<RayCastData> rayCarOblique(4);
-        for (int i = 0; i < rayCarOblique.size(); i++)
+#if 0
+        if (data.dist > abs(floAcc.y - gravity_))
+        //if (-data.dist < floAcc.y - gravity_)
         {
-            rayCarOblique[i].start = transform_.position_;
-            rayCarOblique[i].start.y += vehicleSizeHalf_.y;
-            //90度(?) ずつ回転
-            float angle = theta;//π角度
-            switch (i)
-            {
-            default:break;
-            case 1:
-                angle = XM_PI - theta; break;
-            case 2:
-                angle = XM_PI + theta; break;
-            case 3:
-                angle = -theta; break;
-            }
-            XMMATRIX mat = XMMatrixRotationY(angle);	//Ｙ軸で回転させる行列    
-            rotVec = XMVector3TransformCoord(frontVec_, mat);	//ベクトルを行列で変形
-            XMStoreFloat3(&rayCarOblique[i].dir, rotVec);
+            //位置を下げる
+            //floAcc.y -= gravity_;
+            //acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
+            landingFlag_ = false;
+        }
+        else// if (data.dist < floAcc.y && data.dist > 0 && floAcc.y < 0)
+        {
+            //下方向の加速度が大きいなら　地面にワープ　落下速度を０
+            //transform_.position_.y -= data.dist;
+            //floAcc.y = 0;
+            //acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
+            landingFlag_ = true;
+        }
+        //戻す
+        //acceleration_ = XMLoadFloat3(&floAcc);
+#endif
+    }
 
-            Model::RayCast(hModel, &rayCarOblique[i]);  //レイを発射
-            float hitSpeed = *XMVector3LengthEst(acceleration_).m128_f32 + moveSPD_ * 4;
-            if (rayCarOblique[i].hit && rayCarOblique[i].dist < vehicleSizeOblique_)
-            {
-                //pMarker->SetPosition(rayCarOblique[i].end);
-                //acceleration_ += rayCarOblique[i].normal * hitSpeed * -0.25;
-            }
+    //天井
+    //RayCastData ceiling;
+    //data.start = transform_.position_;   //レイの発射位置
+    data.dir = XMFLOAT3(0, 1, 0);       //真上に発射
+    Model::RayCast(hModel, &data);  //レイを発射
+
+    if (data.hit)
+    {   
+        //XMFLOAT3 floAcc;
+        //XMStoreFloat3(&floAcc, acceleration_);
+
+        //ちょっと地面に埋まったとき
+        if (data.dist < Size.toTop_)
+        {
+            //その分位置を上げる
+            transform_.position_.y += data.dist;
+            acceleration_ *= {1, 0, 1, 1};
+        }
+        //天井にぶつかったとき
+        else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_)
+        {
+            //その分位置を上げる
+            transform_.position_.y += data.dist - Size.toTop_;
+            acceleration_ *= {1, 0, 1, 1};
         }
     }
 
@@ -845,20 +800,211 @@ void Vehicle::Landing()
     }
     else
     {
-        transform_.scale_.y = 1.1f;
+        transform_.scale_.y = 1.3f;
     }
 }
 
-void Vehicle::CollideWall()
+#if 1
+void Vehicle::CollideWall(int hModel, int type)
 {
-    return;
-}
+    enum
+    {
+        front = 0,
+        right = 1,
+        rear = 2,
+        left = 3
+    } direction;
 
-//地面、壁、敵との衝突をまとめる？？
-void Vehicle::VehicleCollide()
-{
-    return;
+    //前後左右と斜めで分割することにする
+    std::array<RayCastData, 4>wallCollideVertical;
+
+    //前後左右編
+    for (int i = 0; i < wallCollideVertical.size(); i++)
+    {
+        wallCollideVertical[i].start = transform_.position_;
+        wallCollideVertical[i].start.y += Size.toCenter_;
+
+        //90度ずつ回転
+        XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(90 * i));	//Ｙ軸で回転させる行列    
+        XMStoreFloat3(&wallCollideVertical[i].dir, XMVector3TransformCoord(frontVec_, matRot));//ベクトルを行列で変形
+
+        Model::RayCast(hModel, &wallCollideVertical[i]);  //レイを発射
+        //当たったら
+        if (wallCollideVertical[i].hit && i != 0)
+        { 
+            XMFLOAT3 floAcc;
+            //ベクトルY軸で回転用行列
+            XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
+            XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+
+            XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
+
+            //方向ごとの加速度
+            float dirAcc;
+            //方向ごとの車体の長さ
+            float dirSize;
+            //方向ごとのプラスマイナス： 1 と -1
+            float dirPlusMinus;
+            //方向ごとに代入　なんか頭わるいことしてそうな気がする
+            switch (i){
+                //前方、その他
+            default:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
+                dirSize = Size.toFront_;
+                dirPlusMinus = 1.0f;
+                break;
+                //右
+            case right:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
+                dirSize = Size.toRight_;
+                dirPlusMinus = 1.0f;
+                break;
+                //後ろ
+            case rear:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
+                dirSize = -Size.toRear_;
+                dirPlusMinus = -1.0f;
+                break;
+                //左
+            case left:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
+                dirSize = -Size.toLeft_;
+                dirPlusMinus = -1.0f;
+                break;
+            }
+
+            if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
+            {
+                //衝突する直前で止まった時の壁までの距離
+
+                //ここが問題　iの角度で回転とかすればいいとおもうけど
+                XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
+                ajustVec = XMVector3TransformCoord(ajustVec, matRot);
+                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
+                transform_.position_.x += XMVectorGetX(ajustVec);
+                transform_.position_.z += XMVectorGetZ(ajustVec);
+
+                //平行移動させる
+                float accY = XMVectorGetY(acceleration_);
+                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32;
+                acceleration_ = XMVectorSetY(acceleration_, accY);
+            }
+
+            if (wallCollideVertical[i].dist < floAcc.z + vehicleSizeHalf_.z)
+            {
+                //衝突する直前で止まった時の壁までの距離
+                XMVECTOR ajustVec = { 0,0,wallCollideVertical[i].dist - vehicleSizeHalf_.z,0 };
+                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
+                transform_.position_.x += XMVectorGetX(ajustVec);
+                transform_.position_.z += XMVectorGetZ(ajustVec);
+
+                //平行移動させる
+                //y軸に対応してないのでは??
+                float accY = XMVectorGetY(acceleration_);
+                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3Length(acceleration_).m128_f32;
+                acceleration_ = XMVectorSetY(acceleration_, accY);
+            }
+        }
+    }
+
 }
+#else
+void Vehicle::CollideWall(int hModel, int type)
+{
+    //斜め***
+    //z軸からの角度
+    float theta = acos(vehicleSizeHalf_.z / vehicleSizeOblique_);
+
+    XMVECTOR rotVec = frontVec_;
+
+    //配列にする
+    vector<RayCastData> rayCar(4);
+    for (int i = 0; i < rayCar.size(); i++)
+    {
+        rayCar[i].start = transform_.position_;
+        rayCar[i].start.y += vehicleSizeHalf_.y;
+
+        //90度ずつ回転
+        XMMATRIX mat = XMMatrixRotationY(XMConvertToRadians(90 * i));	//Ｙ軸で回転させる行列    
+        rotVec = XMVector3TransformCoord(frontVec_, mat);	//ベクトルを行列で変形
+
+        XMStoreFloat3(&rayCar[i].dir, rotVec);
+
+        Model::RayCast(hModel, &rayCar[i]);  //レイを発射
+        //レイが当たったら
+        if (rayCar[i].hit)
+        {
+            //調整           
+            //フロートにしとく
+            XMFLOAT3 floAcc;
+            //ベクトルY軸で回転用行列
+            XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
+            XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+
+            XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
+
+            //正面行き、車両を正しい位置にワープさせ、加速度を正しく０にする
+            //engineRotate_ = rayCar[0].dist - vehicleSizeHalf_.z;
+            if (i == 0 && rayCar[i].dist < floAcc.z + vehicleSizeHalf_.z)
+            {
+                //衝突する直前で止まった時の壁までの距離
+                XMVECTOR ajustVec = { 0,0,rayCar[i].dist - vehicleSizeHalf_.z,0 };
+                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
+                transform_.position_.x += XMVectorGetX(ajustVec);
+                transform_.position_.z += XMVectorGetZ(ajustVec);
+
+                //平行移動させる
+                //y軸に対応してないのでは??
+                float accY = XMVectorGetY(acceleration_);
+                acceleration_ = rayCar[i].parallelism * *XMVector3Length(acceleration_).m128_f32;
+                acceleration_ = XMVectorSetY(acceleration_, accY);
+            }
+
+            //壁に衝突
+            //移動速度+基礎値
+            //
+            float hitSpeed = *XMVector3LengthEst(acceleration_).m128_f32 + moveSPD_ * 2;
+            if ((i == 0 || i == 2) && rayCar[i].dist < vehicleSizeHalf_.z)
+            {
+                //acceleration_ = rayCar[i].reflection * hitSpeed * -0.35f;
+            }
+            //横からあたると低反発
+            else if ((i == 1 || i == 3) && (rayCar[i].dist < vehicleSizeHalf_.x))
+            {
+                //acceleration_ += rayCar[i].normal * hitSpeed * -0.25f / sideFriction_;
+            }
+        }
+    }
+
+    //斜め
+    //配列にする
+    vector<RayCastData> rayCarOblique(4);
+    for (int i = 0; i < rayCarOblique.size(); i++)
+    {
+        rayCarOblique[i].start = transform_.position_;
+        rayCarOblique[i].start.y += vehicleSizeHalf_.y;
+        //90度(?) ずつ回転
+        float angle = theta;//π角度
+        switch (i)
+        {
+        default:break;
+        case 1:
+            angle = XM_PI - theta; break;
+        case 2:
+            angle = XM_PI + theta; break;
+        case 3:
+            angle = -theta; break;
+        }
+        XMMATRIX mat = XMMatrixRotationY(angle);	//Ｙ軸で回転させる行列    
+        rotVec = XMVector3TransformCoord(frontVec_, mat);	//ベクトルを行列で変形
+        XMStoreFloat3(&rayCarOblique[i].dir, rotVec);
+
+        Model::RayCast(hModel, &rayCarOblique[i]);  //レイを発射
+        float hitSpeed = *XMVector3LengthEst(acceleration_).m128_f32 + moveSPD_ * 4;
+        if (rayCarOblique[i].hit && rayCarOblique[i].dist < vehicleSizeOblique_)
+        {
+            //pMarker->SetPosition(rayCarOblique[i].end);
+            //acceleration_ += rayCarOblique[i].normal * hitSpeed * -0.25;
+        }
+    }
+}
+#endif
 
 #if 0
 //初期化

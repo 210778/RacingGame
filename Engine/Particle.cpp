@@ -162,7 +162,6 @@ void Particle::EmitterUpdate()
             if ((*emitter)->data.delay == 0)
             {
                 (*emitter)->isDead = true;
-
             }
 
             emitter++;
