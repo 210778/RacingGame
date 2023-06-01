@@ -140,6 +140,9 @@
     <ClCompile Include="Engine\Global.cpp">
       <Filter>01Engine</Filter>
     </ClCompile>
+    <ClCompile Include="VehicleWheel.cpp">
+      <Filter>04Play</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -243,6 +246,9 @@
     </ClInclude>
     <ClInclude Include="Engine\Debug.h">
       <Filter>01Engine\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleWheel.h">
+      <Filter>04Play</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

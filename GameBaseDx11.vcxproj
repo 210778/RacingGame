@@ -159,6 +159,7 @@
     <ClCompile Include="TestScene.cpp" />
     <ClCompile Include="Tracker.cpp" />
     <ClCompile Include="Vehicle.cpp" />
+    <ClCompile Include="VehicleWheel.cpp" />
     <ClCompile Include="Viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -195,6 +196,7 @@
     <ClInclude Include="TestScene.h" />
     <ClInclude Include="Tracker.h" />
     <ClInclude Include="Vehicle.h" />
+    <ClInclude Include="VehicleWheel.h" />
     <ClInclude Include="Viewer.h" />
   </ItemGroup>
   <ItemGroup>

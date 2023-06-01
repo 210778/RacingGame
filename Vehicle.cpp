@@ -19,6 +19,7 @@
 #include "Tracker.h"
 #include "Speedometer.h"
 #include "CheckPoint.h"
+#include "VehicleWheel.h"
 
 using std::vector;
 using std::string;
@@ -47,9 +48,12 @@ Vehicle::Vehicle(GameObject* parent)
     , torque_(1.0f), mass_(1.0f), engineRotate_(0.0f), clutchFlag_(true)
     , frontVec_({ 0.0, 0.0, 0.0, 0.0 })
     , landingType_(Ground::road)
-    , pParticle(nullptr)
-    , pGround(nullptr)
+    , pParticle_(nullptr)
+    , pGround_(nullptr)
+    , pWheels_(nullptr)
 {
+    Size.wheelHeight_ = 0.1;
+
     vehicleSizeHalf_ = XMFLOAT3(vehicleSize_.x * 0.5f, vehicleSize_.y * 0.5f, vehicleSize_.z * 0.5f);
     //三平方の定理で斜めの値を求める
     vehicleSizeOblique_ = sqrt((vehicleSizeHalf_.x * vehicleSizeHalf_.x) + (vehicleSizeHalf_.z * vehicleSizeHalf_.z));
@@ -94,6 +98,7 @@ void Vehicle::Initialize()
 {
     //hModel_ = Model::Load("model\\CarRed2.fbx");//"Assets\\model\\□□□.fbx"
     //hModel_ = Model::Load("model\\Ground12.fbx");
+    //hModel_ = Model::Load("model\\Car1_blue.fbx");
     hModel_ = Model::Load("model\\Car1_blue.fbx");
     assert(hModel_ >= 0);
 
@@ -137,7 +142,7 @@ void Vehicle::Initialize()
     //AddCollider(collisionB);
 
     //炎
-    pParticle = Instantiate<Particle>(this);
+    pParticle_ = Instantiate<Particle>(this);
 
     //ボーン
     XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel_, "car1_bottom");
@@ -146,10 +151,10 @@ void Vehicle::Initialize()
     XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel_, "car1_right");
     XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel_, "car1_rear");
     XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel_, "car1_front");
-    XMFLOAT3 vehicleWheelFR = Model::GetBonePosition(hModel_, "car1_wheelFR");
-    XMFLOAT3 vehicleWheelFL = Model::GetBonePosition(hModel_, "car1_wheelFL");
-    XMFLOAT3 vehicleWheelRR = Model::GetBonePosition(hModel_, "car1_wheelRR");
-    XMFLOAT3 vehicleWheelRL = Model::GetBonePosition(hModel_, "car1_wheelRL");
+    Size.wheelFR_ = Model::GetBonePosition(hModel_, "car1_wheelFR");
+    Size.wheelFL_ = Model::GetBonePosition(hModel_, "car1_wheelFL");
+    Size.wheelRR_ = Model::GetBonePosition(hModel_, "car1_wheelRR");
+    Size.wheelRL_ = Model::GetBonePosition(hModel_, "car1_wheelRL");
     //車両の大きさ計算
     vehicleSize_.x = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32 + *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
     vehicleSize_.y = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
@@ -168,16 +173,16 @@ void Vehicle::Initialize()
     Size.toRearRight_     = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
     Size.toRearLeft_      = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
 
+    //タイヤ
     int wheelModel = Model::Load("model\\wheel1.fbx");
     assert(wheelModel >= 0);
-    XMFLOAT3 wheelPos = Model::GetBonePosition(wheelModel, "wheel1_center");
-    XMFLOAT3 wheelBotPos = Model::GetBonePosition(wheelModel, "wheel1_bottom");
+    MakeWheels(wheelModel);
 
     //ステージオブジェクトを探す
-    pGround = (Ground*)FindObject("Ground");
-    assert(pGround != nullptr);
+    pGround_ = (Ground*)FindObject("Ground");
+    assert(pGround_ != nullptr);
     //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
-    assert(!(pGround->GetCircuitUnion()->parts_.empty()));
+    assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
 }
 
 //更新
@@ -213,7 +218,7 @@ void Vehicle::Update()
         data.scale = XMFLOAT2(0.80, 0.80);
         XMStoreFloat4(&data.color, vecRainbowRGB);
         data.deltaColor = XMFLOAT4(0, 0, 0, -0.04);
-        pParticle->Start(data);
+        pParticle_->Start(data);
 
         //火の粉
         data.number = 1;
@@ -225,7 +230,7 @@ void Vehicle::Update()
         data.lifeTime = 30;
         data.speed = 0.2f;
         data.gravity = -0.002;
-        pParticle->Start(data);
+        pParticle_->Start(data);
     }
 
     //クールタイム
@@ -369,7 +374,7 @@ void Vehicle::Update()
         data.scale = XMFLOAT2(0.98f, 0.98f);
         data.color = XMFLOAT4(1, 1, 1, 1);
         data.deltaColor = XMFLOAT4(0.0, -0.06, -0.12, -0.05);
-        pParticle->Start(data);
+        pParticle_->Start(data);
 
         //火の粉
         data.number = 2;
@@ -381,7 +386,7 @@ void Vehicle::Update()
         data.speed = 0.1f;
         data.gravity = 0.0;
         data.deltaColor = XMFLOAT4(-0.02, -0.02, -0.1, -0.01);
-        pParticle->Start(data);
+        pParticle_->Start(data);
     }
 
     if (Input::IsKey(DIK_V))
@@ -510,6 +515,9 @@ void Vehicle::Update()
     //接地、壁衝突　（移動してきた）
     VehicleCollide();
 
+    //タイヤの値セット
+    pWheels_->SetWheelSpeedRotate(*XMVector3LengthEst(acceleration_).m128_f32, handleRotate_);
+
 #ifdef _DEBUG
     //テスト 正面にマーカーを設置
     XMVECTOR vecMark = { 0, 10, -1, 0 };    //後ろに伸びるベクトルを用意
@@ -633,8 +641,7 @@ XMFLOAT3 ← XMVECTOR
 XMVECTOR v; 	//何か入ってるとして
 XMFLOAT3 f;
 XMStoreFloat3(&f, v);
-*/
-/*
+
 std::string str;
         str = std::to_string(transform_.position_.x);
         str += "\n" + std::to_string(transform_.position_.y);
@@ -696,13 +703,13 @@ void Vehicle::AngleLimit(float& angle, const float limit)
 void Vehicle::VehicleCollide()
 {
     //種類の分だけ
-    for (int i = 0; i < pGround->GetCircuitUnion()->parts_.size(); i++)
+    for (int i = 0; i < pGround_->GetCircuitUnion()->parts_.size(); i++)
     {
         //地面
-        Landing(pGround->GetCircuitUnion()->parts_[i].model_, pGround->GetCircuitUnion()->parts_[i].type_);
+        Landing(pGround_->GetCircuitUnion()->parts_[i].model_, pGround_->GetCircuitUnion()->parts_[i].type_);
         
         //壁
-        CollideWall(pGround->GetCircuitUnion()->parts_[i].model_, pGround->GetCircuitUnion()->parts_[i].type_);
+        CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_, pGround_->GetCircuitUnion()->parts_[i].type_);
     }
 }
 
@@ -711,7 +718,7 @@ void Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
     data.start = transform_.position_;  //レイの発射位置
-    data.start.y -= 0.1f; //なぜかこれで上手くいく
+    data.start.y -= Size.wheelHeight_;   //地面に張り付いてるとうまくいかない
     data.dir = XMFLOAT3(0, -1, 0);  //レイの方向
     Model::RayCast(hModel, &data);  //レイを発射
         
@@ -872,13 +879,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
             if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
             {
-                if (i == 1 || i == 3)
-                {
-                    transform_.position_.x = transform_.position_.x;
-                }
                 //衝突する直前で止まった時の壁までの距離
-
-                //ここが問題　iの角度で回転とかすればいいとおもうけど
                 XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
                 ajustVec = XMVector3TransformCoord(ajustVec, matRot);
                 ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
@@ -887,29 +888,21 @@ void Vehicle::CollideWall(int hModel, int type)
 
                 //平行移動させる
                 float accY = XMVectorGetY(acceleration_);
-                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32 * 1.5f;
+                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32;
                 acceleration_ = XMVectorSetY(acceleration_, accY);
             }
-#if 0
-            if (wallCollideVertical[i].dist < floAcc.z + vehicleSizeHalf_.z)
-            {
-                //衝突する直前で止まった時の壁までの距離
-                XMVECTOR ajustVec = { 0,0,wallCollideVertical[i].dist - vehicleSizeHalf_.z,0 };
-                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
-                transform_.position_.x += XMVectorGetX(ajustVec);
-                transform_.position_.z += XMVectorGetZ(ajustVec);
-
-                //平行移動させる
-                //y軸に対応してないのでは??
-                float accY = XMVectorGetY(acceleration_);
-                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3Length(acceleration_).m128_f32;
-                acceleration_ = XMVectorSetY(acceleration_, accY);
-            }
-#endif
         }
     }
 
 }
+
+void Vehicle::MakeWheels(int hModel)
+{
+    //タイヤ
+    pWheels_ = Instantiate<VehicleWheel>(this);
+    pWheels_->SetVehicleWheel(this, hModel, Size.wheelFL_, Size.wheelFR_, Size.wheelRL_, Size.wheelRR_);
+}
+
 #else
 void Vehicle::CollideWall(int hModel, int type)
 {
@@ -1020,7 +1013,7 @@ void TestScene::Initialize()
     Camera::SetTarget(XMFLOAT3(0, 0, 0));
     hModel_ = Model::Load("model\\GroundGrid.fbx");
 
-    pParticle_ = Instantiate<Particle>(this);
+    pParticle__ = Instantiate<Particle>(this);
 
     //炎
     {
@@ -1043,7 +1036,7 @@ void TestScene::Initialize()
         data.scale = XMFLOAT2(1.01, 1.01);
         data.color = XMFLOAT4(1, 1, 0, 1);
         data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.02);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
 
         //火の粉
         data.number = 3;
@@ -1055,7 +1048,7 @@ void TestScene::Initialize()
         data.lifeTime = 120;
         data.speed = 0.1f;
         data.gravity = 0;
-        pParticle_->Start(data);
+        pParticle__->Start(data);
     }
 
 
@@ -1079,7 +1072,7 @@ void TestScene::Initialize()
         data.scale = XMFLOAT2(1.01, 1.01);
         data.color = XMFLOAT4(1, 1, 1, 0.2);
         data.deltaColor = XMFLOAT4(0, 0, 0, -0.002);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
     }
 
     //水
@@ -1101,7 +1094,7 @@ void TestScene::Initialize()
         data.sizeErr = XMFLOAT2(0.8, 0.4);
         data.scale = XMFLOAT2(1.02, 1.02);
         data.color = XMFLOAT4(1, 1, 1, 0.1);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
 
         //水滴
         data.textureFileName = "image\\PaticleAssets\\bubleB.png";
@@ -1120,7 +1113,7 @@ void TestScene::Initialize()
         data.sizeErr = XMFLOAT2(0, 0);
         data.scale = XMFLOAT2(0.98, 0.98);
         data.color = XMFLOAT4(1, 1, 1, 1);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
     }
 
     //1
@@ -1143,7 +1136,7 @@ void TestScene::Initialize()
         data.scale = XMFLOAT2(1.01, 1.01);
         data.color = XMFLOAT4(0.5, 0.8, 0.0, 1);
         data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
 
         data.number = 3;
         data.positionErr = XMFLOAT3(0.8, 0, 0.8);
@@ -1154,7 +1147,7 @@ void TestScene::Initialize()
         data.lifeTime = 120;
         data.speed = 0.1f;
         data.gravity = 0;
-        pParticle_->Start(data);
+        pParticle__->Start(data);
     }
 
 }
@@ -1179,7 +1172,7 @@ void TestScene::Update()
         data.scale = XMFLOAT2(1.05, 1.05);
         data.color = XMFLOAT4(1, 1, 0.1, 1);
         data.deltaColor = XMFLOAT4(0, -1.0 / 20, 0, -1.0 / 20);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
 
 
         data.delay = 0;
@@ -1197,7 +1190,7 @@ void TestScene::Update()
         data.color = XMFLOAT4(1, 1, 0.1, 1);
         data.deltaColor = XMFLOAT4(0, 0, 0, 0);
         data.gravity = 0.003f;
-        pParticle_->Start(data);
+        pParticle__->Start(data);
     }
 
     if (Input::IsKey(DIK_V))
@@ -1220,7 +1213,7 @@ void TestScene::Update()
         data.scale = XMFLOAT2(1.01, 1.01);
         data.color = XMFLOAT4(1, 1, 0, 1);
         data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-        pParticle_->Start(data);
+        pParticle__->Start(data);
 
         data.textureFileName = "image\\PaticleAssets\\flashB_R.png";
         data.position = XMFLOAT3(0, 1, 0);

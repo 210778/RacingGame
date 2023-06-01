@@ -9,6 +9,7 @@ class Text;
 //class CircuitUnion;
 class Particle;
 class Ground;
+class VehicleWheel;
 
 //◆◆◆を管理するクラス
 class Vehicle : public GameObject
@@ -98,10 +99,13 @@ class Vehicle : public GameObject
 
     int landingType_; //地面のタイプ
 
-    Particle* pParticle;//エフェクト用
+    Particle* pParticle_;//エフェクト用
 
-    Ground* pGround;
+    Ground* pGround_;//地面のポインター
 
+    VehicleWheel* pWheels_;//タイヤのポインター
+
+    //車両の各サイズ
     struct
     {
         float toRight_;   //右端　までの距離
@@ -116,6 +120,11 @@ class Vehicle : public GameObject
         float toFrontLeft_;   //左斜め前　までの距離
         float toRearRight_;   //右斜め後ろ　までの距離
         float toRearLeft_;    //左斜め後ろ　までの距離
+        XMFLOAT3 wheelFR_;  //右斜め前　タイヤの位置
+        XMFLOAT3 wheelFL_;  //左斜め前　タイヤの位置
+        XMFLOAT3 wheelRR_;  //右斜め後ろ　タイヤの位置
+        XMFLOAT3 wheelRL_;  //左斜め後ろ　タイヤの位置
+        float wheelHeight_; //タイヤの高さ
     }Size;
 
 public:
@@ -169,4 +178,13 @@ public:
     /// </summary>
     /// <param name="hModel">モデル番号</param>
     void CollideWall(int hModel, int type);
+
+    /// <summary>
+    /// タイヤを用意
+    /// </summary>
+    /// <param name="hModel">モデル番号</param>
+    void MakeWheels(int hModel);
+
+    //タイヤの高さセッター
+    void SetWheelHeight(float height) { Size.wheelHeight_ = height; }
 };
