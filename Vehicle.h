@@ -105,6 +105,10 @@ class Vehicle : public GameObject
 
     VehicleWheel* pWheels_;//タイヤのポインター
 
+    float wheelSpeedAdd_; //加速度に加算するタイヤの回転
+
+    short accZDirection_; //前向きに進んでるか後ろ向きか。前：+1, 後：-1
+
     //車両の各サイズ
     struct
     {

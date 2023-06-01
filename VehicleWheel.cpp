@@ -29,6 +29,9 @@ void VehicleWheel::Initialize()
 //çXêV
 void VehicleWheel::Update()
 {
+    transform_.rotate_.x += rotateSpeedX_;
+    //transform_.rotate_.y += rotateSpeedX_ * 3;
+    //transform_.rotate_.z += rotateSpeedX_ * 3;
 }
 
 //ï`âÊ
@@ -42,6 +45,7 @@ void VehicleWheel::Draw()
     for (int i = 0; i < 4; i++)
     {
         wheelTrans = transform_;
+
         switch (i)
         {
         default:

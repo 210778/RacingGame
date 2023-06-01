@@ -50,7 +50,8 @@ Vehicle::Vehicle(GameObject* parent)
     , landingType_(Ground::road)
     , pParticle_(nullptr)
     , pGround_(nullptr)
-    , pWheels_(nullptr)
+    , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
+    , accZDirection_(1)
 {
     Size.wheelHeight_ = 0.1;
 
@@ -141,8 +142,7 @@ void Vehicle::Initialize()
     //                                          XMFLOAT3(vehicleSize_.x, vehicleSize_.y, vehicleSize_.z));
     //AddCollider(collisionB);
 
-    //炎
-    pParticle_ = Instantiate<Particle>(this);
+
 
     //ボーン
     XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel_, "car1_bottom");
@@ -177,6 +177,9 @@ void Vehicle::Initialize()
     int wheelModel = Model::Load("model\\wheel1.fbx");
     assert(wheelModel >= 0);
     MakeWheels(wheelModel);
+
+    //炎
+    pParticle_ = Instantiate<Particle>(this);
 
     //ステージオブジェクトを探す
     pGround_ = (Ground*)FindObject("Ground");
@@ -273,6 +276,15 @@ void Vehicle::Update()
     //ベクトル * 行列
     vecZ = XMVector3TransformCoord(vecZ, matRotateY);
     vecX = XMVector3TransformCoord(vecX, matRotateY);
+
+    //前向きに進んでるか後ろ向きか判定
+
+    accZDirection_ = 1;
+    if (0 > XMVectorGetZ(XMVector3TransformCoord(acceleration_, XMMatrixRotationY(
+        XMConvertToRadians(-transform_.rotate_.y)))))
+    {
+        accZDirection_ = -1;
+    }
 
     //ハンドルの操作
     handleFlag_ = false;
@@ -430,7 +442,7 @@ void Vehicle::Update()
         if (accLength > 0)
         {
             //前後に動いているなら
-            transform_.rotate_.y += handleRotate_ * accLength * turnAdjust_;
+            transform_.rotate_.y += handleRotate_ * accLength * turnAdjust_ * accZDirection_;
             handleRotate_ *= (driveAdjust_ / (accLength + driveAdjust_));
         }
     }
@@ -487,11 +499,9 @@ void Vehicle::Update()
     //テスト　矢印を表示
     XMFLOAT3 floAcc;
     XMStoreFloat3(&floAcc, acceleration_);
-    //スピード
-    pSpeedometer->SetSpeed(*XMVector3LengthEst(acceleration_).m128_f32 * 120);
-    pTachometer->SetPosition(XMFLOAT3(transform_.position_.x, transform_.position_.y + 3, transform_.position_.z));
-    pTachometer->SetRotate(0, handleRotate_ + 90 + transform_.rotate_.y, transform_.rotate_.z + 270);
-    pTachometer->SetScale(pTachometer->GetScale().x, *XMVector3LengthEst(acceleration_).m128_f32, pTachometer->GetScale().z);
+    //pTachometer->SetPosition(XMFLOAT3(transform_.position_.x, transform_.position_.y + 3, transform_.position_.z));
+    //pTachometer->SetRotate(0, handleRotate_ + 90 + transform_.rotate_.y, transform_.rotate_.z + 270);
+    //pTachometer->SetScale(pTachometer->GetScale().x, *XMVector3LengthEst(acceleration_).m128_f32, pTachometer->GetScale().z);
 
     //テスト　軌跡を設置
     static int seconds = 0;
@@ -516,7 +526,12 @@ void Vehicle::Update()
     VehicleCollide();
 
     //タイヤの値セット
-    pWheels_->SetWheelSpeedRotate(*XMVector3LengthEst(acceleration_).m128_f32, handleRotate_);
+    pWheels_->SetWheelSpeedRotate(
+        *XMVector3LengthEst(acceleration_).m128_f32 * wheelSpeedAdd_ * accZDirection_, handleRotate_);
+
+    //スピードメーター
+    XMVECTOR speedVec = acceleration_ * XMVECTOR{ 1,0,1,1 };
+    pSpeedometer->SetSpeed(*XMVector3LengthEst(speedVec).m128_f32 * 120);
 
 #ifdef _DEBUG
     //テスト 正面にマーカーを設置

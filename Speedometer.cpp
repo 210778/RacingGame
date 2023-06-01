@@ -29,7 +29,7 @@ void Speedometer::Initialize()
 
     //‰æ‘œƒ[ƒh
     string header = "image\\";
-    vector<string>imageName = { "mator3.png","matorNeedle.png"};
+    vector<string>imageName = { "mator4.png","matorNeedle.png"};
     for (int i = 0; i < imageName.size(); i++)
     {
         hImage_.push_back(Image::Load(header + imageName[i]));
