@@ -52,7 +52,7 @@ void Speedometer::Draw()
     //˜g
     meterTrans = transform_;
 
-    Image::SetAlpha(hImage_[IMAGE_FRAME], 128);
+    Image::SetAlpha(hImage_[IMAGE_FRAME], 255);
     //Image::SetRect(hImage_[IMAGE_FRAME], 2, 50, 3, 20);
 
     Image::SetTransform(hImage_[IMAGE_FRAME], meterTrans);

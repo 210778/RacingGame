@@ -157,7 +157,6 @@ void Particle::EmitterUpdate()
 
             (*emitter)->frameCount++;
 
-
             //delayが0のエミッターは１発出したら削除
             if ((*emitter)->data.delay == 0)
             {
@@ -183,7 +182,6 @@ void Particle::Draw()
 
         XMMATRIX matScale = XMMatrixScaling((*particle)->now.scale.x, (*particle)->now.scale.y, 1.0f);
 
-
         matWorld = matScale * Camera::GetBillboardMatrix() * matTrans;
         (*particle)->pEmitter->pBillBoard->Draw(matWorld,(*particle)->now.color);
     }
@@ -204,7 +202,6 @@ int Particle::Start(EmitterData emitterData)
     {
         handle++;
     }
-
 
     Emitter* pEmitter = new Emitter;
 

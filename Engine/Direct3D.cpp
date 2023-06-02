@@ -174,7 +174,7 @@ namespace Direct3D
 			pContext_->OMSetBlendState(pBlendState[BLEND_DEFAULT], blendFactor, 0xffffffff);
 
 			//‰ÁŽZ‡¬id‚È‚é‚Ù‚ÇŒõ‚Á‚ÄŒ©‚¦‚éŒø‰Êj
-			BlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+			//BlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
 			BlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 			pDevice_->CreateBlendState(&BlendDesc, &pBlendState[BLEND_ADD]);
 		}

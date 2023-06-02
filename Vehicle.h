@@ -81,10 +81,11 @@ class Vehicle : public GameObject
 
     unsigned long long time_; //経過タイム
 
-    int pointCount_;
-    int lapCount_;
-    bool goalFlag_;
-    int hImage_;
+    int pointCount_;    //チェックポイント経過数
+    int lapCount_;      //周回数
+    int lapMax_;        //必要周回数
+    bool goalFlag_;     //trueならゴール状態
+    int hImage_;        
 
     //追加変数
     float torque_;   //トルク

@@ -42,7 +42,7 @@ Vehicle::Vehicle(GameObject* parent)
     , landingFlag_(true)
     , pMarker(nullptr), pTachometer(nullptr)
     , pTextSpeed_(nullptr), pTextTime_(nullptr), pTextLap_(nullptr), pSpeedometer(nullptr), pTextEngine_(nullptr)
-    , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0)
+    , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
     , hImage_(-1)
     //追加分
     , torque_(1.0f), mass_(1.0f), engineRotate_(0.0f), clutchFlag_(true)
@@ -117,10 +117,11 @@ void Vehicle::Initialize()
     pMarker->SetPosition(transform_.position_);
 
     pTachometer = Instantiate<Tachometer>(GetParent());
-    pTachometer->SetRotate(0, 90, 270);
+    pTachometer->SetRotate(0, 90, 270);  
+#endif
 
     pSpeedometer = Instantiate<Speedometer>(GetParent());
-#endif
+
     //文字
     pTextSpeed_ = new Text;
     pTextSpeed_->Initialize();
@@ -134,15 +135,11 @@ void Vehicle::Initialize()
     pTextEngine_ = new Text;
     pTextEngine_->Initialize();
 
-    //当たり判定
-    SphereCollider* collision = new SphereCollider(XMFLOAT3(0, vehicleSizeHalf_.y, 0), vehicleSizeHalf_.z);
-    AddCollider(collision);
+
 
     //BoxCollider* collisionB = new BoxCollider(XMFLOAT3(0, vehicleSizeHalf_.y, 0),
     //                                          XMFLOAT3(vehicleSize_.x, vehicleSize_.y, vehicleSize_.z));
     //AddCollider(collisionB);
-
-
 
     //ボーン
     XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel_, "car1_bottom");
@@ -178,6 +175,10 @@ void Vehicle::Initialize()
     assert(wheelModel >= 0);
     MakeWheels(wheelModel);
 
+    //当たり判定
+    SphereCollider* collision = new SphereCollider(XMFLOAT3(0, Size.toCenter_, 0), Size.frontToRear_ * 0.5f);
+    AddCollider(collision);
+
     //炎
     pParticle_ = Instantiate<Particle>(this);
 
@@ -186,12 +187,14 @@ void Vehicle::Initialize()
     assert(pGround_ != nullptr);
     //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
     assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
+
+    lapMax_ = pGround_->GetCircuitUnion()->maxLap_;
 }
 
 //更新
 void Vehicle::Update()
 {
-    if (Input::IsKey(DIK_C))
+    if (Input::IsKey(DIK_C) || goalFlag_)
     {
         static unsigned int rainbowTimer = 0;
         static const int colorSpeed = 2;
@@ -236,6 +239,54 @@ void Vehicle::Update()
         pParticle_->Start(data);
     }
 
+    if (landingFlag_ && 0.01f < *XMVector3Length(acceleration_).m128_f32)
+    {
+        EmitterData data;
+
+        //ベクトルY軸で回転用行列
+        XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
+        //タイヤ位置のベクトル
+        XMVECTOR vecWRL = XMLoadFloat3(&Size.wheelRL_);
+        XMVECTOR vecWRR = XMLoadFloat3(&Size.wheelRR_);
+        //行列で回転
+        XMStoreFloat3(&data.position, XMVector3TransformCoord(vecWRL, matRotateY));
+        //現在の位置を入れる
+        data.position.x += transform_.position_.x;
+        data.position.y += transform_.position_.y;
+        data.position.z += transform_.position_.z;
+        //data.position.y -= Size.wheelHeight_;
+
+        data.textureFileName = "image\\PaticleAssets\\circle_W.png";
+        data.positionErr = {0.0f,0.0f,0.0f};
+        data.delay = 0;
+
+        data.number = 1;
+
+        data.lifeTime = 60 * 3;
+        data.gravity = 0.0f;
+        data.dir = {0.0f,0.0f,0.0f};
+        data.dirErr = { 0.0f,0.0f,0.0f };
+        data.speed = 0.0f;
+        data.speedErr = 0.0f;
+        data.size = { 0.5f,0.5f };
+        data.sizeErr = { 0.0f,0.0f };
+        data.scale = { 1.0f,1.0f };
+        data.color = { 1.0f,1.0f,1.0f,0.25};
+        data.deltaColor = { 0.0f,0.0f,0.0f,-0.005f };
+
+        pParticle_->Start(data);
+
+        //もう一つ
+        //行列で回転
+        XMStoreFloat3(&data.position, XMVector3TransformCoord(vecWRR, matRotateY));
+        //現在の位置を入れる
+        data.position.x += transform_.position_.x;
+        data.position.y += transform_.position_.y;
+        data.position.z += transform_.position_.z;
+        //data.position.y -= Size.wheelHeight_;
+        pParticle_->Start(data);
+    }
+
     //クールタイム
     if (coolTime_ > 0)
     {
@@ -247,15 +298,8 @@ void Vehicle::Update()
         time_++;
 
     //Ｇゴール  
-    if (lapCount_ >= 1)//3
+    if (lapCount_ >= lapMax_)
         goalFlag_ = true;
-
-    //滑る
-    if (Input::IsKeyDown(DIK_SPACE))
-        slideFlag_ = true;
-    if (Input::IsKeyUp(DIK_SPACE))
-        slideFlag_ = false;
-
 
     //接地
     //Landing();
@@ -278,7 +322,6 @@ void Vehicle::Update()
     vecX = XMVector3TransformCoord(vecX, matRotateY);
 
     //前向きに進んでるか後ろ向きか判定
-
     accZDirection_ = 1;
     if (0 > XMVectorGetZ(XMVector3TransformCoord(acceleration_, XMMatrixRotationY(
         XMConvertToRadians(-transform_.rotate_.y)))))
@@ -339,24 +382,11 @@ void Vehicle::Update()
         acceleration_ -= vecZ;
     }
 
-#ifdef _DEBUG
-    if (Input::IsKey(DIK_E))
-    {
-        vecPos += vecX * 30;
-    }
-    if (Input::IsKey(DIK_Q))
-    {
-        vecPos -= vecX * 30;
-    }
-
-    //上昇下降
-    if (Input::IsKeyDown(DIK_M))
-    {
-        if (landingFlag_ || true)
-        {
-            acceleration_ += {0.0f,jumpForce_,0.0f,0.0f};
-        }
-    }
+    //滑る
+    if (Input::IsKeyDown(DIK_SPACE))
+        slideFlag_ = true;
+    if (Input::IsKeyUp(DIK_SPACE))
+        slideFlag_ = false;
 
     //
     if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
@@ -399,6 +429,25 @@ void Vehicle::Update()
         data.gravity = 0.0;
         data.deltaColor = XMFLOAT4(-0.02, -0.02, -0.1, -0.01);
         pParticle_->Start(data);
+    }
+
+#ifdef _DEBUG
+    if (Input::IsKey(DIK_E))
+    {
+        vecPos += vecX * 30;
+    }
+    if (Input::IsKey(DIK_Q))
+    {
+        vecPos -= vecX * 30;
+    }
+
+    //上昇下降
+    if (Input::IsKeyDown(DIK_M))
+    {
+        if (landingFlag_ || true)
+        {
+            acceleration_ += {0.0f,jumpForce_,0.0f,0.0f};
+        }
     }
 
     if (Input::IsKey(DIK_V))
@@ -572,6 +621,7 @@ void Vehicle::OnCollision(GameObject* pTarget)
     if (pTarget->GetObjectName() == "CheckPoint")
     {
         CheckPoint* pCP = (CheckPoint*)pTarget;
+#if 0
         if (pCP->GetNumber() == 1 && pointCount_ <= 0)
             pointCount_ = 1;
         else if (pCP->GetNumber() == 2 && pointCount_ == 1)
@@ -583,6 +633,16 @@ void Vehicle::OnCollision(GameObject* pTarget)
             pointCount_ = 0;
             lapCount_++;
         }
+#endif
+        if (pCP->GetNumber() - 1 == pointCount_)
+        {
+            pointCount_++;
+        }
+        if (pCP->GetNumber() == 1 && pointCount_ == pGround_->GetCircuitUnion()->checkPointPosition_.size())
+        {
+            pointCount_ = 0;
+            lapCount_++;
+        }   
     }
 }
 
@@ -614,15 +674,15 @@ void Vehicle::Draw()
 
     //周回数表示
     string lapStr = std::to_string(lapCount_);
-    lapStr += "/1";//"/3"
+    lapStr += "/";
+    lapStr += std::to_string(lapMax_);
     pTextLap_->Draw(30, 110, lapStr.c_str());
 
     //エンジン表示
     string engineStr = std::to_string(engineRotate_);
     //string engineStr = std::to_string((int)transform_.rotate_.y);
-
     engineStr += "C'";//engineStr += "rpm";
-    pTextEngine_->Draw(260, 30, engineStr.c_str());
+    pTextEngine_->Draw(280, 30, engineStr.c_str());
 
     if (goalFlag_)
     {

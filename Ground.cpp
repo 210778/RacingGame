@@ -47,7 +47,7 @@ void Ground::Initialize()
     CircuitParts circuit_1_R(Model::Load("model\\Ground13-R.fbx"), road);
     CircuitParts circuit_1_G(Model::Load("model\\Ground13-G.fbx"), turf);
     //まとめ
-    CircuitUnion circuit_1("circuit_1",1);
+    CircuitUnion circuit_1("circuit_1",2);
     circuit_1.parts_.push_back(circuit_1_R);
     circuit_1.parts_.push_back(circuit_1_G);
     //チェックポイント
