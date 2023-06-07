@@ -192,4 +192,9 @@ public:
 
     //タイヤの高さセッター
     void SetWheelHeight(float height) { Size.wheelHeight_ = height; }
+
+    void SetVehicleSize(int hModel,std::string modelName);
+
+
+
 };

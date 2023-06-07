@@ -135,40 +135,8 @@ void Vehicle::Initialize()
     pTextEngine_ = new Text;
     pTextEngine_->Initialize();
 
-
-
-    //BoxCollider* collisionB = new BoxCollider(XMFLOAT3(0, vehicleSizeHalf_.y, 0),
-    //                                          XMFLOAT3(vehicleSize_.x, vehicleSize_.y, vehicleSize_.z));
-    //AddCollider(collisionB);
-
-    //ボーン
-    XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel_, "car1_bottom");
-    XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel_, "car1_top");
-    XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel_, "car1_left");
-    XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel_, "car1_right");
-    XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel_, "car1_rear");
-    XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel_, "car1_front");
-    Size.wheelFR_ = Model::GetBonePosition(hModel_, "car1_wheelFR");
-    Size.wheelFL_ = Model::GetBonePosition(hModel_, "car1_wheelFL");
-    Size.wheelRR_ = Model::GetBonePosition(hModel_, "car1_wheelRR");
-    Size.wheelRL_ = Model::GetBonePosition(hModel_, "car1_wheelRL");
-    //車両の大きさ計算
-    vehicleSize_.x = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32 + *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
-    vehicleSize_.y = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
-    vehicleSize_.z = *XMVector3Length(XMLoadFloat3(&vehicleFront) * 2).m128_f32 + *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
-
-    Size.toRight_ = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
-    Size.toLeft_  = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32;
-    Size.toFront_ = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32;
-    Size.toRear_  = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
-    Size.toTop_   = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
-    Size.toCenter_ = Size.toTop_ * 0.5f;
-    Size.rightToLeft_ = Size.toRight_ + Size.toLeft_;
-    Size.frontToRear_ = Size.toFront_ + Size.toRear_;
-    Size.toFrontRight_    = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
-    Size.toFrontLeft_     = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
-    Size.toRearRight_     = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
-    Size.toRearLeft_      = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+    //サイズ計算
+    SetVehicleSize(hModel_, "car1");
 
     //タイヤ
     int wheelModel = Model::Load("model\\wheel1.fbx");
@@ -239,7 +207,7 @@ void Vehicle::Update()
         pParticle_->Start(data);
     }
 
-    if (landingFlag_ && 0.01f < *XMVector3Length(acceleration_).m128_f32)
+    if (0.01f < *XMVector3Length(acceleration_).m128_f32 && !slideFlag_)
     {
         EmitterData data;
 
@@ -256,22 +224,22 @@ void Vehicle::Update()
         data.position.z += transform_.position_.z;
         //data.position.y -= Size.wheelHeight_;
 
-        data.textureFileName = "image\\PaticleAssets\\circle_W.png";
+        data.textureFileName = "image\\PaticleAssets\\cloudA.png";
         data.positionErr = {0.0f,0.0f,0.0f};
         data.delay = 0;
 
-        data.number = 1;
+        data.number = 3;
 
-        data.lifeTime = 60 * 3;
+        data.lifeTime = 30;
         data.gravity = 0.0f;
         data.dir = {0.0f,0.0f,0.0f};
         data.dirErr = { 0.0f,0.0f,0.0f };
         data.speed = 0.0f;
-        data.speedErr = 0.0f;
+        data.speedErr = 0.2f;
         data.size = { 0.5f,0.5f };
-        data.sizeErr = { 0.0f,0.0f };
-        data.scale = { 1.0f,1.0f };
-        data.color = { 1.0f,1.0f,1.0f,0.25};
+        data.sizeErr = { 0.2f,0.2f };
+        data.scale = { 0.97f,0.97f };
+        data.color = { 1.0f,1.0f,1.0f,0.08};
         data.deltaColor = { 0.0f,0.0f,0.0f,-0.005f };
 
         pParticle_->Start(data);
@@ -371,16 +339,20 @@ void Vehicle::Update()
     }
 #endif
 
-    //全身後退
-    if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
+    if (landingFlag_)
     {
-        acceleration_ += vecZ;
+        //全身後退
+        if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
+        {
+            acceleration_ += vecZ;
+        }
+
+        if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
+        {
+            acceleration_ -= vecZ;
+        }
     }
 
-    if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
-    {
-        acceleration_ -= vecZ;
-    }
 
     //滑る
     if (Input::IsKeyDown(DIK_SPACE))
@@ -408,7 +380,7 @@ void Vehicle::Update()
         data.gravity = 0.0f;
         //data.dir = XMFLOAT3(0, 1, 0);
         XMStoreFloat3(&data.dir, -vecZ);
-        data.dirErr = XMFLOAT3(60, 60, 60);
+        data.dirErr = XMFLOAT3(50, 50, 50);
         data.speed = 0.1f;
         data.speedErr = 0.0;
         data.size = XMFLOAT2(0.8, 0.8);
@@ -424,7 +396,7 @@ void Vehicle::Update()
         data.dirErr = XMFLOAT3(90, 90, 90);
         data.size = XMFLOAT2(0.1, 0.1);
         data.scale = XMFLOAT2(1.0f, 1.0f);
-        data.lifeTime = 60;
+        data.lifeTime = 40;
         data.speed = 0.1f;
         data.gravity = 0.0;
         data.deltaColor = XMFLOAT4(-0.02, -0.02, -0.1, -0.01);
@@ -441,7 +413,7 @@ void Vehicle::Update()
         vecPos -= vecX * 30;
     }
 
-    //上昇下降
+    //上昇
     if (Input::IsKeyDown(DIK_M))
     {
         if (landingFlag_ || true)
@@ -621,19 +593,7 @@ void Vehicle::OnCollision(GameObject* pTarget)
     if (pTarget->GetObjectName() == "CheckPoint")
     {
         CheckPoint* pCP = (CheckPoint*)pTarget;
-#if 0
-        if (pCP->GetNumber() == 1 && pointCount_ <= 0)
-            pointCount_ = 1;
-        else if (pCP->GetNumber() == 2 && pointCount_ == 1)
-            pointCount_ = 2;
-        else if (pCP->GetNumber() == 3 && pointCount_ == 2)
-            pointCount_ = 3;
-        else if (pCP->GetNumber() == 1 && pointCount_ == 3)
-        {
-            pointCount_ = 0;
-            lapCount_++;
-        }
-#endif
+
         if (pCP->GetNumber() - 1 == pointCount_)
         {
             pointCount_++;
@@ -679,9 +639,16 @@ void Vehicle::Draw()
     pTextLap_->Draw(30, 110, lapStr.c_str());
 
     //エンジン表示
-    string engineStr = std::to_string(engineRotate_);
+
+    XMFLOAT3 floAcc;
+    //ベクトルY軸で回転用行列
+    XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+    XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
+    //string engineStr = std::to_string(engineRotate_);
     //string engineStr = std::to_string((int)transform_.rotate_.y);
-    engineStr += "C'";//engineStr += "rpm";
+    string engineStr = std::to_string(floAcc.x) + "/" + std::to_string(floAcc.y) + "/" + std::to_string(floAcc.z);
+
+    //engineStr += "C'";//engineStr += "rpm";
     pTextEngine_->Draw(280, 30, engineStr.c_str());
 
     if (goalFlag_)
@@ -810,7 +777,6 @@ void Vehicle::Landing(int hModel,int type)
         //XMStoreFloat3(&floAcc, acceleration_);
         //XMVectorGetY(acceleration_);//こっちのほうが軽いか？
 
-        engineRotate_ = data.dist;
         //XMVectorGetY(acceleration_)
 
         if (-data.dist > XMVectorGetY(acceleration_) - gravity_)
@@ -886,7 +852,6 @@ void Vehicle::Landing(int hModel,int type)
     }
 }
 
-#if 1
 void Vehicle::CollideWall(int hModel, int type)
 {
     enum
@@ -978,7 +943,36 @@ void Vehicle::MakeWheels(int hModel)
     pWheels_->SetVehicleWheel(this, hModel, Size.wheelFL_, Size.wheelFR_, Size.wheelRL_, Size.wheelRR_);
 }
 
-#else
+void Vehicle::SetVehicleSize(int hModel, std::string modelName)
+{
+    //ボーン
+    XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel, modelName + "_bottom");
+    XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel, modelName + "_top");
+    XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel, modelName + "_left");
+    XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel, modelName + "_right");
+    XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel, modelName + "_rear");
+    XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel, modelName + "_front");
+    Size.wheelFR_ = Model::GetBonePosition(hModel, modelName + "_wheelFR");
+    Size.wheelFL_ = Model::GetBonePosition(hModel, modelName + "_wheelFL");
+    Size.wheelRR_ = Model::GetBonePosition(hModel, modelName + "_wheelRR");
+    Size.wheelRL_ = Model::GetBonePosition(hModel, modelName + "_wheelRL");
+    //車両の大きさ計算
+
+    Size.toRight_   = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
+    Size.toLeft_    = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32;
+    Size.toFront_   = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32;
+    Size.toRear_    = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
+    Size.toTop_     = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
+    Size.toCenter_  = Size.toTop_ * 0.5f;
+    Size.rightToLeft_   = Size.toRight_ + Size.toLeft_;
+    Size.frontToRear_   = Size.toFront_ + Size.toRear_;
+    Size.toFrontRight_  = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
+    Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
+    Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
+    Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+}
+
+#if 0
 void Vehicle::CollideWall(int hModel, int type)
 {
     //斜め***
