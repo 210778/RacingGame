@@ -10,14 +10,13 @@ class Particle;
 class Ground;
 class VehicleWheel;
 
-//◆◆◆を管理するクラス
+//車両を管理するクラス
 class Vehicle : public GameObject
 {
+protected:
     int hModel_;    //モデル番号
     int hGroundModel_;  //地面のモデル番号
 
-
-    //XMFLOAT3 acceleration_; //加速度
     XMVECTOR acceleration_; //加速度
 
     //モデルの大きさ
@@ -86,11 +85,8 @@ class Vehicle : public GameObject
     bool goalFlag_;     //trueならゴール状態
     int hImage_;        
 
-    //追加変数
-    float torque_;   //トルク
     float mass_;     //車の重量
     float engineRotate_;    //エンジン回転数
-    bool clutchFlag_;   //クラッチが繋がってるか
 
     //サーキット用
     //CircuitUnion* pCircuitUnion;
@@ -191,9 +187,10 @@ public:
 
     //タイヤの高さセッター
     void SetWheelHeight(float height) { Size.wheelHeight_ = height; }
-
+    //モデルの大きさセッター
     void SetVehicleSize(int hModel,std::string modelName);
 
-
+    //車両の操作、入力の受付
+    void InputOperate();
 
 };

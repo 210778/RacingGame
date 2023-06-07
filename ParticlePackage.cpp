@@ -3,9 +3,6 @@
 namespace ParticlePackage
 {
 	//変数
-
-	unsigned long long timeCount_;	//時間のカウント
-
 	EmitterData boosterFire_;
 	EmitterData boosterSpark_;
 
@@ -14,14 +11,21 @@ namespace ParticlePackage
 
 	EmitterData airCloud_;
 
+	unsigned long long timeCount_;	//時間のカウント
+    const int colorSpeed_ = 2;  //カウントのスピード
+    const float operand = 0.0027778f; // 1 / 360
+
     //セッター
 	void SetBooster();
+    void SetRainbow();
 };
 
 void ParticlePackage::Initialize()
 {
 	timeCount_ = 0;
+
 	SetBooster();
+    SetRainbow();
 }
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
@@ -35,6 +39,22 @@ void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTO
     pParticle->Start(boosterSpark_);
 }
 
+void ParticlePackage::ActRainbowFire(Particle* pParticle, XMFLOAT3 position)
+{
+    timeCount_ += colorSpeed_;
+    XMFLOAT4 HSV((timeCount_ % 360) * operand, 1.0, 1.0, 0.7);//色相、彩度、明度、アルファ
+    XMVECTOR vecRainbowRGB = XMColorHSVToRGB(XMLoadFloat4(&HSV));
+    XMFLOAT4 rainbowRGB;
+    XMStoreFloat4(&rainbowRGB, vecRainbowRGB);
+
+    rainbowFire_.position = position;
+    rainbowFire_.color = rainbowRGB;
+    pParticle->Start(rainbowFire_);
+
+    rainbowSpark_.position = position;
+    rainbowSpark_.color = rainbowRGB;
+    pParticle->Start(rainbowSpark_);
+}
 
 void ParticlePackage::SetBooster()
 {
@@ -69,19 +89,39 @@ void ParticlePackage::SetBooster()
     boosterSpark_.speedErr = 0.0f;
     boosterSpark_.size = { 0.1f, 0.1f };
     boosterSpark_.scale = { 1.0f, 1.0f };
-    boosterFire_.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    boosterSpark_.color = { 1.0f, 1.0f, 1.0f, 1.0f };
     boosterSpark_.deltaColor = { -0.02f, -0.02f, -0.1f, -0.01f };
 }
 
-#if 0
-void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
+void ParticlePackage::SetRainbow()
 {
-	boosterFire_.position = position;
-	XMStoreFloat3(&boosterFire_.dir, direction);
-	pParticle->Start(boosterFire_);
+    //炎
+    rainbowFire_.textureFileName = "image\\PaticleAssets\\cloudB.png";
+    rainbowFire_.position = { 0.0f,0.0f,0.0f };
+    rainbowFire_.positionErr = { 0.2f,0.0f,0.2f };
+    rainbowFire_.delay = 0;
+    rainbowFire_.number = 1;
+    rainbowFire_.lifeTime = 15.0f;
+    rainbowFire_.gravity = 0.0f;
+    rainbowFire_.dir = { 0.0f,1.0f,0.0f };
+    rainbowFire_.dirErr = { 15.0f,0.0f,15.0f };
+    rainbowFire_.speed = 0.75f;
+    rainbowFire_.speedErr = 0.2f;
+    rainbowFire_.size = { 6.0f, 6.0f };
+    rainbowFire_.sizeErr = { 0.5f, 0.5f };
+    rainbowFire_.scale = { 0.8f, 0.8f };;
+    rainbowFire_.color = { 0.0f,0.0f,0.0f,0.0f };
+    rainbowFire_.deltaColor = { 0.0f,0.0f,0.0f,-0.01f };
 
-	boosterSpark_.position = position;
-	XMStoreFloat3(&boosterSpark_.dir, direction);
-	pParticle->Start(boosterSpark_);
+    //火花
+    rainbowSpark_ = rainbowFire_;
+    rainbowSpark_.number = 1;
+    rainbowSpark_.positionErr = { 0.8f, 0.0f, 0.8f };
+    rainbowSpark_.dir = { 0.0f, 1.0f, 0.0f };
+    rainbowSpark_.dirErr = { 10.0f, 10.0f, 10.0f };
+    rainbowSpark_.size = { 0.5f, 0.5f };
+    rainbowSpark_.scale = { 0.98f, 0.98f };
+    rainbowSpark_.lifeTime = 30.0f;
+    rainbowSpark_.speed = 0.2f;
+    rainbowSpark_.gravity = -0.002f;
 }
-#endif

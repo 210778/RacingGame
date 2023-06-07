@@ -45,8 +45,7 @@ Vehicle::Vehicle(GameObject* parent)
     , pTextSpeed_(nullptr), pTextTime_(nullptr), pTextLap_(nullptr), pSpeedometer(nullptr), pTextEngine_(nullptr)
     , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
     , hImage_(-1)
-    //追加分
-    , torque_(1.0f), mass_(1.0f), engineRotate_(0.0f), clutchFlag_(true)
+    , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0, 0.0, 0.0, 0.0 })
     , landingType_(Ground::road)
     , pParticle_(nullptr)
@@ -167,47 +166,7 @@ void Vehicle::Update()
 {
     if (Input::IsKey(DIK_C) || goalFlag_)
     {
-        static unsigned int rainbowTimer = 0;
-        static const int colorSpeed = 2;
-        static const float operand = 0.0027778f;// 1 / 360
-
-        rainbowTimer += colorSpeed;
-
-        XMFLOAT4 HSV((rainbowTimer % 360) * operand, 1.0, 1.0, 0.5);//色相、彩度、明度、アルファ
-        XMVECTOR vecRainbowRGB = XMColorHSVToRGB(XMLoadFloat4(&HSV));
-  
-        EmitterData data;
-
-        //炎
-        data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-        data.position = transform_.position_;
-        data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-        data.delay = 0;
-        data.number = 1;
-        data.lifeTime = 15;
-        data.gravity = 0.0f;
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(15, 0, 15);
-        data.speed = 0.75f;
-        data.speedErr = 0.2;
-        data.size = XMFLOAT2(6, 6);
-        data.sizeErr = XMFLOAT2(0.5, 0.5);
-        data.scale = XMFLOAT2(0.80, 0.80);
-        XMStoreFloat4(&data.color, vecRainbowRGB);
-        data.deltaColor = XMFLOAT4(0, 0, 0, -0.04);
-        pParticle_->Start(data);
-
-        //火の粉
-        data.number = 1;
-        data.positionErr = XMFLOAT3(0.8, 0, 0.8);
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(10, 10, 10);
-        data.size = XMFLOAT2(0.5, 0.5);
-        data.scale = XMFLOAT2(0.98, 0.98);
-        data.lifeTime = 30;
-        data.speed = 0.2f;
-        data.gravity = -0.002;
-        pParticle_->Start(data);
+        ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
     }
 
     if (0.01f < *XMVector3Length(acceleration_).m128_f32 && !slideFlag_)
@@ -254,7 +213,6 @@ void Vehicle::Update()
         data.position.x += transform_.position_.x;
         data.position.y += transform_.position_.y;
         data.position.z += transform_.position_.z;
-        //data.position.y -= Size.wheelHeight_;
         pParticle_->Start(data);
     }
 
@@ -356,42 +314,6 @@ void Vehicle::Update()
         XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "car1_rear");
         boosterPos.y += Size.toCenter_;
         ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
-#if 0
-        EmitterData data;
-
-        //炎
-        //data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-        data.textureFileName = "image\\PaticleAssets\\circle_W.png";
-        data.position = Model::GetBonePosition(hModel_, "car1_rear");
-        data.position.y += Size.toCenter_;
-        data.positionErr = XMFLOAT3(0.2, 0.2, 0.2);
-        data.delay = 0;
-        data.number = 10;
-        data.lifeTime = 30;
-        data.gravity = 0.0f;
-        XMStoreFloat3(&data.dir, -vecZ);
-        data.dirErr = XMFLOAT3(50, 50, 50);
-        data.speed = 0.1f;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(0.8, 0.8);
-        data.sizeErr = XMFLOAT2(0.1, 0.1);
-        data.scale = XMFLOAT2(0.98f, 0.98f);
-        data.color = XMFLOAT4(1, 1, 1, 1);
-        data.deltaColor = XMFLOAT4(0.0, -0.06, -0.12, -0.05);
-        pParticle_->Start(data);
-
-        //火の粉
-        data.number = 2;
-        data.positionErr = XMFLOAT3(0.5, 0.5, 0.5);
-        data.dirErr = XMFLOAT3(90, 90, 90);
-        data.size = XMFLOAT2(0.1, 0.1);
-        data.scale = XMFLOAT2(1.0f, 1.0f);
-        data.lifeTime = 40;
-        data.speed = 0.1f;
-        data.gravity = 0.0;
-        data.deltaColor = XMFLOAT4(-0.02, -0.02, -0.1, -0.01);
-        pParticle_->Start(data);
-#endif
     }
 
 #ifdef _DEBUG
@@ -511,25 +433,6 @@ void Vehicle::Update()
 
     //正面のベクトルをハンドルの角度で回転
     XMMATRIX handleMatRotate = XMMatrixRotationY(XMConvertToRadians(handleRotate_));
-
-#ifdef _DEBUG
-    //テスト　矢印を表示
-    XMFLOAT3 floAcc;
-    XMStoreFloat3(&floAcc, acceleration_);
-    //pTachometer->SetPosition(XMFLOAT3(transform_.position_.x, transform_.position_.y + 3, transform_.position_.z));
-    //pTachometer->SetRotate(0, handleRotate_ + 90 + transform_.rotate_.y, transform_.rotate_.z + 270);
-    //pTachometer->SetScale(pTachometer->GetScale().x, *XMVector3LengthEst(acceleration_).m128_f32, pTachometer->GetScale().z);
-
-    //テスト　軌跡を設置
-    static int seconds = 0;
-    seconds++;
-    if (seconds % 6 == 0 && *XMVector3LengthEst(acceleration_).m128_f32 > 0)
-    {
-        //Tracker* pTracker = Instantiate<Tracker>(GetParent());
-        //pTracker->SetPosition(transform_.position_.x, transform_.position_.y + 1, transform_.position_.z);
-        //pTracker->SetScale(0.5, 0.5, 0.5);
-    }
-#endif
 
     //長さの調整
     SpeedLimit(acceleration_, speedLimit_);

@@ -17,6 +17,13 @@ namespace ParticlePackage
     /// <param name="position">位置</param>
     /// <param name="direction">方向</param>
     void ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction);
+
+    /// <summary>
+    /// 虹炎エフェクト起動
+    /// </summary>
+    /// <param name="pParticle">パーティクル型ポインタ</param>
+    /// <param name="position">位置</param>
+    void ActRainbowFire(Particle* pParticle, XMFLOAT3 position);
 };
 #if 0
 //パーティクルをまとめるためのクラス
