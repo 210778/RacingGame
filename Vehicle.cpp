@@ -20,6 +20,7 @@
 #include "Speedometer.h"
 #include "CheckPoint.h"
 #include "VehicleWheel.h"
+#include "ParticlePackage.h"
 
 using std::vector;
 using std::string;
@@ -120,7 +121,29 @@ void Vehicle::Initialize()
     pTachometer->SetRotate(0, 90, 270);  
 #endif
 
-    pSpeedometer = Instantiate<Speedometer>(GetParent());
+    //サイズ計算
+    SetVehicleSize(hModel_, "car1");
+
+    //タイヤ
+    int wheelModel = Model::Load("model\\wheel1.fbx");
+    assert(wheelModel >= 0);
+    MakeWheels(wheelModel);
+
+    //当たり判定
+    SphereCollider* collision = new SphereCollider(XMFLOAT3(0, Size.toCenter_, 0), Size.frontToRear_ * 0.5f);
+    AddCollider(collision);
+
+    //エフェクトのポインタとそれのまとめ
+    pParticle_ = Instantiate<Particle>(this);
+    //pParticlePackage_ = Instantiate<ParticlePackage>(this);
+
+    //ステージオブジェクトを探す
+    pGround_ = (Ground*)FindObject("Ground");
+    assert(pGround_ != nullptr);
+    //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
+    assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
+
+    lapMax_ = pGround_->GetCircuitUnion()->maxLap_;
 
     //文字
     pTextSpeed_ = new Text;
@@ -135,28 +158,8 @@ void Vehicle::Initialize()
     pTextEngine_ = new Text;
     pTextEngine_->Initialize();
 
-    //サイズ計算
-    SetVehicleSize(hModel_, "car1");
-
-    //タイヤ
-    int wheelModel = Model::Load("model\\wheel1.fbx");
-    assert(wheelModel >= 0);
-    MakeWheels(wheelModel);
-
-    //当たり判定
-    SphereCollider* collision = new SphereCollider(XMFLOAT3(0, Size.toCenter_, 0), Size.frontToRear_ * 0.5f);
-    AddCollider(collision);
-
-    //炎
-    pParticle_ = Instantiate<Particle>(this);
-
-    //ステージオブジェクトを探す
-    pGround_ = (Ground*)FindObject("Ground");
-    assert(pGround_ != nullptr);
-    //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
-    assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
-
-    lapMax_ = pGround_->GetCircuitUnion()->maxLap_;
+    //スピードメーター
+    pSpeedometer = Instantiate<Speedometer>(GetParent());
 }
 
 //更新
@@ -269,9 +272,6 @@ void Vehicle::Update()
     if (lapCount_ >= lapMax_)
         goalFlag_ = true;
 
-    //接地
-    //Landing();
-
     //それぞれの値に合わせて軸回転させる行列
     XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
     XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
@@ -327,18 +327,6 @@ void Vehicle::Update()
             AngleLimit(handleRotate_, handleRotateMax_);
     }
 
-#ifdef _DEBUG
-    //左右
-    if (Input::IsKey(DIK_Z))
-    {
-        transform_.rotate_.y -= rotateSPD_;
-    }
-    if (Input::IsKey(DIK_X))
-    {
-        transform_.rotate_.y += rotateSPD_;
-    }
-#endif
-
     if (landingFlag_)
     {
         //全身後退
@@ -353,7 +341,6 @@ void Vehicle::Update()
         }
     }
 
-
     //滑る
     if (Input::IsKeyDown(DIK_SPACE))
         slideFlag_ = true;
@@ -366,6 +353,10 @@ void Vehicle::Update()
         //vecPos -= vecY;
         acceleration_ += vecZ;
 
+        XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "car1_rear");
+        boosterPos.y += Size.toCenter_;
+        ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+#if 0
         EmitterData data;
 
         //炎
@@ -378,7 +369,6 @@ void Vehicle::Update()
         data.number = 10;
         data.lifeTime = 30;
         data.gravity = 0.0f;
-        //data.dir = XMFLOAT3(0, 1, 0);
         XMStoreFloat3(&data.dir, -vecZ);
         data.dirErr = XMFLOAT3(50, 50, 50);
         data.speed = 0.1f;
@@ -401,9 +391,20 @@ void Vehicle::Update()
         data.gravity = 0.0;
         data.deltaColor = XMFLOAT4(-0.02, -0.02, -0.1, -0.01);
         pParticle_->Start(data);
+#endif
     }
 
 #ifdef _DEBUG
+    //左右
+    if (Input::IsKey(DIK_Z))
+    {
+        transform_.rotate_.y -= rotateSPD_;
+    }
+    if (Input::IsKey(DIK_X))
+    {
+        transform_.rotate_.y += rotateSPD_;
+    }
+
     if (Input::IsKey(DIK_E))
     {
         vecPos += vecX * 30;
@@ -460,18 +461,13 @@ void Vehicle::Update()
     //地上ならハンドルに合わせて回転
     if (landingFlag_)
     {
-        if (accLength > 0)
-        {
-            //前後に動いているなら
-            transform_.rotate_.y += handleRotate_ * accLength * turnAdjust_ * accZDirection_;
-            handleRotate_ *= (driveAdjust_ / (accLength + driveAdjust_));
-        }
+        //前後に動いているなら
+        transform_.rotate_.y += handleRotate_ * accLength * turnAdjust_ * accZDirection_;
+        handleRotate_ *= (driveAdjust_ / (accLength + driveAdjust_));
     }
     //ハンドルを戻す
     if (handleFlag_ == false)
-    {
         handleRotate_ *= handleAdjust_;
-    }
 
     //タイヤの角度と減速
     //正面やタイヤの方向へは減速しないが、タイヤの方向と平行のほうこうへは減速する
@@ -540,10 +536,11 @@ void Vehicle::Update()
 
     //位置ベクトル　＋　加速度ベクトル
     vecPos += acceleration_;
+
     //ベクトルを位置に入れる
     XMStoreFloat3(&transform_.position_, vecPos);
 
-    //接地、壁衝突　（移動してきた）
+    //接地、壁衝突
     VehicleCollide();
 
     //タイヤの値セット

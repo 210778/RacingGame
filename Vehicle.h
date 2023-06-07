@@ -6,7 +6,6 @@ class Tachometer;
 class Course;
 class Speedometer;
 class Text;
-//class CircuitUnion;
 class Particle;
 class Ground;
 class VehicleWheel;

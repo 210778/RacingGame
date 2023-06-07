@@ -1,11 +1,13 @@
 #include "Engine/SceneManager.h"
 #include "Engine/Image.h"
 #include "Engine/Model.h"
+#include "Engine/Input.h"
+
 #include "PlayScene.h"
 #include "Sample.h"
-
 #include "Vehicle.h"
 #include "Ground.h"
+#include "ParticlePackage.h"
 
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
@@ -27,10 +29,13 @@ void PlayScene::Initialize()
 	//pGround->SetChosenCircuit(0);
 	pGround->SetChosenCircuitCheckPoint(0);
 
+	//エフェクト用
+	ParticlePackage::Initialize();
+
 	//Vehicle *pVehicle = Instantiate<Vehicle>(this);
 	Instantiate<Vehicle>(this);
 }
-#include "Engine/Input.h"
+
 //更新
 void PlayScene::Update()
 {

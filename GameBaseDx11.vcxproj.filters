@@ -143,6 +143,9 @@
     <ClCompile Include="VehicleWheel.cpp">
       <Filter>04Play</Filter>
     </ClCompile>
+    <ClCompile Include="ParticlePackage.cpp">
+      <Filter>04Play\Others</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -249,6 +252,9 @@
     </ClInclude>
     <ClInclude Include="VehicleWheel.h">
       <Filter>04Play</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticlePackage.h">
+      <Filter>04Play\Others</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
