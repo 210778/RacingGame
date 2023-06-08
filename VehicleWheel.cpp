@@ -33,35 +33,6 @@ void VehicleWheel::Update()
     transform_.rotate_.x += rotateSpeedX_;
     //transform_.rotate_.y += rotateSpeedX_ * 3;
     //transform_.rotate_.z += rotateSpeedX_ * 3;
-#if 0
-    static Particle *pP = Instantiate<Particle>(this);
-    if (true)
-    {
-        EmitterData data;
-
-        data.textureFileName = "image\\PaticleAssets\\slash_W.png";
-        data.position = GetWorldPosition();
-        data.position.y -= Wheels.wheelHeight_;
-        data.positionErr = { 0.0f,0.0f,0.0f };
-        data.delay = 0;
-        data.number = 1;
-        data.lifeTime = 60 * 5;
-        data.gravity = 0.0f;
-        data.dir = { 0.0f,0.0f,0.0f };
-        data.dirErr = { 0.0f,0.0f,0.0f };
-        data.speed = 0.0f;
-        data.speedErr = 0.0f;
-        data.size = { 5.0f,5.0f };
-        data.sizeErr = { 5.0f,5.0f };
-        data.scale = { 1.0f,1.0f };
-        data.color = { 0.0f,0.0f,0.0f,1.0f };
-        data.deltaColor = { 0.0f,0.0f,0.0f,-0.01f };
-        pP->Start(data);
-        //data.position = Size.wheelRR_;
-        //data.position.y = transform_.position_.y;
-        //pP->Start(data);
-    }
-#endif
 }
 
 //•`‰æ

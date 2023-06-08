@@ -9,7 +9,7 @@ namespace ParticlePackage
 	EmitterData rainbowFire_;
 	EmitterData rainbowSpark_;
 
-	EmitterData airCloud_;
+	EmitterData smokeCloud_;
 
 	unsigned long long timeCount_;	//時間のカウント
     const int colorSpeed_ = 2;  //カウントのスピード
@@ -18,6 +18,7 @@ namespace ParticlePackage
     //セッター
 	void SetBooster();
     void SetRainbow();
+    void SetSmoke();
 };
 
 void ParticlePackage::Initialize()
@@ -26,6 +27,7 @@ void ParticlePackage::Initialize()
 
 	SetBooster();
     SetRainbow();
+    SetSmoke();
 }
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
@@ -56,9 +58,15 @@ void ParticlePackage::ActRainbowFire(Particle* pParticle, XMFLOAT3 position)
     pParticle->Start(rainbowSpark_);
 }
 
+void ParticlePackage::ActSmokeCloud(Particle* pParticle, XMFLOAT3 position)
+{
+    smokeCloud_.position = position;
+    pParticle->Start(smokeCloud_);
+}
+
 void ParticlePackage::SetBooster()
 {
-    //炎
+    //ジェット炎
     boosterFire_.textureFileName = "image\\PaticleAssets\\circle_W.png";
     boosterFire_.position = { 0.0f,0.0f,0.0f };
     boosterFire_.positionErr = { 0.2f, 0.2f, 0.2f };
@@ -75,7 +83,7 @@ void ParticlePackage::SetBooster()
     boosterFire_.scale = { 0.98f, 0.98f };
     boosterFire_.color = { 1.0f, 1.0f, 1.0f, 1.0f };
     boosterFire_.deltaColor = { 0.0f, -0.06f, -0.12f, -0.05f };
-    //火の粉
+    //ジェット火花
     boosterSpark_.textureFileName = "image\\PaticleAssets\\circle_W.png";
     boosterSpark_.position = { 0.0f,0.0f,0.0f };
     boosterSpark_.positionErr = { 0.5f, 0.5f, 0.5f };
@@ -95,7 +103,7 @@ void ParticlePackage::SetBooster()
 
 void ParticlePackage::SetRainbow()
 {
-    //炎
+    //虹炎
     rainbowFire_.textureFileName = "image\\PaticleAssets\\cloudB.png";
     rainbowFire_.position = { 0.0f,0.0f,0.0f };
     rainbowFire_.positionErr = { 0.2f,0.0f,0.2f };
@@ -113,7 +121,7 @@ void ParticlePackage::SetRainbow()
     rainbowFire_.color = { 0.0f,0.0f,0.0f,0.0f };
     rainbowFire_.deltaColor = { 0.0f,0.0f,0.0f,-0.01f };
 
-    //火花
+    //虹火花
     rainbowSpark_ = rainbowFire_;
     rainbowSpark_.number = 1;
     rainbowSpark_.positionErr = { 0.8f, 0.0f, 0.8f };
@@ -124,4 +132,25 @@ void ParticlePackage::SetRainbow()
     rainbowSpark_.lifeTime = 30.0f;
     rainbowSpark_.speed = 0.2f;
     rainbowSpark_.gravity = -0.002f;
+}
+
+void ParticlePackage::SetSmoke()
+{
+    //煙
+    smokeCloud_.textureFileName = "image\\PaticleAssets\\cloudA.png";
+    smokeCloud_.position = { 0.0f,0.0f,0.0f };
+    smokeCloud_.positionErr = { 0.0f,0.0f,0.0f };
+    smokeCloud_.delay = 0;
+    smokeCloud_.number = 1;
+    smokeCloud_.lifeTime = 40;
+    smokeCloud_.gravity = 0.0f;
+    smokeCloud_.dir = { 0.0f,0.0f,0.0f };
+    smokeCloud_.dirErr = { 50.0f,50.0f,50.0f };
+    smokeCloud_.speed = 0.0f;
+    smokeCloud_.speedErr = 0.0f;
+    smokeCloud_.size = { 0.5f,0.5f };
+    smokeCloud_.sizeErr = { 0.0f,0.0f };
+    smokeCloud_.scale = { 1.0f,1.0f };
+    smokeCloud_.color = { 1.0f,1.0f,1.0f,0.04 };
+    smokeCloud_.deltaColor = { 0.0f,0.0f,0.0f,-0.003f };
 }

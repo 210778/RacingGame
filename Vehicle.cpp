@@ -6,8 +6,6 @@
 #include "Engine/Text.h"
 #include "Engine/Image.h"
 #include "Engine/Debug.h"
-
-//#include "Engine/BillBoard.h"
 #include "Engine/Particle.h"
 
 #include "Vehicle.h"
@@ -28,7 +26,7 @@ using std::string;
 //コンストラクタ
 Vehicle::Vehicle(GameObject* parent)
     :GameObject(parent, "Vehicle"), hModel_(-1), hGroundModel_(-1)
-    , acceleration_({ 0, 0, 0, 0 }), vehicleSize_(2, 2, 4)
+    , acceleration_({ 0, 0, 0, 0 })
     , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10), wheelSpeed_(0), wheelDirection_({ 0, 0, 0, 0 })
@@ -41,7 +39,6 @@ Vehicle::Vehicle(GameObject* parent)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
-    , pMarker(nullptr), pTachometer(nullptr)
     , pTextSpeed_(nullptr), pTextTime_(nullptr), pTextLap_(nullptr), pSpeedometer(nullptr), pTextEngine_(nullptr)
     , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
     , hImage_(-1)
@@ -52,12 +49,9 @@ Vehicle::Vehicle(GameObject* parent)
     , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
+    , wheelParticleLength_(0.1f)
 {
     Size.wheelHeight_ = 0.1;
-
-    vehicleSizeHalf_ = XMFLOAT3(vehicleSize_.x * 0.5f, vehicleSize_.y * 0.5f, vehicleSize_.z * 0.5f);
-    //三平方の定理で斜めの値を求める
-    vehicleSizeOblique_ = sqrt((vehicleSizeHalf_.x * vehicleSizeHalf_.x) + (vehicleSizeHalf_.z * vehicleSizeHalf_.z));
 }
 
 //デストラクタ
@@ -97,9 +91,6 @@ A, Dキーで操作
 //初期化
 void Vehicle::Initialize()
 {
-    //hModel_ = Model::Load("model\\CarRed2.fbx");//"Assets\\model\\□□□.fbx"
-    //hModel_ = Model::Load("model\\Ground12.fbx");
-    //hModel_ = Model::Load("model\\Car1_blue.fbx");
     hModel_ = Model::Load("model\\Car1_blue.fbx");
     assert(hModel_ >= 0);
 
@@ -111,14 +102,6 @@ void Vehicle::Initialize()
 
     Viewer* pViewer = Instantiate<Viewer>(this);
     pViewer->SetPosition(transform_.position_);
-
-#ifdef _DEBUG
-    pMarker = Instantiate<Sample>(GetParent());
-    pMarker->SetPosition(transform_.position_);
-
-    pTachometer = Instantiate<Tachometer>(GetParent());
-    pTachometer->SetRotate(0, 90, 270);  
-#endif
 
     //サイズ計算
     SetVehicleSize(hModel_, "car1");
@@ -134,7 +117,6 @@ void Vehicle::Initialize()
 
     //エフェクトのポインタとそれのまとめ
     pParticle_ = Instantiate<Particle>(this);
-    //pParticlePackage_ = Instantiate<ParticlePackage>(this);
 
     //ステージオブジェクトを探す
     pGround_ = (Ground*)FindObject("Ground");
@@ -164,63 +146,22 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
-    if (Input::IsKey(DIK_C) || goalFlag_)
+    //ゴールしたら
+    if (goalFlag_)
     {
         ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
     }
 
-    if (0.01f < *XMVector3Length(acceleration_).m128_f32 && !slideFlag_)
+    //走行中のタイヤの軌跡
+    if (wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
     {
-        EmitterData data;
-
-        //ベクトルY軸で回転用行列
-        XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
-        //タイヤ位置のベクトル
-        XMVECTOR vecWRL = XMLoadFloat3(&Size.wheelRL_);
-        XMVECTOR vecWRR = XMLoadFloat3(&Size.wheelRR_);
-        //行列で回転
-        XMStoreFloat3(&data.position, XMVector3TransformCoord(vecWRL, matRotateY));
-        //現在の位置を入れる
-        data.position.x += transform_.position_.x;
-        data.position.y += transform_.position_.y;
-        data.position.z += transform_.position_.z;
-        //data.position.y -= Size.wheelHeight_;
-
-        data.textureFileName = "image\\PaticleAssets\\cloudA.png";
-        data.positionErr = {0.0f,0.0f,0.0f};
-        data.delay = 0;
-
-        data.number = 3;
-
-        data.lifeTime = 30;
-        data.gravity = 0.0f;
-        data.dir = {0.0f,0.0f,0.0f};
-        data.dirErr = { 0.0f,0.0f,0.0f };
-        data.speed = 0.0f;
-        data.speedErr = 0.2f;
-        data.size = { 0.5f,0.5f };
-        data.sizeErr = { 0.2f,0.2f };
-        data.scale = { 0.97f,0.97f };
-        data.color = { 1.0f,1.0f,1.0f,0.08};
-        data.deltaColor = { 0.0f,0.0f,0.0f,-0.005f };
-
-        pParticle_->Start(data);
-
-        //もう一つ
-        //行列で回転
-        XMStoreFloat3(&data.position, XMVector3TransformCoord(vecWRR, matRotateY));
-        //現在の位置を入れる
-        data.position.x += transform_.position_.x;
-        data.position.y += transform_.position_.y;
-        data.position.z += transform_.position_.z;
-        pParticle_->Start(data);
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "car1_wheelRR"));
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "car1_wheelRL"));
     }
 
     //クールタイム
     if (coolTime_ > 0)
-    {
         coolTime_--;
-    }
 
     //時間
     if (!(goalFlag_))
@@ -259,20 +200,11 @@ void Vehicle::Update()
     handleFlag_ = false;
     if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
     {
-        handleFlag_ = true;
-        //滑ってると曲がりやすい
-        if (slideFlag_)
-            handleRotate_ -= rotateSPD_ * slideHandleRotateAdd_;
-        else
-            handleRotate_ -= rotateSPD_;
+        HandleTurnLR(left);
     }
     if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT))
     {
-        handleFlag_ = true;
-        if (slideFlag_)
-            handleRotate_ += rotateSPD_ * slideHandleRotateAdd_;
-        else
-            handleRotate_ += rotateSPD_;
+        HandleTurnLR(right);
     }
 
     //ハンドル角度制限
@@ -308,7 +240,6 @@ void Vehicle::Update()
     //
     if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
     {
-        //vecPos -= vecY;
         acceleration_ += vecZ;
 
         XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "car1_rear");
@@ -539,7 +470,6 @@ void Vehicle::Draw()
     pTextLap_->Draw(30, 110, lapStr.c_str());
 
     //エンジン表示
-
     XMFLOAT3 floAcc;
     //ベクトルY軸で回転用行列
     XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
@@ -660,9 +590,9 @@ void Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
     data.start = transform_.position_;  //レイの発射位置
-    data.start.y -= Size.wheelHeight_;   //地面に張り付いてるとうまくいかない
-    data.dir = XMFLOAT3(0, -1, 0);  //レイの方向
-    Model::RayCast(hModel, &data);  //レイを発射
+    data.start.y -= Size.wheelHeight_;  //地面に張り付いてるとうまくいかない この値ぶんだけ地面から浮く　タイヤの高さにする
+    data.dir = XMFLOAT3(0, -1, 0);      //レイの方向
+    Model::RayCast(hModel, &data);      //レイを発射
         
     //レイが当たったら
     if (data.hit)
@@ -671,13 +601,6 @@ void Vehicle::Landing(int hModel,int type)
             landingType_ = Ground::turf;
         if (type == Ground::road)
             landingType_ = Ground::road;
-
-        //フロートにしとく
-        //XMFLOAT3 floAcc;
-        //XMStoreFloat3(&floAcc, acceleration_);
-        //XMVectorGetY(acceleration_);//こっちのほうが軽いか？
-
-        //XMVectorGetY(acceleration_)
 
         if (-data.dist > XMVectorGetY(acceleration_) - gravity_)
         {
@@ -692,39 +615,14 @@ void Vehicle::Landing(int hModel,int type)
             acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
             landingFlag_ = false;
         }
-#if 0
-        if (data.dist > abs(floAcc.y - gravity_))
-        //if (-data.dist < floAcc.y - gravity_)
-        {
-            //位置を下げる
-            //floAcc.y -= gravity_;
-            //acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
-            landingFlag_ = false;
-        }
-        else// if (data.dist < floAcc.y && data.dist > 0 && floAcc.y < 0)
-        {
-            //下方向の加速度が大きいなら　地面にワープ　落下速度を０
-            //transform_.position_.y -= data.dist;
-            //floAcc.y = 0;
-            //acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
-            landingFlag_ = true;
-        }
-        //戻す
-        //acceleration_ = XMLoadFloat3(&floAcc);
-#endif
     }
 
     //天井
-    //RayCastData ceiling;
-    //data.start = transform_.position_;   //レイの発射位置
     data.dir = XMFLOAT3(0, 1, 0);       //真上に発射
     Model::RayCast(hModel, &data);  //レイを発射
 
     if (data.hit)
     {   
-        //XMFLOAT3 floAcc;
-        //XMStoreFloat3(&floAcc, acceleration_);
-
         //ちょっと地面に埋まったとき
         if (data.dist < Size.toTop_)
         {
@@ -870,6 +768,18 @@ void Vehicle::SetVehicleSize(int hModel, std::string modelName)
     Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
     Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
     Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+}
+
+//ハンドルの操作
+void Vehicle::HandleTurnLR(int LR)
+{
+    handleFlag_ = true;
+
+    //滑ってると曲がりやすい
+    if (slideFlag_)
+        handleRotate_ += rotateSPD_ * slideHandleRotateAdd_ * LR;
+    else
+        handleRotate_ += rotateSPD_ * LR;
 }
 
 #if 0

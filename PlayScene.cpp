@@ -18,7 +18,7 @@ PlayScene::PlayScene(GameObject* parent)
 //‰Šú‰»
 void PlayScene::Initialize()
 {
-	hImage_ = Image::Load("image\\skyField.png");
+	hImage_ = Image::Load("image\\grass-pattern-set\\grass01.jpg");
 	assert(hImage_ >= 0);
 	
 	hModel_ = Model::Load("model\\SkyFieldSphere.fbx");

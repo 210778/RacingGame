@@ -51,9 +51,7 @@ void Speedometer::Draw()
 
     //òg
     meterTrans = transform_;
-
     Image::SetAlpha(hImage_[IMAGE_FRAME], 255);
-    //Image::SetRect(hImage_[IMAGE_FRAME], 2, 50, 3, 20);
 
     Image::SetTransform(hImage_[IMAGE_FRAME], meterTrans);
     Image::Draw(hImage_[IMAGE_FRAME]);
@@ -61,6 +59,7 @@ void Speedometer::Draw()
     //êj
     Transform needleTrans = transform_;
     needleTrans.rotate_.z = -speed_;
+    Image::SetAlpha(hImage_[IMAGE_NEEDLE], 255);
 
     Image::SetTransform(hImage_[IMAGE_NEEDLE], needleTrans);
     Image::Draw(hImage_[IMAGE_NEEDLE]);

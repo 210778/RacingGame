@@ -1,8 +1,6 @@
 #pragma once
 #include "Engine/GameObject.h"
 
-class Sample;
-class Tachometer;
 class Course;
 class Speedometer;
 class Text;
@@ -18,11 +16,6 @@ protected:
     int hGroundModel_;  //地面のモデル番号
 
     XMVECTOR acceleration_; //加速度
-
-    //モデルの大きさ
-    XMFLOAT3 vehicleSize_;
-    XMFLOAT3 vehicleSizeHalf_;
-    float vehicleSizeOblique_;//斜め
 
     //移動、回転の速さ
     float moveSPD_;
@@ -66,9 +59,7 @@ protected:
     //レイキャスト系
     float rayStartHeight;   //上にレイキャストするときの高さ
 
-    //テスト　デバッグ用
-    Sample* pMarker;
-    Tachometer* pTachometer;
+    //スピードメーター
     Speedometer* pSpeedometer;
 
     //文字シリーズ
@@ -105,6 +96,8 @@ protected:
 
     short accZDirection_; //前向きに進んでるか後ろ向きか。前：+1, 後：-1
 
+    float wheelParticleLength_;
+
     //車両の各サイズ
     struct
     {
@@ -132,7 +125,7 @@ public:
     Vehicle(GameObject* parent);
 
     //デストラクタ
-    ~Vehicle(); //未来を見越してヴぁーチャル化 ??
+    virtual ~Vehicle(); //未来を見越してヴァーチャル
 
     //初期化
     void Initialize() override;
@@ -192,5 +185,26 @@ public:
 
     //車両の操作、入力の受付
     void InputOperate();
+
+    enum
+    {
+        right =  1,
+        left  = -1
+    }handleLR_;
+
+    //ハンドルの操作
+    void HandleTurnLR(int LR);
+
+    template <class V>
+    V* VehicleInstantiate(GameObject* pParent)
+    {
+        V* pNewObject = new V(pParent);
+        if (pParent != nullptr)
+        {
+            pParent->PushBackChild(pNewObject);
+        }
+        pNewObject->Initialize();
+        return pNewObject;
+    }
 
 };
