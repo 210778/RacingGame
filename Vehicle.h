@@ -1,9 +1,6 @@
 #pragma once
 #include "Engine/GameObject.h"
 
-class Course;
-class Speedometer;
-class Text;
 class Particle;
 class Ground;
 class VehicleWheel;
@@ -12,8 +9,10 @@ class VehicleWheel;
 class Vehicle : public GameObject
 {
 protected:
+
     int hModel_;    //モデル番号
     int hGroundModel_;  //地面のモデル番号
+    int hWheelModel_;
 
     XMVECTOR acceleration_; //加速度
 
@@ -37,10 +36,6 @@ protected:
     float slideHandleRotateAdd_; //滑るときのハンドル速度の追加
     float slideHandleAngleLimitAdd_; //滑るときのハンドル角度の追加
 
-    float wheelSpeed_;  //タイヤの回転　地面につくと減少する代わりに加速度を加算　アクセルで増加か
-    XMVECTOR wheelDirection_; //使うかは不明
-
-    //float frictionForce_;   //摩擦
     //地上・空中
     bool landingFlag_;          //着地、空中
     float wheelFriction_;       //タイヤ摩擦
@@ -56,25 +51,12 @@ protected:
     float bulletPower_;
     int heatAdd_;   //クールタイムに追加
 
-    //レイキャスト系
-    float rayStartHeight;   //上にレイキャストするときの高さ
-
-    //スピードメーター
-    Speedometer* pSpeedometer;
-
-    //文字シリーズ
-    Text* pTextSpeed_;  //時速
-    Text* pTextTime_;   //経過時間
-    Text* pTextLap_;    //周回数
-    Text* pTextEngine_; //エンジン回転数
-
     unsigned long long time_; //経過タイム
 
     int pointCount_;    //チェックポイント経過数
     int lapCount_;      //周回数
     int lapMax_;        //必要周回数
     bool goalFlag_;     //trueならゴール状態
-    int hImage_;        
 
     float mass_;     //車の重量
     float engineRotate_;    //エンジン回転数
@@ -96,7 +78,13 @@ protected:
 
     short accZDirection_; //前向きに進んでるか後ろ向きか。前：+1, 後：-1
 
-    float wheelParticleLength_;
+    float wheelParticleLength_;//タイヤのエフェクトが発生するベクトルの長さ
+
+    XMFLOAT3 startPosition_;    //開始時の位置
+    XMFLOAT3 startRotate_;      //開始時の回転
+    std::string vehicleModelName_;  //車両モデルの名前
+    std::string wheelModelName_;    //タイヤモデルの名前
+
 
     //車両の各サイズ
     struct
@@ -124,8 +112,11 @@ public:
     //コンストラクタ
     Vehicle(GameObject* parent);
 
+    //継承用
+    Vehicle(GameObject* parent, const std::string& name);
+
     //デストラクタ
-    virtual ~Vehicle(); //未来を見越してヴァーチャル
+    virtual ~Vehicle(); //ヴァーチャル
 
     //初期化
     void Initialize() override;
@@ -181,7 +172,7 @@ public:
     //タイヤの高さセッター
     void SetWheelHeight(float height) { Size.wheelHeight_ = height; }
     //モデルの大きさセッター
-    void SetVehicleSize(int hModel,std::string modelName);
+    void SetVehicleSize(int hModel);
 
     //車両の操作、入力の受付
     void InputOperate();
@@ -195,10 +186,21 @@ public:
     //ハンドルの操作
     void HandleTurnLR(int LR);
 
+    //プレイヤー限定で実行する関数  
+        //UIの初期化
+        virtual void PlayerUI_Initialize();
+        //UIの表示
+        virtual void PlayerUI_Draw();
+        //UIの情報更新
+        virtual void PlayerUI_Update();
+        //カメラの用意
+        virtual void PlayerCamera__Initialize();
+
+#if 0
     template <class V>
-    V* VehicleInstantiate(GameObject* pParent)
+    V* VehicleInstantiate(GameObject* pParent, std::string modelName)
     {
-        V* pNewObject = new V(pParent);
+        V* pNewObject = new V(pParent, std::string modelName);
         if (pParent != nullptr)
         {
             pParent->PushBackChild(pNewObject);
@@ -206,5 +208,5 @@ public:
         pNewObject->Initialize();
         return pNewObject;
     }
-
+#endif
 };

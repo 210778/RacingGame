@@ -8,32 +8,51 @@
 #include "Vehicle.h"
 #include "Ground.h"
 #include "ParticlePackage.h"
+#include "VehiclePlayer.h"
+#include "VehicleOpponent.h"
 
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
+	,pGround_(nullptr)
 {
 }
 
 //初期化
 void PlayScene::Initialize()
 {
-	hImage_ = Image::Load("image\\grass-pattern-set\\grass01.jpg");
+	hImage_ = Image::Load("image\\skyField.png");
 	assert(hImage_ >= 0);
 	
 	hModel_ = Model::Load("model\\SkyFieldSphere.fbx");
 	//hModel_ = Model::Load("model\\CarRed2.fbx");
 	assert(hModel_ >= 0);
 
-	Ground *pGround = Instantiate<Ground>(this);
-	//pGround->SetChosenCircuit(0);
-	pGround->SetChosenCircuitCheckPoint(0);
+	pGround_ = Instantiate<Ground>(this);
+	pGround_->SetChosenCircuitCheckPoint(0);
 
 	//エフェクト用
 	ParticlePackage::Initialize();
 
-	//Vehicle *pVehicle = Instantiate<Vehicle>(this);
-	Instantiate<Vehicle>(this);
+	float distans = -180;
+
+	VehiclePlayer *pVehiclePlayer 
+		= VehicleInstantiate<VehiclePlayer>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
+	pVehiclePlayer->SetPosition({ 0.0f,0.0f,distans });
+	pVehiclePlayer->SetRotate({ 0.0f,270.0f,0.0f });
+
+	for (int i = 1; i <= 5; i++)
+	{
+		VehicleOpponent* pVehicleOpponent
+			= VehicleInstantiate<VehicleOpponent>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
+		pVehicleOpponent->SetPosition({ 0.0f,0.0f,distans - 10 * i});
+		pVehicleOpponent->SetRotate({ 0.0f,270.0f,0.0f });
+	}
+
+	//Instantiate<VehiclePlayer>(this);
+	//vehicleVector_.push_back(VehicleInstantiate<VehiclePlayer>(this,""));
+	//vehicleVector_.push_back(Instantiate<VehicleOpponent>(this));
+	//vehicleVector_[0]->SetPosition({ 0.0f,0.0f,-180.0f });
 }
 
 //更新
@@ -65,4 +84,17 @@ void PlayScene::Draw()
 //開放
 void PlayScene::Release()
 {
+}
+
+//車両クラスのための初期化
+template <class V>
+V* PlayScene::VehicleInstantiate(GameObject* pParent, std::string vehicleName, std::string wheelName)
+{
+	V* pNewObject = new V(pParent, vehicleName, wheelName);
+	if (pParent != nullptr)
+	{
+		pParent->PushBackChild(pNewObject);
+	}
+	pNewObject->Initialize();
+	return pNewObject;
 }

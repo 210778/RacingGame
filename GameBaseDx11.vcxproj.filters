@@ -33,6 +33,9 @@
     <Filter Include="04Play\Others">
       <UniqueIdentifier>{2782c352-a845-469b-9217-0e5f9ee42d36}</UniqueIdentifier>
     </Filter>
+    <Filter Include="04Play\Vehicle">
+      <UniqueIdentifier>{8e827e7d-32a4-49b7-9270-265413370ccb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\BoxCollider.cpp">
@@ -131,9 +134,6 @@
     <ClCompile Include="Ground.cpp">
       <Filter>04Play</Filter>
     </ClCompile>
-    <ClCompile Include="Vehicle.cpp">
-      <Filter>04Play</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Debug.cpp">
       <Filter>01Engine\ResourceManager</Filter>
     </ClCompile>
@@ -145,6 +145,15 @@
     </ClCompile>
     <ClCompile Include="ParticlePackage.cpp">
       <Filter>04Play\Others</Filter>
+    </ClCompile>
+    <ClCompile Include="Vehicle.cpp">
+      <Filter>04Play\Vehicle</Filter>
+    </ClCompile>
+    <ClCompile Include="VehiclePlayer.cpp">
+      <Filter>04Play\Vehicle</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleOpponent.cpp">
+      <Filter>04Play\Vehicle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -244,9 +253,6 @@
     <ClInclude Include="Ground.h">
       <Filter>04Play</Filter>
     </ClInclude>
-    <ClInclude Include="Vehicle.h">
-      <Filter>04Play</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Debug.h">
       <Filter>01Engine\ResourceManager</Filter>
     </ClInclude>
@@ -255,6 +261,15 @@
     </ClInclude>
     <ClInclude Include="ParticlePackage.h">
       <Filter>04Play\Others</Filter>
+    </ClInclude>
+    <ClInclude Include="Vehicle.h">
+      <Filter>04Play\Vehicle</Filter>
+    </ClInclude>
+    <ClInclude Include="VehiclePlayer.h">
+      <Filter>04Play\Vehicle</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleOpponent.h">
+      <Filter>04Play\Vehicle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

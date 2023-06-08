@@ -160,6 +160,8 @@
     <ClCompile Include="TestScene.cpp" />
     <ClCompile Include="Tracker.cpp" />
     <ClCompile Include="Vehicle.cpp" />
+    <ClCompile Include="VehicleOpponent.cpp" />
+    <ClCompile Include="VehiclePlayer.cpp" />
     <ClCompile Include="VehicleWheel.cpp" />
     <ClCompile Include="Viewer.cpp" />
   </ItemGroup>
@@ -198,6 +200,8 @@
     <ClInclude Include="TestScene.h" />
     <ClInclude Include="Tracker.h" />
     <ClInclude Include="Vehicle.h" />
+    <ClInclude Include="VehicleOpponent.h" />
+    <ClInclude Include="VehiclePlayer.h" />
     <ClInclude Include="VehicleWheel.h" />
     <ClInclude Include="Viewer.h" />
   </ItemGroup>

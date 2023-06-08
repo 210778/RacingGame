@@ -25,23 +25,20 @@ using std::string;
 
 //コンストラクタ
 Vehicle::Vehicle(GameObject* parent)
-    :GameObject(parent, "Vehicle"), hModel_(-1), hGroundModel_(-1)
+    :GameObject(parent, "Vehicle"), hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
     , acceleration_({ 0, 0, 0, 0 })
     , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
-    , gravity_(0.03f), speedLimit_(10), wheelSpeed_(0), wheelDirection_({ 0, 0, 0, 0 })
+    , gravity_(0.03f), speedLimit_(10)
     , handleRotate_(0), slideHandleAngleLimitAdd_(1.1f)
     , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.0f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
-    , rayStartHeight(1.0f)
     , turnAdjust_(0.05f), driveAdjust_(20), handleAdjust_(0.95f)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
-    , pTextSpeed_(nullptr), pTextTime_(nullptr), pTextLap_(nullptr), pSpeedometer(nullptr), pTextEngine_(nullptr)
     , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
-    , hImage_(-1)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0, 0.0, 0.0, 0.0 })
     , landingType_(Ground::road)
@@ -50,6 +47,38 @@ Vehicle::Vehicle(GameObject* parent)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f)
+    , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
+    , vehicleModelName_(""), wheelModelName_("")
+{
+    Size.wheelHeight_ = 0.1;
+}
+
+//継承用
+Vehicle::Vehicle(GameObject* parent, const std::string& name)
+    :GameObject(parent, name), hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
+    , acceleration_({ 0, 0, 0, 0 })
+    , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
+    , coolTime_(0), bulletPower_(0.5), heatAdd_(10)
+    , gravity_(0.03f), speedLimit_(10)
+    , handleRotate_(0), slideHandleAngleLimitAdd_(1.1f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.0f)
+    , slideFlag_(false)
+    , sideFriction_(0.2f), sideSlideFriction_(0.1f)
+    , turnAdjust_(0.05f), driveAdjust_(20), handleAdjust_(0.95f)
+    , slideHandleRotateAdd_(2.0f)
+    , handleFlag_(false), handleRotateMax_(/*70*/60)
+    , landingFlag_(true)
+    , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
+    , mass_(1.0f), engineRotate_(0.0f)
+    , frontVec_({ 0.0, 0.0, 0.0, 0.0 })
+    , landingType_(Ground::road)
+    , pParticle_(nullptr)
+    , pGround_(nullptr)
+    , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
+    , accZDirection_(1)
+    , wheelParticleLength_(0.1f)
+    , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
+    , vehicleModelName_(""), wheelModelName_("")
 {
     Size.wheelHeight_ = 0.1;
 }
@@ -91,25 +120,24 @@ A, Dキーで操作
 //初期化
 void Vehicle::Initialize()
 {
-    hModel_ = Model::Load("model\\Car1_blue.fbx");
+    hModel_ = Model::Load(vehicleModelName_);
     assert(hModel_ >= 0);
-
-    hImage_ = Image::Load("image\\clearImage.png");
-    assert(hImage_ >= 0);
+    //ModelInitialize("");
 
     transform_.position_ = XMFLOAT3(0.0f, 0.0f, -200.0f);
     transform_.rotate_   = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-    Viewer* pViewer = Instantiate<Viewer>(this);
-    pViewer->SetPosition(transform_.position_);
+    PlayerCamera__Initialize();
+    //Viewer* pViewer = Instantiate<Viewer>(this);
+    //pViewer->SetPosition(transform_.position_);
 
     //サイズ計算
-    SetVehicleSize(hModel_, "car1");
+    SetVehicleSize(hModel_);
 
     //タイヤ
-    int wheelModel = Model::Load("model\\wheel1.fbx");
-    assert(wheelModel >= 0);
-    MakeWheels(wheelModel);
+    hWheelModel_ = Model::Load(wheelModelName_);
+    assert(hWheelModel_ >= 0);
+    MakeWheels(hWheelModel_);
 
     //当たり判定
     SphereCollider* collision = new SphereCollider(XMFLOAT3(0, Size.toCenter_, 0), Size.frontToRear_ * 0.5f);
@@ -126,6 +154,9 @@ void Vehicle::Initialize()
 
     lapMax_ = pGround_->GetCircuitUnion()->maxLap_;
 
+    //UI初期化
+    PlayerUI_Initialize();
+#if 0
     //文字
     pTextSpeed_ = new Text;
     pTextSpeed_->Initialize();
@@ -141,6 +172,7 @@ void Vehicle::Initialize()
 
     //スピードメーター
     pSpeedometer = Instantiate<Speedometer>(GetParent());
+#endif
 }
 
 //更新
@@ -155,8 +187,8 @@ void Vehicle::Update()
     //走行中のタイヤの軌跡
     if (wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
     {
-        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "car1_wheelRR"));
-        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "car1_wheelRL"));
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
     //クールタイム
@@ -382,8 +414,11 @@ void Vehicle::Update()
         *XMVector3LengthEst(acceleration_).m128_f32 * wheelSpeedAdd_ * accZDirection_, handleRotate_);
 
     //スピードメーター
+    PlayerUI_Update();
+#if 0
     XMVECTOR speedVec = acceleration_ * XMVECTOR{ 1,0,1,1 };
     pSpeedometer->SetSpeed(*XMVector3LengthEst(speedVec).m128_f32 * 120);
+#endif
 
 #ifdef _DEBUG
     //テスト 正面にマーカーを設置
@@ -443,44 +478,8 @@ void Vehicle::Draw()
     Model::SetTransform(hModel_, transform_);
     Model::Draw(hModel_);
 
-    //時速表示
-    //平面のベクトルの長さ
-    XMVECTOR speedVec = acceleration_ * XMVECTOR{ 1,0,1,1 };
-    string speedStr = std::to_string((float)(*XMVector3LengthEst(speedVec).m128_f32 * 120));
-    speedStr += "km/h";
-    pTextSpeed_->Draw(30, 30, speedStr.c_str());
-
-    //経過時間表示
-    int min = 0;
-    int sec = 0;
-    int mSec = 0;
-    int rest = 0;
-    min = time_ / 3600;
-    rest = time_ % 3600;
-    sec = rest / 60;
-    rest = rest % 60;
-    mSec = rest;
-    string timeStr = std::to_string(min) + ":" + std::to_string(sec) + ":" + std::to_string(mSec);
-    pTextTime_->Draw(30, 70, timeStr.c_str());
-
-    //周回数表示
-    string lapStr = std::to_string(lapCount_);
-    lapStr += "/";
-    lapStr += std::to_string(lapMax_);
-    pTextLap_->Draw(30, 110, lapStr.c_str());
-
-    //エンジン表示
-    XMFLOAT3 floAcc;
-    //ベクトルY軸で回転用行列
-    XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
-    XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
-    //string engineStr = std::to_string(engineRotate_);
-    //string engineStr = std::to_string((int)transform_.rotate_.y);
-    string engineStr = std::to_string(floAcc.x) + "/" + std::to_string(floAcc.y) + "/" + std::to_string(floAcc.z);
-
-    //engineStr += "C'";//engineStr += "rpm";
-    pTextEngine_->Draw(280, 30, engineStr.c_str());
-
+    PlayerUI_Draw();
+#if 0
     if (goalFlag_)
     {
         Transform imageTrans;
@@ -491,16 +490,12 @@ void Vehicle::Draw()
         Image::SetTransform(hImage_, imageTrans);
         Image::Draw(hImage_);
     }
-
+#endif
 }
 
 //開放
 void Vehicle::Release()
 {
-    pTextSpeed_->Release();
-    pTextTime_->Release();
-    pTextLap_->Release();
-    pTextEngine_->Release();
 }
 /*
 XMFLOAT3 → XMVECTOR
@@ -731,57 +726,6 @@ void Vehicle::CollideWall(int hModel, int type)
             }
         }
     }
-
-}
-
-void Vehicle::MakeWheels(int hModel)
-{
-    //タイヤ
-    pWheels_ = Instantiate<VehicleWheel>(this);
-    pWheels_->SetVehicleWheel(this, hModel, Size.wheelFL_, Size.wheelFR_, Size.wheelRL_, Size.wheelRR_);
-}
-
-void Vehicle::SetVehicleSize(int hModel, std::string modelName)
-{
-    //ボーン
-    XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel, modelName + "_bottom");
-    XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel, modelName + "_top");
-    XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel, modelName + "_left");
-    XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel, modelName + "_right");
-    XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel, modelName + "_rear");
-    XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel, modelName + "_front");
-    Size.wheelFR_ = Model::GetBonePosition(hModel, modelName + "_wheelFR");
-    Size.wheelFL_ = Model::GetBonePosition(hModel, modelName + "_wheelFL");
-    Size.wheelRR_ = Model::GetBonePosition(hModel, modelName + "_wheelRR");
-    Size.wheelRL_ = Model::GetBonePosition(hModel, modelName + "_wheelRL");
-    //車両の大きさ計算
-
-    Size.toRight_   = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
-    Size.toLeft_    = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32;
-    Size.toFront_   = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32;
-    Size.toRear_    = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
-    Size.toTop_     = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
-    Size.toCenter_  = Size.toTop_ * 0.5f;
-    Size.rightToLeft_   = Size.toRight_ + Size.toLeft_;
-    Size.frontToRear_   = Size.toFront_ + Size.toRear_;
-    Size.toFrontRight_  = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
-    Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
-    Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
-    Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
-}
-
-//ハンドルの操作
-void Vehicle::HandleTurnLR(int LR)
-{
-    handleFlag_ = true;
-
-    //滑ってると曲がりやすい
-    if (slideFlag_)
-        handleRotate_ += rotateSPD_ * slideHandleRotateAdd_ * LR;
-    else
-        handleRotate_ += rotateSPD_ * LR;
-}
-
 #if 0
 void Vehicle::CollideWall(int hModel, int type)
 {
@@ -883,299 +827,70 @@ void Vehicle::CollideWall(int hModel, int type)
     }
 }
 #endif
-
-#if 0
-//初期化
-void TestScene::Initialize()
-{
-    Camera::SetPosition(XMFLOAT3(0, 10, -20));
-    Camera::SetTarget(XMFLOAT3(0, 0, 0));
-    hModel_ = Model::Load("model\\GroundGrid.fbx");
-
-    pParticle__ = Instantiate<Particle>(this);
-
-    //炎
-    {
-        EmitterData data;
-
-        //炎
-        data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-        data.position = XMFLOAT3(-4, 1.5, -4);
-        data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-        data.delay = 5;
-        data.number = 1;
-        data.lifeTime = 60;
-        data.gravity = -0.002f;
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(0, 0, 0);
-        data.speed = 0.01f;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(1.5, 1.5);
-        data.sizeErr = XMFLOAT2(0.4, 0.4);
-        data.scale = XMFLOAT2(1.01, 1.01);
-        data.color = XMFLOAT4(1, 1, 0, 1);
-        data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.02);
-        pParticle__->Start(data);
-
-        //火の粉
-        data.number = 3;
-        data.positionErr = XMFLOAT3(0.8, 0, 0.8);
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(10, 10, 10);
-        data.size = XMFLOAT2(0.2, 0.2);
-        data.scale = XMFLOAT2(0.95, 0.95);
-        data.lifeTime = 120;
-        data.speed = 0.1f;
-        data.gravity = 0;
-        pParticle__->Start(data);
-    }
-
-
-    //煙
-    {
-        EmitterData data;
-
-        data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-        data.position = XMFLOAT3(4, 1.5, 4);
-        data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-        data.delay = 5;
-        data.number = 1;
-        data.lifeTime = 150;
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(0, 0, 0);
-        data.speed = 0.1f;
-        data.accel = 0.98;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(2, 2);
-        data.sizeErr = XMFLOAT2(0.4, 0.4);
-        data.scale = XMFLOAT2(1.01, 1.01);
-        data.color = XMFLOAT4(1, 1, 1, 0.2);
-        data.deltaColor = XMFLOAT4(0, 0, 0, -0.002);
-        pParticle__->Start(data);
-    }
-
-    //水
-    {
-        EmitterData data;
-
-        data.textureFileName = "image\\PaticleAssets\\Water.png";
-        data.position = XMFLOAT3(4, 3.3, -4.5);
-        data.delay = 1;
-        data.number = 3;
-        data.lifeTime = 50;
-        data.dir = XMFLOAT3(0, 0, -1);
-        data.dirErr = XMFLOAT3(0, 0, 0);
-        data.gravity = 0.005;
-        data.speed = 0.1f;
-        data.accel = 0.98;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(1, 1);
-        data.sizeErr = XMFLOAT2(0.8, 0.4);
-        data.scale = XMFLOAT2(1.02, 1.02);
-        data.color = XMFLOAT4(1, 1, 1, 0.1);
-        pParticle__->Start(data);
-
-        //水滴
-        data.textureFileName = "image\\PaticleAssets\\bubleB.png";
-        data.position = XMFLOAT3(4, 3.3, -4.5);
-        data.positionErr = XMFLOAT3(0.5, 0, 0);
-        data.delay = 1;
-        data.number = 3;
-        data.lifeTime = 50;
-        data.dir = XMFLOAT3(0, 0, -1);
-        data.dirErr = XMFLOAT3(0, 20, 0);
-        data.gravity = 0.005;
-        data.speed = 0.1f;
-        data.accel = 0.98;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(0.3, 0.3);
-        data.sizeErr = XMFLOAT2(0, 0);
-        data.scale = XMFLOAT2(0.98, 0.98);
-        data.color = XMFLOAT4(1, 1, 1, 1);
-        pParticle__->Start(data);
-    }
-
-    //1
-    {
-        EmitterData data;
-        //wind
-        data.textureFileName = "image\\PaticleAssets\\circle_B.png";
-        data.position = XMFLOAT3(-8, 1, 5);
-        data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-        data.delay = 5;
-        data.number = 1;
-        data.lifeTime = 60;
-        data.gravity = -0.002f;
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(0, 0, 0);
-        data.speed = 0.01f;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(2.5, 2.5);
-        data.sizeErr = XMFLOAT2(0.4, 0.4);
-        data.scale = XMFLOAT2(1.01, 1.01);
-        data.color = XMFLOAT4(0.5, 0.8, 0.0, 1);
-        data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-        pParticle__->Start(data);
-
-        data.number = 3;
-        data.positionErr = XMFLOAT3(0.8, 0, 0.8);
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(10, 10, 10);
-        data.size = XMFLOAT2(0.2, 0.2);
-        data.scale = XMFLOAT2(0.95, 0.95);
-        data.lifeTime = 120;
-        data.speed = 0.1f;
-        data.gravity = 0;
-        pParticle__->Start(data);
-    }
-
 }
 
-//更新
-void TestScene::Update()
+void Vehicle::MakeWheels(int hModel)
 {
-    if (Input::IsKeyDown(DIK_SPACE))
-    {
-        EmitterData data;
-        data.textureFileName = "image\\PaticleAssets\\CloudC.png";
-        data.position = XMFLOAT3(0, 0.05, 0);
-        data.delay = 0;
-        data.number = 80;
-        data.lifeTime = 20;
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(90, 90, 90);
-        data.speed = 0.1f;
-        data.speedErr = 0.8;
-        data.size = XMFLOAT2(1, 1);
-        data.sizeErr = XMFLOAT2(0.4, 0.4);
-        data.scale = XMFLOAT2(1.05, 1.05);
-        data.color = XMFLOAT4(1, 1, 0.1, 1);
-        data.deltaColor = XMFLOAT4(0, -1.0 / 20, 0, -1.0 / 20);
-        pParticle__->Start(data);
-
-
-        data.delay = 0;
-        data.number = 80;
-        data.lifeTime = 100;
-        data.positionErr = XMFLOAT3(0.5, 0, 0.5);
-        data.dir = XMFLOAT3(0, 1, 0);
-        data.dirErr = XMFLOAT3(90, 90, 90);
-        data.speed = 0.25f;
-        data.speedErr = 1;
-        data.accel = 0.93;
-        data.size = XMFLOAT2(0.1, 0.1);
-        data.sizeErr = XMFLOAT2(0.4, 0.4);
-        data.scale = XMFLOAT2(0.99, 0.99);
-        data.color = XMFLOAT4(1, 1, 0.1, 1);
-        data.deltaColor = XMFLOAT4(0, 0, 0, 0);
-        data.gravity = 0.003f;
-        pParticle__->Start(data);
-    }
-
-    if (Input::IsKey(DIK_V))
-    {
-        EmitterData data;
-
-        data.textureFileName = "image\\PaticleAssets\\flashB_R.png";
-        data.position = XMFLOAT3(0, 1, 0);
-        data.positionErr = XMFLOAT3(0.15, 0.15, 0);
-        data.delay = 0;
-        data.number = 1;
-        data.lifeTime = 2;
-        data.gravity = 0;
-        data.dir = XMFLOAT3(1, 0, 1);
-        data.dirErr = XMFLOAT3(0, 0, 0);
-        data.speed = 0.05f;
-        data.speedErr = 0.01f;
-        data.size = XMFLOAT2(1.25, 1.25);
-        data.sizeErr = XMFLOAT2(0.5, 0.5);
-        data.scale = XMFLOAT2(1.01, 1.01);
-        data.color = XMFLOAT4(1, 1, 0, 1);
-        data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-        pParticle__->Start(data);
-
-        data.textureFileName = "image\\PaticleAssets\\flashB_R.png";
-        data.position = XMFLOAT3(0, 1, 0);
-        data.positionErr = XMFLOAT3(0.1, 0.1, 0);
-        data.delay = 0;
-        data.number = 1;
-        data.lifeTime = 30;
-        data.dir = XMFLOAT3(1, 0, 1);
-        data.dirErr = XMFLOAT3(0, 20, 0);
-        data.gravity = 0.002;
-        data.speed = 0.2f;
-        data.accel = 0.98;
-        data.speedErr = 0.0;
-        data.size = XMFLOAT2(0.5, 0.5);
-        data.sizeErr = XMFLOAT2(0.1, 0.1);
-        data.scale = XMFLOAT2(0.9, 0.9);
-        data.color = XMFLOAT4(1, 1, 0, 1);
-        data.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-        pParticle_->Start(data);
-    }
-
-    if (Input::IsKey(DIK_B))
-    {
-        EmitterData data;
-
-        //炎
-        data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-        data.position = XMFLOAT3(-5, 1.0, -4);
-        data.positionErr = XMFLOAT3(0.15, 0.15, 0.15);
-        data.delay = 0;
-        data.number = 4;
-        data.lifeTime = 15;
-        data.gravity = 0.001f;
-        data.dir = XMFLOAT3(-1, 0, 0);
-        data.dirErr = XMFLOAT3(0.75, 0.75, 0.75);
-        data.speed = 0.4f;
-        data.speedErr = 0.01;
-        data.size = XMFLOAT2(0.5, 0.5);
-        data.sizeErr = XMFLOAT2(0.2, 0.2);
-        data.scale = XMFLOAT2(1.15, 1.15);
-        data.color = XMFLOAT4(1, 0.2, 0, 1);
-        data.deltaColor = XMFLOAT4(0.0, 0.02, 0.01, -0.075);
-        pParticle_->Start(data);
-    }
+    //タイヤ
+    pWheels_ = Instantiate<VehicleWheel>(this);
+    pWheels_->SetVehicleWheel(this, hModel, Size.wheelFL_, Size.wheelFR_, Size.wheelRL_, Size.wheelRR_);
 }
-#endif
-//power oh-ra
-#if 0
-if (!Input::IsKey(DIK_C))
+
+void Vehicle::SetVehicleSize(int hModel)
 {
-    EmitterData data;
-
-    //炎
-    data.textureFileName = "image\\PaticleAssets\\CloudA.png";
-    data.position = transform_.position_;
-    data.positionErr = XMFLOAT3(0.1, 0, 0.1);
-    //data.delay = 1;
-    data.number = 1;
-    data.lifeTime = 10;
-    data.gravity = -0.002f;
-    data.dir = XMFLOAT3(0, 1, 0);
-    data.dirErr = XMFLOAT3(0, 0, 0);
-    data.speed = 0.75f;
-    data.speedErr = 0.2;
-    data.size = XMFLOAT2(5, 5);
-    data.sizeErr = XMFLOAT2(0.4, 0.4);
-    data.scale = XMFLOAT2(0.9, 0.9);
-    data.color = XMFLOAT4(1, 1, 0, 1);
-    data.deltaColor = XMFLOAT4(0, 0, 0.1, -0.2);
-    pParticle->Start(data);
-
-    //火の粉
-    data.number = 1;
-    data.positionErr = XMFLOAT3(0.8, 0, 0.8);
-    data.dir = XMFLOAT3(0, 1, 0);
-    data.dirErr = XMFLOAT3(10, 10, 10);
-    data.size = XMFLOAT2(0.5, 0.5);
-    data.scale = XMFLOAT2(0.98, 0.98);
-    data.lifeTime = 30;
-    data.speed = 0.2f;
-    data.gravity = 0.005;
-    data.color = XMFLOAT4(1, 1, 0, 1);
-    data.deltaColor = XMFLOAT4(0, 0, 0.02, -0.015);
-    pParticle->Start(data);
+    //ボーン
+    XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel, "bottom");
+    XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel, "top");
+    XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel, "left");
+    XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel, "right");
+    XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel, "rear");
+    XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel, "front");
+    Size.wheelFR_ = Model::GetBonePosition(hModel, "wheelFR");
+    Size.wheelFL_ = Model::GetBonePosition(hModel, "wheelFL");
+    Size.wheelRR_ = Model::GetBonePosition(hModel, "wheelRR");
+    Size.wheelRL_ = Model::GetBonePosition(hModel, "wheelRL");
+    //車両の大きさ計算
+    Size.toRight_   = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
+    Size.toLeft_    = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32;
+    Size.toFront_   = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32;
+    Size.toRear_    = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
+    Size.toTop_     = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
+    Size.toCenter_  = Size.toTop_ * 0.5f;
+    Size.rightToLeft_   = Size.toRight_ + Size.toLeft_;
+    Size.frontToRear_   = Size.toFront_ + Size.toRear_;
+    Size.toFrontRight_  = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
+    Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
+    Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
+    Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
 }
-#endif
+
+//ハンドルの操作
+void Vehicle::HandleTurnLR(int LR)
+{
+    handleFlag_ = true;
+
+    //滑ってると曲がりやすい
+    if (slideFlag_)
+        handleRotate_ += rotateSPD_ * slideHandleRotateAdd_ * LR;
+    else
+        handleRotate_ += rotateSPD_ * LR;
+}
+
+//UIの関数群　プレイヤー限定で作用する
+//UIの初期化
+void Vehicle::PlayerUI_Initialize()
+{
+}
+//UIの表示
+void Vehicle::PlayerUI_Draw()
+{
+}
+//UIの情報更新
+void Vehicle::PlayerUI_Update()
+{
+}
+
+//カメラの用意
+void Vehicle::PlayerCamera__Initialize()
+{
+}

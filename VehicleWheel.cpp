@@ -20,19 +20,12 @@ VehicleWheel::~VehicleWheel()
 //‰Šú‰»
 void VehicleWheel::Initialize()
 {
-    if (hModel_ >= 0)
-    {
-        hModel_ = Model::Load("model\\wheel1.fbx");
-        assert(hModel_ >= 0);
-    }
 }
 
 //XV
 void VehicleWheel::Update()
 {
     transform_.rotate_.x += rotateSpeedX_;
-    //transform_.rotate_.y += rotateSpeedX_ * 3;
-    //transform_.rotate_.z += rotateSpeedX_ * 3;
 }
 
 //•`‰æ
@@ -106,7 +99,7 @@ void VehicleWheel::SetVehicleWheel(Vehicle* pVehicle, int hModel
 
 void VehicleWheel::calculateHeight()
 {
-    XMFLOAT3 wheelBottom = Model::GetBonePosition(hModel_, "wheel1_bottom");
+    XMFLOAT3 wheelBottom = Model::GetBonePosition(hModel_, "bottom");
     Wheels.wheelHeight_ = *XMVector3Length(XMLoadFloat3(&wheelBottom)).m128_f32;
     //ˆê‰žŠg‘å‚É‘Î‰ž
     pVehicle_->SetWheelHeight(Wheels.wheelHeight_ * transform_.scale_.y);
