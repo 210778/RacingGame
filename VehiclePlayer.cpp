@@ -1,8 +1,17 @@
 #include "VehiclePlayer.h"
 
 #include "Engine/Text.h"
+#include "Engine/Model.h"
+#include "Engine/Input.h"
+#include "Engine/SphereCollider.h"
+#include "Engine/BoxCollider.h"
+
 #include "Speedometer.h"
 #include "Viewer.h"
+#include "Ground.h"
+#include "Bullet.h"
+#include "Speedometer.h"
+#include "ParticlePackage.h"
 
 using std::string;
 using std::to_string;
@@ -30,6 +39,15 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
 //デストラクタ
 VehiclePlayer::~VehiclePlayer()
 {
+}
+
+//開放
+void VehiclePlayer::Release()
+{
+    pTextSpeed_->Release();
+    pTextTime_->Release();
+    pTextLap_->Release();
+    pTextAcceleration_->Release();
 }
 
 //UIの初期化
@@ -108,19 +126,26 @@ void VehiclePlayer::PlayerUI_Update()
 }
 
 //カメラの用意
-void VehiclePlayer::PlayerCamera__Initialize()
+void VehiclePlayer::PlayerCamera_Initialize()
 {
     Viewer* pViewer = Instantiate<Viewer>(this);
     pViewer->SetPosition(transform_.position_);
 }
 
-//開放
-void VehiclePlayer::Release()
+void VehiclePlayer::PlayerParticle()
 {
-    pTextSpeed_->Release();
-    pTextTime_->Release();
-    pTextLap_->Release();
-    pTextAcceleration_->Release();
+    //ゴールしたら
+    if (goalFlag_)
+    {
+        ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
+    }
+
+    //走行中のタイヤの軌跡
+    if (wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
+    {
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
+    }
 }
 #if 0
 

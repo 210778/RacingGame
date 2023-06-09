@@ -71,7 +71,7 @@ void ParticlePackage::SetBooster()
     boosterFire_.position = { 0.0f,0.0f,0.0f };
     boosterFire_.positionErr = { 0.2f, 0.2f, 0.2f };
     boosterFire_.delay = 0;
-    boosterFire_.number = 10;
+    boosterFire_.number = 5;
     boosterFire_.lifeTime = 30.0f;
     boosterFire_.gravity = 0.0f;
     boosterFire_.dir = { 0.0f,0.0f,0.0f };
@@ -88,7 +88,7 @@ void ParticlePackage::SetBooster()
     boosterSpark_.position = { 0.0f,0.0f,0.0f };
     boosterSpark_.positionErr = { 0.5f, 0.5f, 0.5f };
     boosterSpark_.delay = 0;
-    boosterSpark_.number = 2;
+    boosterSpark_.number = 1;
     boosterSpark_.lifeTime = 40.0f;
     boosterSpark_.gravity = 0.0f;
     boosterSpark_.dir = { 0.0f,0.0f,0.0f };

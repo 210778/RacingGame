@@ -17,17 +17,6 @@ class VehiclePlayer : public Vehicle
     Text* pTextAcceleration_; //加速度表示 デバッグ用
     float km_hAdd;  //時速表示加算
 
-
-    //プレイヤー限定で実行する関数  
-    //UIの初期化
-    void PlayerUI_Initialize() override;
-    //UIの表示
-    void PlayerUI_Draw() override;
-    //UIの情報更新
-    void PlayerUI_Update() override;
-    //カメラの用意
-    void PlayerCamera__Initialize() override;
-
 public:
     //コンストラクタ
     VehiclePlayer(GameObject* parent);
@@ -40,6 +29,18 @@ public:
 
     //開放
     void Release() override;
+
+    //プレイヤー限定で実行する関数  
+    //UIの初期化
+    void PlayerUI_Initialize() override;
+    //UIの表示
+    void PlayerUI_Draw() override;
+    //UIの情報更新
+    void PlayerUI_Update() override;
+    //カメラの用意
+    void PlayerCamera_Initialize() override;
+    //エフェクト表示
+    void PlayerParticle() override;
 
 #if 0
     //初期化

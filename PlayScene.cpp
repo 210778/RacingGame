@@ -41,18 +41,13 @@ void PlayScene::Initialize()
 	pVehiclePlayer->SetPosition({ 0.0f,0.0f,distans });
 	pVehiclePlayer->SetRotate({ 0.0f,270.0f,0.0f });
 
-	for (int i = 1; i <= 5; i++)
+	for (int i = 1; i <= 0; i++)
 	{
 		VehicleOpponent* pVehicleOpponent
 			= VehicleInstantiate<VehicleOpponent>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
 		pVehicleOpponent->SetPosition({ 0.0f,0.0f,distans - 10 * i});
 		pVehicleOpponent->SetRotate({ 0.0f,270.0f,0.0f });
 	}
-
-	//Instantiate<VehiclePlayer>(this);
-	//vehicleVector_.push_back(VehicleInstantiate<VehiclePlayer>(this,""));
-	//vehicleVector_.push_back(Instantiate<VehicleOpponent>(this));
-	//vehicleVector_[0]->SetPosition({ 0.0f,0.0f,-180.0f });
 }
 
 //çXêV

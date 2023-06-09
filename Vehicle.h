@@ -194,19 +194,7 @@ public:
         //UIの情報更新
         virtual void PlayerUI_Update();
         //カメラの用意
-        virtual void PlayerCamera__Initialize();
-
-#if 0
-    template <class V>
-    V* VehicleInstantiate(GameObject* pParent, std::string modelName)
-    {
-        V* pNewObject = new V(pParent, std::string modelName);
-        if (pParent != nullptr)
-        {
-            pParent->PushBackChild(pNewObject);
-        }
-        pNewObject->Initialize();
-        return pNewObject;
-    }
-#endif
+        virtual void PlayerCamera_Initialize();
+        //エフェクトを表示(重くなるのでNPCはやらない)
+        virtual void PlayerParticle();
 };
