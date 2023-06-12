@@ -118,6 +118,19 @@ XMFLOAT3 Fbx::GetBonePosition(std::string boneName)
 	return position;
 }
 
+bool Fbx::GetBonePosition(XMFLOAT3* position, std::string boneName)
+{
+	*position = {0.0f,0.0f,0.0f};
+
+	for (int i = 0; i < parts_.size(); i++)
+	{
+		if (parts_[i]->GetBonePosition(boneName, position))
+			return true;
+	}
+
+	return false;
+}
+
 void Fbx::Draw(Transform& transform, int frame)
 {
 	Direct3D::SetBlendMode(Direct3D::BLEND_DEFAULT);

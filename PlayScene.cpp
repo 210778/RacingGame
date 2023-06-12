@@ -29,7 +29,7 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuitCheckPoint(0);
+	pGround_->SetChosenCircuit(0);
 
 	//エフェクト用
 	ParticlePackage::Initialize();
@@ -41,7 +41,7 @@ void PlayScene::Initialize()
 	pVehiclePlayer->SetPosition({ 0.0f,0.0f,distans });
 	pVehiclePlayer->SetRotate({ 0.0f,270.0f,0.0f });
 
-	for (int i = 1; i <= 0; i++)
+	for (int i = 1; i <= 1; i++)
 	{
 		VehicleOpponent* pVehicleOpponent
 			= VehicleInstantiate<VehicleOpponent>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
@@ -53,9 +53,6 @@ void PlayScene::Initialize()
 //更新
 void PlayScene::Update()
 {
-	if (Input::IsKeyUp(DIK_G))
-	{
-	}
 }
 
 //描画

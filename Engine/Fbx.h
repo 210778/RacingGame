@@ -55,10 +55,6 @@ class Fbx
 	//アニメーションの最初と最後のフレーム
 	int _startFrame, _endFrame;
 
-
-
-
-
 	//ノードの中身を調べる
 	//引数：pNode		調べるノード
 	//引数：pPartsList	パーツのリスト
@@ -87,6 +83,14 @@ public:
 	//引数：boneName	取得したいボーンの位置
 	//戻値：ボーンの位置
 	XMFLOAT3 GetBonePosition(std::string boneName);
+
+	/// <summary>
+	/// 任意のボーンの位置を取得改
+	/// </summary>
+	/// <param name="position">取得したいボーンの位置が入れられるポインタ</param>
+	/// <param name="boneName">取得したいボーンの名前</param>
+	/// <returns>見つかったか、見つからなかったか</returns>
+	bool GetBonePosition(XMFLOAT3* position, std::string boneName);
 
 	//レイキャスト（レイを飛ばして当たり判定）
 	//引数：data	必要なものをまとめたデータ

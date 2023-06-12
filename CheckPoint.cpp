@@ -5,7 +5,7 @@
 //コンストラクタ
 CheckPoint::CheckPoint(GameObject* parent)
     :GameObject(parent, "CheckPoint")
-
+    ,number_(-1)
 {
 }
 
@@ -40,8 +40,12 @@ void CheckPoint::OnCollision(GameObject* pTarget)
 }
 
 //当たり判定を作る
-void CheckPoint::MakeSphereCollider(XMFLOAT3 position, float size)
+void CheckPoint::MakeSphereCollider(const XMFLOAT3* position, float size, int number)
 {
-    SphereCollider* collision = new SphereCollider(position, size);
+    //constなので
+    XMFLOAT3 posi = *position;
+    posi.x *= -1;  //mayaとのずれの解消
+    SphereCollider* collision = new SphereCollider(posi, size);
     AddCollider(collision);
+    number_ = number;
 }

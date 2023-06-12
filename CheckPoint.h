@@ -32,7 +32,7 @@ public:
     void SetNumber(int value) { number_ = value; };
     int GetNumber() { return number_; };
 
-    //“–‚½‚è”»’è‚ğì‚é
-    void MakeSphereCollider(XMFLOAT3 position, float size);
+    //“–‚½‚è”»’è‚ğì‚é ”Ô†‚àƒZƒbƒg
+    void MakeSphereCollider(const XMFLOAT3* position, float size,int number);
 
 };

@@ -85,6 +85,7 @@ protected:
     std::string vehicleModelName_;  //車両モデルの名前
     std::string wheelModelName_;    //タイヤモデルの名前
 
+    Transform startTransform_;  //スタート状態の位置と回転
 
     //車両の各サイズ
     struct
@@ -155,7 +156,8 @@ public:
     /// </summary>
     /// <param name="hModel">モデル番号</param>
     /// <param name="type">モデルの種類</param>
-    void Landing(int hModel , int type);
+    /// <returns>なにかに当たった場合true</returns>
+    bool Landing(int hModel , int type);
 
     /// <summary>
     /// 壁との接触
@@ -185,6 +187,11 @@ public:
 
     //ハンドルの操作
     void HandleTurnLR(int LR);
+
+    //スタートの位置
+    void SetStartTransform(Transform value) { startTransform_ = value; }
+
+
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

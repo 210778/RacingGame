@@ -37,16 +37,19 @@ GameObject::~GameObject()
 }
 
 //かつては各オブジェクトで必ず作る関数だった
-void Initialize()
+void GameObject::Initialize()
 {
 }
-void Update()
+
+void GameObject::Update()
 {
 }
-void Draw()
+
+void GameObject::Draw()
 {
 }
-void Release()
+
+void GameObject::Release()
 {
 }
 

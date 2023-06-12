@@ -17,7 +17,11 @@ class Ground : public GameObject
         int type_;  //種類
 
         //引数なし
-        CircuitParts() {};
+        CircuitParts()
+        {
+            model_ = -1;
+            type_ = 0;
+        }
         //コンストラクタ（モデル番号、種類）
         CircuitParts(int m, int t)
         {
@@ -29,10 +33,11 @@ class Ground : public GameObject
     //コース１つ分
     struct CircuitUnion
     {
-        std::vector<CircuitParts> parts_;    //コースのパーツたち
-        std::string  name_;     //コースの名前
-        int maxLap_;            //必要周回数
-        std::vector<XMFLOAT3> checkPointPosition_;
+        std::vector<CircuitParts> parts_;   //コースのパーツたち
+        std::string  name_;                 //コースの名前
+        int maxLap_;                        //必要周回数
+        std::vector<CheckPoint*> checkPoint_;   //チェックポイントのポインタ
+        Transform startTransform_;              //スタート地点のトランスフォーム(位置と回転)
 
         //引数なしコンストラクタ
         CircuitUnion(){
@@ -53,12 +58,12 @@ class Ground : public GameObject
 
     std::vector<CircuitUnion> circuits_;    //コースすべてのまとめ
 
-
     //選択されたコース
     int chosenCircuit_;
 
-    //チェックポイントの当たり判定
-    std::vector<CheckPoint*> checkPoint_;
+    float defaultCheckpointSize_;   //チェックポイントの大きさ
+
+    float defaultStartRotate_;      //スタート時の回転
     
 public:
 
@@ -66,6 +71,8 @@ public:
     {
         road = 0,   //通常道路 
         turf,       //芝生
+        abyss,      //奈落
+        other,      //どれでもない
         circuitMax  //終点
     };
 
@@ -97,6 +104,7 @@ public:
 
     //コース選択
     void SetChosenCircuit(int i) { chosenCircuit_ = i; }
+    //コース選択
     int  GetChosenCircuit() { return chosenCircuit_; }
     //コースを選択して、当たり判定をセット。すでにある当たり判定は消去(引数：コース番号)
     void SetChosenCircuitCheckPoint(int value);
@@ -109,4 +117,10 @@ public:
         else
             return nullptr;
     }
+
+    //チェックポイントを探してセット
+    void MakeCheckPoint();
+
+    //スタート地点を探してセット
+    void MakeStartPoint();
 };

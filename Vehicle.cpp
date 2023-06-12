@@ -38,7 +38,7 @@ Vehicle::Vehicle(GameObject* parent)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
-    , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
+    , time_(0), goalFlag_(false), pointCount_(0), lapCount_(0), lapMax_(1)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -49,6 +49,7 @@ Vehicle::Vehicle(GameObject* parent)
     , wheelParticleLength_(0.1f)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
+    , startTransform_()
 {
     Size.wheelHeight_ = 0.1f;
 }
@@ -68,7 +69,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(60.0f)
     , landingFlag_(true)
-    , time_(0), goalFlag_(false), pointCount_(-1), lapCount_(0), lapMax_(1)
+    , time_(0), goalFlag_(false), pointCount_(0), lapCount_(0), lapMax_(1)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -79,6 +80,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , wheelParticleLength_(0.1f)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
+    , startTransform_()
 {
     Size.wheelHeight_ = 0.1f;
 }
@@ -128,8 +130,6 @@ void Vehicle::Initialize()
     transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
 
     PlayerCamera_Initialize();
-    //Viewer* pViewer = Instantiate<Viewer>(this);
-    //pViewer->SetPosition(transform_.position_);
 
     //サイズ計算
     SetVehicleSize(hModel_);
@@ -269,10 +269,8 @@ void Vehicle::Update()
     //上昇
     if (Input::IsKeyDown(DIK_M))
     {
-        if (landingFlag_ || true)
-        {
-            acceleration_ += {0.0f,jumpForce_,0.0f,0.0f};
-        }
+        acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
+        landingFlag_ = false;
     }
 
     if (Input::IsKey(DIK_V))
@@ -285,21 +283,28 @@ void Vehicle::Update()
     }
 #endif
 
-    //ベクトル加速度 摩擦抵抗　加速度も変える
-    if (slideFlag_)
+    //地面の種類によって
+    if (landingFlag_)
     {
-        //acceleration_ *= {airFriction_, 1, airFriction_, 1};
-        acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
-    }
-    else
-    {
-        acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
-    }
-
-    //芝生状態
-    if (landingType_ == Ground::turf)
-    {
-        acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
+        if (landingType_ == Ground::road)
+        {
+            acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
+        }
+        else if (landingType_ == Ground::turf)
+        {
+            acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
+        }
+        else if (landingType_ == Ground::abyss)
+        {
+            //奈落に落下
+            acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
+            transform_.position_ = startTransform_.position_;
+            transform_.rotate_ = startTransform_.rotate_;
+        }
+        else
+        {
+            acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
+        }
     }
 
     //正面の行列を用意
@@ -375,10 +380,6 @@ void Vehicle::Update()
 
     //スピードメーター
     PlayerUI_Update();
-#if 0
-    XMVECTOR speedVec = acceleration_ * XMVECTOR{ 1,0,1,1 };
-    pSpeedometer->SetSpeed(*XMVector3LengthEst(speedVec).m128_f32 * 120);
-#endif
 
 #ifdef _DEBUG
     //テスト 正面にマーカーを設置
@@ -420,15 +421,15 @@ void Vehicle::OnCollision(GameObject* pTarget)
     {
         CheckPoint* pCP = (CheckPoint*)pTarget;
 
-        if (pCP->GetNumber() - 1 == pointCount_)
+        if (pCP->GetNumber() == pointCount_)
         {
             pointCount_++;
         }
-        if (pCP->GetNumber() == 1 && pointCount_ == pGround_->GetCircuitUnion()->checkPointPosition_.size())
+        if (pCP->GetNumber() == 0 && pointCount_ == pGround_->GetCircuitUnion()->checkPoint_.size())
         {
             pointCount_ = 0;
             lapCount_++;
-        }   
+        }
     }
 }
 
@@ -439,18 +440,6 @@ void Vehicle::Draw()
     Model::Draw(hModel_);
 
     PlayerUI_Draw();
-#if 0
-    if (goalFlag_)
-    {
-        Transform imageTrans;
-        imageTrans.position_ = XMFLOAT3(1.0f, 1.0f, 0.0f);
-        imageTrans.scale_ = XMFLOAT3(0.5f, 0.5f, 0.5f);
-
-        Image::SetRect(hImage_, 0, 0, 1024, 128);
-        Image::SetTransform(hImage_, imageTrans);
-        Image::Draw(hImage_);
-    }
-#endif
 }
 
 //開放
@@ -529,35 +518,42 @@ void Vehicle::AngleLimit(float& angle, const float limit)
 //地面、壁、敵との衝突をまとめる？？
 void Vehicle::VehicleCollide()
 {
+    bool isLanding = false;
+
     //種類の分だけ
     for (int i = 0; i < pGround_->GetCircuitUnion()->parts_.size(); i++)
     {
         //地面
-        Landing(pGround_->GetCircuitUnion()->parts_[i].model_, pGround_->GetCircuitUnion()->parts_[i].type_);
+        if (!isLanding)
+        {
+            isLanding = Landing(pGround_->GetCircuitUnion()->parts_[i].model_
+                , pGround_->GetCircuitUnion()->parts_[i].type_);
+        }
         
         //壁
-        CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_, pGround_->GetCircuitUnion()->parts_[i].type_);
+        CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
+            , pGround_->GetCircuitUnion()->parts_[i].type_);
     }
 }
 
 //接地 
-void Vehicle::Landing(int hModel,int type)
+bool Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
     data.start = transform_.position_;  //レイの発射位置
     data.start.y -= Size.wheelHeight_;  //地面に張り付いてるとうまくいかない この値ぶんだけ地面から浮く　タイヤの高さにする
     data.dir = { 0.0f, -1.0f, 0.0f };      //レイの方向
     Model::RayCast(hModel, &data);      //レイを発射
-        
+    
+    bool isHit = false;
+
     //レイが当たったら
     if (data.hit)
     {
-        if (type == Ground::turf)
-            landingType_ = Ground::turf;
-        if (type == Ground::road)
-            landingType_ = Ground::road;
+        landingType_ = type;
+        isHit = true;
 
-        if (-data.dist > XMVectorGetY(acceleration_) - gravity_)
+        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.wheelHeight_)
         {
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             transform_.position_.y -= data.dist;
@@ -572,27 +568,30 @@ void Vehicle::Landing(int hModel,int type)
         }
     }
 
-    //天井
+    //天井 ほんとは分割するべきだろうけど天井に当たることは珍しいし重そうだからここに置く
+    data.start.y = transform_.position_.y;  //戻す
     data.dir = { 0.0f, 1.0f, 0.0f };       //真上に発射
     Model::RayCast(hModel, &data);  //レイを発射
 
     if (data.hit)
     {   
         //ちょっと地面に埋まったとき
-        if (data.dist < Size.toTop_)
+        if (data.dist < Size.toTop_ + Size.wheelHeight_)
         {
             //その分位置を上げる
-            transform_.position_.y += data.dist;
+            transform_.position_.y += data.dist + Size.wheelHeight_;
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
         //天井にぶつかったとき
-        else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_)
+        else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_ + Size.wheelHeight_)
         {
             //その分位置を上げる
             transform_.position_.y += data.dist - Size.toTop_;
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
     }
+
+    return isHit;
 }
 
 void Vehicle::CollideWall(int hModel, int type)
