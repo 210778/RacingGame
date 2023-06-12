@@ -29,12 +29,10 @@ public:
     void OnCollision(GameObject* pTarget) override;
 
     //セッターとゲッター
-    void SetNumber(int value)
-    {
-        number_ = value;
-    }
-    int GetNumber()
-    {
-        return number_;
-    }
+    void SetNumber(int value) { number_ = value; };
+    int GetNumber() { return number_; };
+
+    //当たり判定を作る
+    void MakeSphereCollider(XMFLOAT3 position, float size);
+
 };

@@ -36,6 +36,20 @@ GameObject::~GameObject()
 	colliderList_.clear();
 }
 
+//かつては各オブジェクトで必ず作る関数だった
+void Initialize()
+{
+}
+void Update()
+{
+}
+void Draw()
+{
+}
+void Release()
+{
+}
+
 // 削除するかどうか
 bool GameObject::IsDead()
 {

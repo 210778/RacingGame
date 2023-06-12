@@ -17,8 +17,6 @@ CheckPoint::~CheckPoint()
 //‰Šú‰»
 void CheckPoint::Initialize()
 {
-    SphereCollider* collision = new SphereCollider(XMFLOAT3(0, 0, 0), 40.0f);
-    AddCollider(collision);
 }
 
 //XV
@@ -39,5 +37,11 @@ void CheckPoint::Release()
 //‰½‚©‚É“–‚½‚Á‚½
 void CheckPoint::OnCollision(GameObject* pTarget)
 {
-    //“–‚½‚Á‚½‚Æ‚«‚Ìˆ—
+}
+
+//“–‚½‚è”»’è‚ğì‚é
+void CheckPoint::MakeSphereCollider(XMFLOAT3 position, float size)
+{
+    SphereCollider* collision = new SphereCollider(position, size);
+    AddCollider(collision);
 }

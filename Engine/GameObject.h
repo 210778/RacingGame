@@ -41,10 +41,11 @@ public:
 	virtual ~GameObject();
 
 	//各オブジェクトで必ず作る関数
-	virtual void Initialize(void) = 0;
-	virtual void Update(void) = 0;
-	virtual void Draw() = 0;
-	virtual void Release(void) = 0;
+	//ではない
+	virtual void Initialize();
+	virtual void Update();
+	virtual void Draw();
+	virtual void Release();
 
 	//自分の該当関数を読んだ後、子供の関数も呼ぶ
 	void UpdateSub();
