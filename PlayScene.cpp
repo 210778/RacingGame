@@ -36,17 +36,29 @@ void PlayScene::Initialize()
 
 	float distans = -180;
 
-	VehiclePlayer *pVehiclePlayer 
-		= VehicleInstantiate<VehiclePlayer>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
-	pVehiclePlayer->SetPosition({ 0.0f,0.0f,distans });
-	pVehiclePlayer->SetRotate({ 0.0f,270.0f,0.0f });
 
-	for (int i = 1; i <= 1; i++)
+
+	int population = 3;
+	int playerNumber = 1;
+
+	for (int i = 0; i < population; i++)
 	{
-		VehicleOpponent* pVehicleOpponent
-			= VehicleInstantiate<VehicleOpponent>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
-		pVehicleOpponent->SetPosition({ 0.0f,0.0f,distans - 10 * i});
-		pVehicleOpponent->SetRotate({ 0.0f,270.0f,0.0f });
+		if (i == playerNumber)
+		{
+			VehiclePlayer* pVehiclePlayer
+				= VehicleInstantiate<VehiclePlayer>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
+			pVehiclePlayer->SetPosition(pGround_->GetCircuitUnion()->startTransform_[i].position_);
+			pVehiclePlayer->SetRotate(pGround_->GetCircuitUnion()->startTransform_[i].rotate_);
+			pVehiclePlayer->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[i]);
+		}
+		else
+		{
+			VehicleOpponent* pVehicleOpponent
+				= VehicleInstantiate<VehicleOpponent>(this, "model\\Car01_red.fbx", "model\\wheel01.fbx");
+			pVehicleOpponent->SetPosition(pGround_->GetCircuitUnion()->startTransform_[i].position_);
+			pVehicleOpponent->SetRotate(pGround_->GetCircuitUnion()->startTransform_[i].rotate_);
+			pVehicleOpponent->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[i]);
+		}
 	}
 }
 

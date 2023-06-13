@@ -37,7 +37,7 @@ class Ground : public GameObject
         std::string  name_;                 //コースの名前
         int maxLap_;                        //必要周回数
         std::vector<CheckPoint*> checkPoint_;   //チェックポイントのポインタ
-        Transform startTransform_;              //スタート地点のトランスフォーム(位置と回転)
+        std::vector<Transform> startTransform_;              //スタート地点のトランスフォーム(位置と回転)
 
         //引数なしコンストラクタ
         CircuitUnion(){
@@ -123,4 +123,8 @@ public:
 
     //スタート地点を探してセット
     void MakeStartPoint();
+
+    //次のチェックポイントの位置を返す
+    //ただしサイズがオーバーしてれば０番の位置を返す
+    XMFLOAT3 NextCheckPointPosition(int number);
 };

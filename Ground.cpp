@@ -102,8 +102,7 @@ void Ground::MakeCheckPoint()
             for (int part = 0; part < circuits_[circuit].parts_.size(); part++)
             {
                 //モデル名
-                string center = "checkpoint";
-                if (last < 10) center += "0";
+                string center = "checkpoint_";
                 center += to_string(last);
                 string out = center;
                 center += "_center";
@@ -173,21 +172,20 @@ void Ground::MakeStartPoint()
     for (int circuit = 0; circuit < circuits_.size(); circuit++)
     {
         int last = 0;   //最新のスタート位置の番号
+        defaultStartRotate_ = 0;    //リセットしておく
 
         //見つかり続ける限り終わらない
         while (true)
         {
             bool isSuccess = false;//見つかったか
-            defaultStartRotate_ = 0;    //リセットしておく
 
             //パーツ
             for (int part = 0; part < circuits_[circuit].parts_.size(); part++)
             {
                 //モデル名
-                string start = "startposition_";
-                if (last < 10) start += "0";
+                string start = "startpoint_";
                 start += to_string(last);
-                string dir = start += "direction";
+                string dir = start + "_direction";
 
                 XMFLOAT3 startPos;
                 //中心を探す
@@ -209,22 +207,22 @@ void Ground::MakeStartPoint()
                             dirSuccess = true;
                             last++;
 
-                            XMVECTOR startVec = XMLoadFloat3(&startPos);
-                            XMVECTOR dirVec = XMLoadFloat3(&dirPos);
-
-                            //もしやこうか？
-                            startVec = XMVector3Normalize(dirVec - startVec);
-                            dirVec = { 0.0f,0.0f,1.0f,0.0f };
+                            XMVECTOR startVec = XMVector3Normalize(XMLoadFloat3(&startPos) - XMLoadFloat3(&dirPos));
+                            XMVECTOR dirVec = { 0.0f,0.0f,1.0f,0.0f };
 
                             //ベクトルから角度を計算
-                            defaultStartRotate_ = cos(*XMVector3Dot(startVec, dirVec).m128_f32
-                                / (*XMVector3Length(startVec).m128_f32 * *XMVector3Length(dirVec).m128_f32));
+                            defaultStartRotate_ = XMConvertToDegrees(acos(*XMVector3Dot(startVec, dirVec).m128_f32
+                                / (*XMVector3Length(startVec).m128_f32 * *XMVector3Length(dirVec).m128_f32)));
+
+                            //外積を使わないと0 ~ 180　になってしまう
+                            defaultStartRotate_ += 180;
 
                             //更新
                             Transform startTrans;
                             startTrans.position_ = startPos;
+                            startTrans.position_.x *= -1;   //ずれ解消
                             startTrans.rotate_.y = defaultStartRotate_;
-                            circuits_[circuit].startTransform_ = startTrans;
+                            circuits_[circuit].startTransform_.push_back(startTrans);
                             break;
                         }
                     }
@@ -237,8 +235,9 @@ void Ground::MakeStartPoint()
                         //更新
                         Transform startTrans;
                         startTrans.position_ = startPos;
+                        startTrans.position_.x *= -1;   //ずれ解消
                         startTrans.rotate_.y = defaultStartRotate_;
-                        circuits_[circuit].startTransform_ = startTrans;
+                        circuits_[circuit].startTransform_.push_back(startTrans);
                     }
                 }
             }
