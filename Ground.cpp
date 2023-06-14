@@ -67,21 +67,6 @@ void Ground::Release()
 {
 }
 
-void Ground::SetChosenCircuitCheckPoint(int value)
-{
-#if 0
-    SetChosenCircuit(value);
-    //ループ
-    for (int i = 0; i < circuits_[chosenCircuit_].checkPointPosition_.size(); i++)
-    {
-        CheckPoint* pCheckPoint = Instantiate<CheckPoint>(this);
-        pCheckPoint->SetPosition(circuits_[chosenCircuit_].checkPointPosition_[i]);
-        pCheckPoint->SetNumber(i);
-        //checkPoint_.push_back(pCheckPoint);
-    }
-#endif
-}
-
 //チェックポイントを探してセット
 void Ground::MakeCheckPoint()
 {
@@ -208,14 +193,18 @@ void Ground::MakeStartPoint()
                             last++;
 
                             XMVECTOR startVec = XMVector3Normalize(XMLoadFloat3(&startPos) - XMLoadFloat3(&dirPos));
-                            XMVECTOR dirVec = { 0.0f,0.0f,1.0f,0.0f };
+                            //正規化しなくていいはず
+                            XMVECTOR vecZ = { 0.0f,0.0f,1.0f,0.0f };
+                            XMVECTOR vecUp = { 0.0f,1.0f,0.0f,0.0f };
 
                             //ベクトルから角度を計算
-                            defaultStartRotate_ = XMConvertToDegrees(acos(*XMVector3Dot(startVec, dirVec).m128_f32
-                                / (*XMVector3Length(startVec).m128_f32 * *XMVector3Length(dirVec).m128_f32)));
+                            defaultStartRotate_ = XMConvertToDegrees(acos(*XMVector3Dot(startVec, vecZ).m128_f32
+                                / (*XMVector3Length(startVec).m128_f32 * *XMVector3Length(vecZ).m128_f32)));
 
                             //外積を使わないと0 ~ 180　になってしまう
-                            defaultStartRotate_ += 180;
+                            XMVECTOR cro = XMVector3Cross(startVec, vecZ - startVec);
+                            if (*XMVector3Dot(cro, vecUp).m128_f32 > 0.0f)
+                                defaultStartRotate_ += 180;
 
                             //更新
                             Transform startTrans;

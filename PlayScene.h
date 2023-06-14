@@ -13,7 +13,15 @@ class PlayScene : public GameObject
 
 	Ground* pGround_;
 
-	std::vector<Vehicle*> vehicleVector_;
+	std::vector<Vehicle*> vehicles_;
+
+	enum
+	{
+		lap = 0,
+		check = 1,
+		distance = 2,
+		pointer = 3
+	}rank_;
 
 public:
 	//コンストラクタ
@@ -36,4 +44,7 @@ public:
 	template <class V>
 	V* VehicleInstantiate(GameObject* pParent, std::string vehicleName, std::string wheelName);
 
+	//車両を初期化して必要な値をセット
+	template <class V>
+	void SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::string wheelName,int number);
 };

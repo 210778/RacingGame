@@ -12,6 +12,7 @@
 #include "Bullet.h"
 #include "Speedometer.h"
 #include "ParticlePackage.h"
+#include "Sample.h"
 
 using std::string;
 using std::to_string;
@@ -20,8 +21,9 @@ using std::to_string;
 VehiclePlayer::VehiclePlayer(GameObject* parent)
     :Vehicle(parent, "VehiclePlayer")
     , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
-    , pTextLap_(nullptr), pTextAcceleration_(nullptr)
+    , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
     , km_hAdd(120.0f)
+    , pSample_(nullptr)
 {
 }
 
@@ -29,8 +31,9 @@ VehiclePlayer::VehiclePlayer(GameObject* parent)
 VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::string wheelName)
     :Vehicle(parent, "VehiclePlayer")
     , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
-    , pTextLap_(nullptr), pTextAcceleration_(nullptr)
+    , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
     , km_hAdd(120.0f)
+    , pSample_(nullptr)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -47,6 +50,7 @@ void VehiclePlayer::Release()
     pTextSpeed_->Release();
     pTextTime_->Release();
     pTextLap_->Release();
+    pTextRanking_->Release();
     pTextAcceleration_->Release();
 }
 
@@ -54,7 +58,7 @@ void VehiclePlayer::Release()
 void VehiclePlayer::PlayerUI_Initialize()
 {
     //スピードメーター
-    pSpeedometer_ = Instantiate<Speedometer>(GetParent());
+    pSpeedometer_ = Instantiate<Speedometer>(this);
 
     //文字
     pTextSpeed_ = new Text;
@@ -66,8 +70,13 @@ void VehiclePlayer::PlayerUI_Initialize()
     pTextLap_ = new Text;
     pTextLap_->Initialize();
 
+    pTextRanking_ = new Text;
+    pTextRanking_->Initialize();
+
     pTextAcceleration_ = new Text;
     pTextAcceleration_->Initialize();
+
+    pSample_ = Instantiate<Sample>(GetParent());
 }
 
 //UIの表示
@@ -107,7 +116,15 @@ void VehiclePlayer::PlayerUI_Draw()
     lapStr += to_string(lapCount_) + "/" + to_string(lapMax_);
     pTextLap_->Draw(30, 110, lapStr.c_str());
 
+    //順位表示
+    string rank = to_string(ranking_) + "/" + to_string(population_);
+    pTextLap_->Draw(30, 150, rank.c_str());
+
 #ifdef _DEBUG
+    //
+    pSample_->SetPosition(*GetNextCheckPosition());
+    pSample_->SetScale({ 20.0,20.0,20.0 });
+
     //加速度表示
     XMFLOAT3 floAcc;
     //ベクトルY軸で回転用行列

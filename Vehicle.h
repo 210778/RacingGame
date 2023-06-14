@@ -16,18 +16,23 @@ protected:
 
     XMVECTOR acceleration_; //加速度
 
+    //それぞれの軸のベクトル
+
+
     //移動、回転の速さ
     float moveSPD_;
     float rotateSPD_;
     float jumpForce_;
 
-    float gravity_;  //重力
+    //float gravity_;    static constexpr float gravity_;  //重力 定数
+    const float gravity_;  //重力 定数
     float speedLimit_;  //加速度の制限
 
     //ハンドル関係
     float handleRotate_;    //ハンドルの回転（単位：度）90゜～ -90゜くらい？
     float handleRotateMax_; //ハンドルの限界
     bool handleFlag_;       //ハンドルを動かしていたら true
+
     //回転するときの調整
     float turnAdjust_;
     float driveAdjust_;
@@ -54,16 +59,17 @@ protected:
     unsigned long long time_; //経過タイム
 
     int pointCount_;    //チェックポイント経過数
+    int pointCountMax_; //必要なチェックポイント経過数
     int lapCount_;      //周回数
-    int lapMax_;        //必要周回数
+    int lapMax_;        //必要な周回数
     bool goalFlag_;     //trueならゴール状態
+    int ranking_;       //自分の順位
+    int population_;    //レースに参加している人数
 
     float mass_;     //車の重量
     float engineRotate_;    //エンジン回転数
 
     //サーキット用
-    //CircuitUnion* pCircuitUnion;
-
     XMVECTOR frontVec_;//正面のベクトル
 
     int landingType_; //地面のタイプ
@@ -177,7 +183,7 @@ public:
     void SetVehicleSize(int hModel);
 
     //車両の操作、入力の受付
-    void InputOperate();
+    virtual void InputOperate();
 
     enum
     {
@@ -191,7 +197,23 @@ public:
     //スタートの位置
     void SetStartTransform(Transform value) { startTransform_ = value; }
 
-
+    //順位判定系セッター・ゲッター
+        //チェックポイント通過数を取得
+        int GetPointCount() { return pointCount_; }
+        //必要なチェックポイント経過数をセット
+        void SetPointCountMax(int value) { pointCountMax_ = value; }
+        //周回数を取得
+        int GetLapCount() { return lapCount_; }
+        //必要な周回数を取得
+        void SetLapMax(int value) { lapMax_ = value; }
+        //次のチェックポイントの位置を取得　ただし配列をオーバーしてたら０の位置を返す
+        XMFLOAT3* GetNextCheckPosition();
+        //次のチェックポイントまでの距離を取得
+        float GetNextCheckDistance();
+        //順位をセット
+        void SetRanking(int value) { ranking_ = value; }
+        //レース参加人数をセット
+        void SetPopulation(int value) { population_ = value; }
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

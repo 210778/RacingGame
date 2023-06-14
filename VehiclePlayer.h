@@ -3,6 +3,7 @@
 
 class Speedometer;
 class Text;
+class Sample;
 
 //◆◆◆を管理するクラス
 class VehiclePlayer : public Vehicle
@@ -14,8 +15,10 @@ class VehiclePlayer : public Vehicle
     Text* pTextSpeed_;  //時速
     Text* pTextTime_;   //経過時間
     Text* pTextLap_;    //周回数
+    Text* pTextRanking_;    //順位
     Text* pTextAcceleration_; //加速度表示 デバッグ用
     float km_hAdd;  //時速表示加算
+    Sample* pSample_;
 
 public:
     //コンストラクタ

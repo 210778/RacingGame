@@ -1,3 +1,6 @@
+#include <tuple>
+#include <algorithm>
+
 #include "Engine/SceneManager.h"
 #include "Engine/Image.h"
 #include "Engine/Model.h"
@@ -10,6 +13,10 @@
 #include "ParticlePackage.h"
 #include "VehiclePlayer.h"
 #include "VehicleOpponent.h"
+
+using std::tuple;
+using std::sort;
+using std::vector;
 
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
@@ -34,37 +41,53 @@ void PlayScene::Initialize()
 	//エフェクト用
 	ParticlePackage::Initialize();
 
-	float distans = -180;
-
-
-
-	int population = 3;
+	int population = 2;
 	int playerNumber = 1;
-
+	//車両をセット
 	for (int i = 0; i < population; i++)
 	{
 		if (i == playerNumber)
 		{
-			VehiclePlayer* pVehiclePlayer
-				= VehicleInstantiate<VehiclePlayer>(this, "model\\Car01_blue.fbx", "model\\wheel01.fbx");
-			pVehiclePlayer->SetPosition(pGround_->GetCircuitUnion()->startTransform_[i].position_);
-			pVehiclePlayer->SetRotate(pGround_->GetCircuitUnion()->startTransform_[i].rotate_);
-			pVehiclePlayer->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[i]);
+			VehiclePlayer* pVehiclePlayer = nullptr;
+			SetVehicle<VehiclePlayer>(pVehiclePlayer, "model\\Car01_blue.fbx", "model\\wheel02_white.fbx", i);
 		}
 		else
 		{
-			VehicleOpponent* pVehicleOpponent
-				= VehicleInstantiate<VehicleOpponent>(this, "model\\Car01_red.fbx", "model\\wheel01.fbx");
-			pVehicleOpponent->SetPosition(pGround_->GetCircuitUnion()->startTransform_[i].position_);
-			pVehicleOpponent->SetRotate(pGround_->GetCircuitUnion()->startTransform_[i].rotate_);
-			pVehicleOpponent->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[i]);
+			VehicleOpponent* pVehicleOpponent = nullptr;
+			SetVehicle<VehicleOpponent>(pVehicleOpponent, "model\\Car01_red.fbx", "model\\wheel01.fbx", i);
 		}
+	}
+	//順位をセット
+	for (auto& i : vehicles_)
+	{
+		(*i).SetPopulation(vehicles_.size());
 	}
 }
 
 //更新
 void PlayScene::Update()
 {
+	if (rand() % 10 == 0)
+	{
+		//車両の順位を計算
+		//型を用意
+		vector<tuple<int, int, float, Vehicle*>> ranking(vehicles_.size());
+		for (int i = 0; i < ranking.size(); i++)
+		{
+			std::get<lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
+			std::get<check>(ranking[i]) = -vehicles_[i]->GetPointCount();
+			std::get<distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
+			std::get<pointer>(ranking[i]) = vehicles_[i];
+		}
+		//ソート
+		sort(ranking.begin(), ranking.end());
+		//順位を教える
+		for (int i = 0; i < ranking.size(); i++)
+		{
+			std::get<pointer>(ranking[i])->SetRanking(i + 1);
+		}
+	}
+
 }
 
 //描画
@@ -101,4 +124,19 @@ V* PlayScene::VehicleInstantiate(GameObject* pParent, std::string vehicleName, s
 	}
 	pNewObject->Initialize();
 	return pNewObject;
+}
+
+//車両を初期化して必要な値をセット
+template <class V>
+void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::string wheelName, int number)
+{
+	pVehicle = VehicleInstantiate<V>(this, vehicleName, wheelName);
+	Transform setTra = pGround_->GetCircuitUnion()->startTransform_[number];
+
+	vehicles_.push_back(pVehicle);
+	pVehicle->SetPosition(pGround_->GetCircuitUnion()->startTransform_[number].position_);
+	pVehicle->SetRotate(pGround_->GetCircuitUnion()->startTransform_[number].rotate_);
+	pVehicle->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[number]);
+	pVehicle->SetPointCountMax(pGround_->GetCircuitUnion()->checkPoint_.size());
+	pVehicle->SetLapMax(pGround_->GetCircuitUnion()->maxLap_);
 }

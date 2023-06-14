@@ -102,14 +102,12 @@ public:
         return hModel_;
     }
 
-    //コース選択
+    //番号をセットして配列の中からコース選択
     void SetChosenCircuit(int i) { chosenCircuit_ = i; }
-    //コース選択
+    //選択したコースの番号を取得
     int  GetChosenCircuit() { return chosenCircuit_; }
-    //コースを選択して、当たり判定をセット。すでにある当たり判定は消去(引数：コース番号)
-    void SetChosenCircuitCheckPoint(int value);
 
-    //使用しているコースのポインタ
+    //使用しているコースのポインタ 安全対策されていて、失敗したらnullptr
     CircuitUnion* GetCircuitUnion()
     {
         if (chosenCircuit_ <= 0 && chosenCircuit_ < circuits_.size())

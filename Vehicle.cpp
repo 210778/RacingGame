@@ -31,14 +31,15 @@ Vehicle::Vehicle(GameObject* parent)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.0f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(0.98f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
-    , time_(0), goalFlag_(false), pointCount_(0), lapCount_(0), lapMax_(1)
+    , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
+    , ranking_(0), population_(1)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -62,14 +63,15 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(wheelFriction_ * 1.0f)
+    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(0.98f)
     , slideFlag_(false)
     , sideFriction_(0.2f), sideSlideFriction_(0.1f)
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(60.0f)
     , landingFlag_(true)
-    , time_(0), goalFlag_(false), pointCount_(0), lapCount_(0), lapMax_(1)
+    , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
+    , ranking_(0), population_(1)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -90,34 +92,6 @@ Vehicle::~Vehicle()
 {
 }
 
-#if 0
-物理演算に関するメモ
-
-・運動の法則
-加速度[a]は加えた力[F]に比例し、質量[m]に反比例する。[k]は比例定数
-a = k * (F / m)     そして、
-F = m * a
-・慣性によって発生する見かけの力は　 - a * m
-
-・遠心力
-たぶん慣性の一部。向心力と釣り合う力
-半径r[m]の円上を、質量m[kg]・速度v[m / s]で等速円運動している物体で考えると、[ω]は角速度
-向心力 = mrω2 = m * (v ^ 2 / r)
-
-・スリップ率
-タイヤと路面間の摩擦特性がなんとか
-スリップ率 = (車体速度 - 車輪の回転速度) / 車体速度
-
-
-運動考察
-・車の持つ値
-・エンジン回転数：タコメーターで表示　クラッチが繋がってるなら徐々に値をタイヤに移す　W, Sキーで操作
-・タイヤ回転数：接地してるなら前タイヤの方向へ回転数の分、加速度を加算する
-・タイヤ角度：↑の時に角度の分だけベクトルを回転させる。慣性(遠心力)のために角度が大きいと回転しきれないことにするか
-A, Dキーで操作
-
-
-#endif
 
 //初期化
 void Vehicle::Initialize()
@@ -147,12 +121,11 @@ void Vehicle::Initialize()
     pParticle_ = Instantiate<Particle>(this);
 
     //ステージオブジェクトを探す
+    //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
     pGround_ = (Ground*)FindObject("Ground");
     assert(pGround_ != nullptr);
-    //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
+    assert(!(pGround_->GetCircuitUnion() == nullptr));
     assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
-
-    lapMax_ = pGround_->GetCircuitUnion()->maxLap_;
 
     //UI初期化
     PlayerUI_Initialize();
@@ -182,6 +155,9 @@ void Vehicle::Update()
     XMVECTOR vecPos = XMLoadFloat3(&transform_.position_);
 
     //行列を用意
+
+    //メモ：全部をメンバ変数（定数）、単位ベクトルにするべきでは？
+
     XMVECTOR vecX = { moveSPD_, 0.0f, 0.0f ,0.0f };
     XMVECTOR vecY = { 0.0f, moveSPD_, 0.0f ,0.0f };
     XMVECTOR vecZ = { 0.0f, 0.0f, moveSPD_ ,0.0f };
@@ -286,12 +262,32 @@ void Vehicle::Update()
     //地面の種類によって
     if (landingFlag_)
     {
+        //switchのほうが軽いかはわからない
+        switch (landingType_)
+        {
+        //なんでもない
+        default:
+        //通常道路
+        case Ground::road: acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f}; break;
+        //芝生
+        case Ground::turf: acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f}; break;
+        //奈落に落下
+        case Ground::abyss:
+            acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
+            transform_.position_ = startTransform_.position_;
+            vecPos = XMLoadFloat3(&startTransform_.position_);
+            transform_.rotate_ = startTransform_.rotate_;
+            break;
+        }
+#if 0
         if (landingType_ == Ground::road)
         {
+            //通常道路
             acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
         }
         else if (landingType_ == Ground::turf)
         {
+            //芝生
             acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
         }
         else if (landingType_ == Ground::abyss)
@@ -299,12 +295,15 @@ void Vehicle::Update()
             //奈落に落下
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = startTransform_.position_;
+            vecPos = XMLoadFloat3(&startTransform_.position_);
             transform_.rotate_ = startTransform_.rotate_;
         }
         else
         {
+            //何でもない
             acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
         }
+#endif
     }
 
     //正面の行列を用意
@@ -325,6 +324,8 @@ void Vehicle::Update()
     //タイヤの角度と減速
     //正面やタイヤの方向へは減速しないが、タイヤの方向と平行のほうこうへは減速する
     //タイヤの方向と平行なら何もしないが、垂直に近いほどタイヤの方向にベクトルを発生させる
+
+    //メモ：これのせいで重い可能性があるから変えるべきかもしれない
     if (landingFlag_)
     {
         XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
@@ -381,7 +382,10 @@ void Vehicle::Update()
     //スピードメーター
     PlayerUI_Update();
 
-#ifdef _DEBUG
+    //エフェクト
+    PlayerParticle();
+
+#if 0
     //テスト 正面にマーカーを設置
     XMVECTOR vecMark = { 0, 10, -1, 0 };    //後ろに伸びるベクトルを用意
     vecMark = XMVector3TransformCoord(vecMark, matRotateX);        //それを戦車の向きに合わせて回転
@@ -425,7 +429,7 @@ void Vehicle::OnCollision(GameObject* pTarget)
         {
             pointCount_++;
         }
-        if (pCP->GetNumber() == 0 && pointCount_ == pGround_->GetCircuitUnion()->checkPoint_.size())
+        if (pCP->GetNumber() <= 0 && pointCount_ >= pointCountMax_)
         {
             pointCount_ = 0;
             lapCount_++;
@@ -825,6 +829,27 @@ void Vehicle::HandleTurnLR(int LR)
         handleRotate_ += rotateSPD_ * LR;
 }
 
+//次のチェックポイントの位置を取得
+XMFLOAT3* Vehicle::GetNextCheckPosition()
+{
+    if(pointCount_ < pointCountMax_ && pointCount_ >= 0)
+    {
+        XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[pointCount_]->GetPosition();
+        return &pos;
+    }
+    else
+    {
+        XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[0]->GetPosition();
+        return &pos;
+    }
+}
+//次のチェックポイントまでの距離を取得
+float Vehicle::GetNextCheckDistance()
+{
+    return *XMVector3LengthEst(XMLoadFloat3(&transform_.position_)).m128_f32
+        - *XMVector3LengthEst(XMLoadFloat3(GetNextCheckPosition())).m128_f32;
+}
+
 //UIの関数群　プレイヤー限定で作用する
 //UIの初期化
 void Vehicle::PlayerUI_Initialize()
@@ -848,3 +873,37 @@ void Vehicle::PlayerCamera_Initialize()
 void Vehicle::PlayerParticle()
 {
 }
+
+//車両の操作、入力の受付
+void Vehicle::InputOperate()
+{
+}
+
+#if 0
+物理演算に関するメモ
+
+・運動の法則
+加速度[a]は加えた力[F]に比例し、質量[m]に反比例する。[k]は比例定数
+a = k * (F / m)     そして、
+F = m * a
+・慣性によって発生する見かけの力は　 - a * m
+
+・遠心力
+たぶん慣性の一部。向心力と釣り合う力
+半径r[m]の円上を、質量m[kg]・速度v[m / s]で等速円運動している物体で考えると、[ω]は角速度
+向心力 = mrω2 = m * (v ^ 2 / r)
+
+・スリップ率
+タイヤと路面間の摩擦特性がなんとか
+スリップ率 = (車体速度 - 車輪の回転速度) / 車体速度
+
+
+運動考察
+・車の持つ値
+・エンジン回転数：タコメーターで表示　クラッチが繋がってるなら徐々に値をタイヤに移す　W, Sキーで操作
+・タイヤ回転数：接地してるなら前タイヤの方向へ回転数の分、加速度を加算する
+・タイヤ角度：↑の時に角度の分だけベクトルを回転させる。慣性(遠心力)のために角度が大きいと回転しきれないことにするか
+A, Dキーで操作
+
+
+#endif
