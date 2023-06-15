@@ -240,6 +240,10 @@ void GameObject::Collision(GameObject * pTarget)
 	{
 		return;
 	}
+	
+	//チェックポイント同士での当たり判定をしないようにしてみる
+	//if (objectName_ == "CheckPoint")
+	//		return;
 
 	//自分とpTargetのコリジョン情報を使って当たり判定
 	//1つのオブジェクトが複数のコリジョン情報を持ってる場合もあるので二重ループ

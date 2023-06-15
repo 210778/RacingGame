@@ -25,8 +25,10 @@ using std::string;
 
 //コンストラクタ
 Vehicle::Vehicle(GameObject* parent)
-    :GameObject(parent, "Vehicle"), hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
+    :GameObject(parent, "Vehicle")
+    , hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
+    , VectorX_({ 1.0f,0.0f,0.0f,0.0f }), VectorY_({ 0.0f,1.0f,0.0f,0.0f }), VectorZ_({ 0.0f,0.0f,1.0f,0.0f })
     , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
@@ -51,17 +53,27 @@ Vehicle::Vehicle(GameObject* parent)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_()
+    , handleRight_(1), handleLeft_(-1)
 {
     Size.wheelHeight_ = 0.1f;
 }
 
 //継承用
 Vehicle::Vehicle(GameObject* parent, const std::string& name)
-    :GameObject(parent, name), hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
+    :GameObject(parent, name)
+    //モデル番号
+    , hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
+    //ベクトル
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
+    , VectorX_({ 1.0f,0.0f,0.0f,0.0f }), VectorY_({ 0.0f,1.0f,0.0f,0.0f }), VectorZ_({ 0.0f,0.0f,1.0f,0.0f })
+    , vehicleVectorX_({ 1.0f,0.0f,0.0f,0.0f })
+    , vehicleVectorY_({ 0.0f,1.0f,0.0f,0.0f })
+    , vehicleVectorZ_({ 0.0f,0.0f,1.0f,0.0f })
+    //スピードなど
     , moveSPD_(0.01f), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
+    //ハンドル関係
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
     , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(0.98f)
     , slideFlag_(false)
@@ -69,6 +81,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(60.0f)
+
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
     , ranking_(0), population_(1)
@@ -83,6 +96,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_()
+    , handleRight_(1), handleLeft_(-1)
 {
     Size.wheelHeight_ = 0.1f;
 }
@@ -98,10 +112,6 @@ void Vehicle::Initialize()
 {
     hModel_ = Model::Load(vehicleModelName_);
     assert(hModel_ >= 0);
-    //ModelInitialize("");
-
-    transform_.position_ = { 0.0f, 0.0f, 0.0f };
-    transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
 
     PlayerCamera_Initialize();
 
@@ -178,11 +188,11 @@ void Vehicle::Update()
     handleFlag_ = false;
     if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
     {
-        HandleTurnLR(left);
+        HandleTurnLR(handleLeft_);
     }
     if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT))
     {
-        HandleTurnLR(right);
+        HandleTurnLR(handleRight_);
     }
 
     //ハンドル角度制限
@@ -318,6 +328,7 @@ void Vehicle::Update()
         handleRotate_ *= (driveAdjust_ / (accLength + driveAdjust_));
     }
     //ハンドルを戻す
+    //ここ問題あり
     if (handleFlag_ == false)
         handleRotate_ *= handleAdjust_;
 
@@ -545,7 +556,7 @@ bool Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
     data.start = transform_.position_;  //レイの発射位置
-    data.start.y -= Size.wheelHeight_;  //地面に張り付いてるとうまくいかない この値ぶんだけ地面から浮く　タイヤの高さにする
+    data.start.y -= Size.wheelHeight_;  //この値ぶんだけ地面から浮く タイヤの高さにする
     data.dir = { 0.0f, -1.0f, 0.0f };      //レイの方向
     Model::RayCast(hModel, &data);      //レイを発射
     
@@ -600,13 +611,6 @@ bool Vehicle::Landing(int hModel,int type)
 
 void Vehicle::CollideWall(int hModel, int type)
 {
-    enum
-    {
-        front = 0,
-        right = 1,
-        rear = 2,
-        left = 3,
-    } direction;
 
     //前後左右と斜めで分割することにする
     std::array<RayCastData, 4>wallCollideVertical;
@@ -647,17 +651,17 @@ void Vehicle::CollideWall(int hModel, int type)
                 dirPlusMinus = 1.0f;
                 break;
                 //右
-            case right:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            case Direction::right:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = Size.toRight_;
                 dirPlusMinus = 1.0f;
                 break;
                 //後ろ
-            case rear:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            case Direction::rear:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = -Size.toRear_;
                 dirPlusMinus = -1.0f;
                 break;
                 //左
-            case left:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            case Direction::left:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = -Size.toLeft_;
                 dirPlusMinus = -1.0f;
                 break;
@@ -846,8 +850,8 @@ XMFLOAT3* Vehicle::GetNextCheckPosition()
 //次のチェックポイントまでの距離を取得
 float Vehicle::GetNextCheckDistance()
 {
-    return *XMVector3LengthEst(XMLoadFloat3(&transform_.position_)).m128_f32
-        - *XMVector3LengthEst(XMLoadFloat3(GetNextCheckPosition())).m128_f32;
+    return *XMVector3LengthEst(XMLoadFloat3(GetNextCheckPosition())).m128_f32
+        - *XMVector3LengthEst(XMLoadFloat3(&transform_.position_)).m128_f32;
 }
 
 //UIの関数群　プレイヤー限定で作用する

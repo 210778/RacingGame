@@ -9,67 +9,71 @@ class VehicleWheel;
 class Vehicle : public GameObject
 {
 protected:
+    //モデル番号系
+        int hModel_;    //モデル番号
+        int hGroundModel_;  //地面のモデル番号
+        int hWheelModel_;
 
-    int hModel_;    //モデル番号
-    int hGroundModel_;  //地面のモデル番号
-    int hWheelModel_;
-
-    XMVECTOR acceleration_; //加速度
-
-    //それぞれの軸のベクトル
-
+    //重要ベクトル系
+        //加速度
+        XMVECTOR acceleration_;
+        //それぞれの軸の単位ベクトル　定数
+        const XMVECTOR VectorX_;    //X軸単位ベクトル
+        const XMVECTOR VectorY_;    //Y軸単位ベクトル
+        const XMVECTOR VectorZ_;    //Z軸単位ベクトル
+        //車両から見た各軸の単位ベクトル
+        XMVECTOR vehicleVectorX_;   //車両から見たX軸単位ベクトル
+        XMVECTOR vehicleVectorY_;   //車両から見たY軸単位ベクトル
+        XMVECTOR vehicleVectorZ_;   //車両から見たZ軸単位ベクトル
 
     //移動、回転の速さ
     float moveSPD_;
     float rotateSPD_;
     float jumpForce_;
 
-    //float gravity_;    static constexpr float gravity_;  //重力 定数
     const float gravity_;  //重力 定数
     float speedLimit_;  //加速度の制限
 
     //ハンドル関係
-    float handleRotate_;    //ハンドルの回転（単位：度）90゜～ -90゜くらい？
-    float handleRotateMax_; //ハンドルの限界
-    bool handleFlag_;       //ハンドルを動かしていたら true
+        float handleRotate_;    //ハンドルの回転（単位：度）90゜～ -90゜くらい？
+        float handleRotateMax_; //ハンドルの限界
+        bool handleFlag_;       //ハンドルを動かしていたら true
+        //回転するときの調整
+        float turnAdjust_;
+        float driveAdjust_;
+        float handleAdjust_;
 
-    //回転するときの調整
-    float turnAdjust_;
-    float driveAdjust_;
-    float handleAdjust_;
-
-    float slideHandleRotateAdd_; //滑るときのハンドル速度の追加
-    float slideHandleAngleLimitAdd_; //滑るときのハンドル角度の追加
+        float slideHandleRotateAdd_; //滑るときのハンドル速度の追加
+        float slideHandleAngleLimitAdd_; //滑るときのハンドル角度の追加
 
     //地上・空中
-    bool landingFlag_;          //着地、空中
-    float wheelFriction_;       //タイヤ摩擦
-    float airFriction_;         //空気摩擦
-    float turfFriction_;        //芝生摩擦
+        bool landingFlag_;          //着地、空中
+        float wheelFriction_;       //タイヤ摩擦
+        float airFriction_;         //空気摩擦
+        float turfFriction_;        //芝生摩擦
 
-    bool  slideFlag_;           //走行、滑走
-    float sideFriction_;        //横向きの摩擦
-    float sideSlideFriction_;   //横向き空中摩擦
+        bool  slideFlag_;           //走行、滑走
+        float sideFriction_;        //横向きの摩擦
+        float sideSlideFriction_;   //横向き空中摩擦
 
     //弾丸系
     int coolTime_;  //弾丸用
     float bulletPower_;
     int heatAdd_;   //クールタイムに追加
 
-    unsigned long long time_; //経過タイム
-
-    int pointCount_;    //チェックポイント経過数
-    int pointCountMax_; //必要なチェックポイント経過数
-    int lapCount_;      //周回数
-    int lapMax_;        //必要な周回数
-    bool goalFlag_;     //trueならゴール状態
-    int ranking_;       //自分の順位
-    int population_;    //レースに参加している人数
+    //レース系
+        unsigned long long time_; //経過タイム
+        int pointCount_;    //チェックポイント経過数
+        int pointCountMax_; //必要なチェックポイント経過数
+        int lapCount_;      //周回数
+        int lapMax_;        //必要な周回数
+        bool goalFlag_;     //trueならゴール状態
+        int ranking_;       //自分の順位
+        int population_;    //レースに参加している人数
 
     float mass_;     //車の重量
     float engineRotate_;    //エンジン回転数
 
-    //サーキット用
     XMVECTOR frontVec_;//正面のベクトル
 
     int landingType_; //地面のタイプ
@@ -114,6 +118,18 @@ protected:
         XMFLOAT3 wheelRL_;  //左斜め後ろ　タイヤの位置
         float wheelHeight_; //タイヤの高さ
     }Size;
+
+    const short handleRight_;
+    const short handleLeft_;
+
+    //レイキャストの時つかう
+    enum Direction
+    {
+        front = 0,
+        right = 1,
+        rear = 2,
+        left = 3,
+    };
 
 public:
     //コンストラクタ
@@ -185,11 +201,7 @@ public:
     //車両の操作、入力の受付
     virtual void InputOperate();
 
-    enum
-    {
-        right =  1,
-        left  = -1
-    }handleLR_;
+
 
     //ハンドルの操作
     void HandleTurnLR(int LR);

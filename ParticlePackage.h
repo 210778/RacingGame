@@ -31,6 +31,13 @@ namespace ParticlePackage
     /// <param name="pParticle">パーティクル型ポインタ</param>
     /// <param name="position">位置</param>
     void ActSmokeCloud(Particle* pParticle, XMFLOAT3 position);
+
+    /// <summary>
+    /// 草地エフェクト起動
+    /// </summary>
+    /// <param name="pParticle">パーティクル型ポインタ</param>
+    /// <param name="position">位置</param>
+    void ActLandingGrass(Particle* pParticle, XMFLOAT3 position);
 };
 #if 0
 //パーティクルをまとめるためのクラス

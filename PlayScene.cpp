@@ -42,19 +42,25 @@ void PlayScene::Initialize()
 	ParticlePackage::Initialize();
 
 	int population = 2;
-	int playerNumber = 1;
+	int playerNumber = 0;
 	//車両をセット
 	for (int i = 0; i < population; i++)
 	{
 		if (i == playerNumber)
 		{
 			VehiclePlayer* pVehiclePlayer = nullptr;
-			SetVehicle<VehiclePlayer>(pVehiclePlayer, "model\\Car01_blue.fbx", "model\\wheel02_white.fbx", i);
+			SetVehicle<VehiclePlayer>(pVehiclePlayer
+				, "model\\Car01_blue.fbx"
+				, "model\\wheel_race_1_white.fbx"
+				, i);
 		}
 		else
 		{
 			VehicleOpponent* pVehicleOpponent = nullptr;
-			SetVehicle<VehicleOpponent>(pVehicleOpponent, "model\\Car01_red.fbx", "model\\wheel01.fbx", i);
+			SetVehicle<VehicleOpponent>(pVehicleOpponent
+				, "model\\Car01_red.fbx"
+				, "model\\wheel_industry_1_yellow.fbx"
+				, i);
 		}
 	}
 	//順位をセット
@@ -67,27 +73,28 @@ void PlayScene::Initialize()
 //更新
 void PlayScene::Update()
 {
-	if (rand() % 10 == 0)
+	//車両の順位を計算
+	//型を用意
+	vector<tuple<int, int, float, Vehicle*>> ranking(vehicles_.size());
+	for (int i = 0; i < ranking.size(); i++)
 	{
-		//車両の順位を計算
-		//型を用意
-		vector<tuple<int, int, float, Vehicle*>> ranking(vehicles_.size());
-		for (int i = 0; i < ranking.size(); i++)
-		{
-			std::get<lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
-			std::get<check>(ranking[i]) = -vehicles_[i]->GetPointCount();
-			std::get<distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
-			std::get<pointer>(ranking[i]) = vehicles_[i];
-		}
-		//ソート
-		sort(ranking.begin(), ranking.end());
-		//順位を教える
-		for (int i = 0; i < ranking.size(); i++)
-		{
-			std::get<pointer>(ranking[i])->SetRanking(i + 1);
-		}
-	}
+		int la = vehicles_[i]->GetLapCount();
+		int point = vehicles_[i]->GetPointCount();
+		float dist = vehicles_[i]->GetNextCheckDistance();
 
+
+		std::get<lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
+		std::get<check>(ranking[i]) = -vehicles_[i]->GetPointCount();
+		std::get<distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
+		std::get<pointer>(ranking[i]) = vehicles_[i];
+	}
+	//ソート
+	sort(ranking.begin(), ranking.end());
+	//順位を教える
+	for (int i = 0; i < ranking.size(); i++)
+	{
+		std::get<pointer>(ranking[i])->SetRanking(i + 1);
+	}
 }
 
 //描画

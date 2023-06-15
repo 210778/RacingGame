@@ -2,7 +2,7 @@
 
 namespace ParticlePackage
 {
-	//変数
+	//パーティクルまとめ
 	EmitterData boosterFire_;
 	EmitterData boosterSpark_;
 
@@ -11,14 +11,16 @@ namespace ParticlePackage
 
 	EmitterData smokeCloud_;
 
+    EmitterData landingGrass_;
+
 	unsigned long long timeCount_;	//時間のカウント
-    const int colorSpeed_ = 2;  //カウントのスピード
-    const float operand = 0.0027778f; // 1 / 360
+    int colorSpeed_ = 2;  //カウントのスピード
 
     //セッター
 	void SetBooster();
     void SetRainbow();
     void SetSmoke();
+    void SetGrass();
 };
 
 void ParticlePackage::Initialize()
@@ -28,6 +30,7 @@ void ParticlePackage::Initialize()
 	SetBooster();
     SetRainbow();
     SetSmoke();
+    SetGrass();
 }
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
@@ -44,7 +47,7 @@ void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTO
 void ParticlePackage::ActRainbowFire(Particle* pParticle, XMFLOAT3 position)
 {
     timeCount_ += colorSpeed_;
-    XMFLOAT4 HSV((timeCount_ % 360) * operand, 1.0, 1.0, 0.7);//色相、彩度、明度、アルファ
+    XMFLOAT4 HSV((timeCount_ % 360) / 360.0f, 1.0f, 1.0f, 0.7f);//色相、彩度、明度、アルファ
     XMVECTOR vecRainbowRGB = XMColorHSVToRGB(XMLoadFloat4(&HSV));
     XMFLOAT4 rainbowRGB;
     XMStoreFloat4(&rainbowRGB, vecRainbowRGB);
@@ -64,6 +67,13 @@ void ParticlePackage::ActSmokeCloud(Particle* pParticle, XMFLOAT3 position)
     pParticle->Start(smokeCloud_);
 }
 
+void ParticlePackage::ActLandingGrass(Particle* pParticle, XMFLOAT3 position)
+{
+    landingGrass_.position = position;
+    pParticle->Start(landingGrass_);
+}
+
+//セッター
 void ParticlePackage::SetBooster()
 {
     //ジェット炎
@@ -145,16 +155,36 @@ void ParticlePackage::SetSmoke()
     smokeCloud_.lifeTime = 40;
     smokeCloud_.gravity = 0.0f;
     smokeCloud_.dir = { 0.0f,0.0f,0.0f };
-    smokeCloud_.dirErr = { 50.0f,50.0f,50.0f };
+    smokeCloud_.dirErr = { 0.0f,0.0f,0.0f };
     smokeCloud_.speed = 0.0f;
     smokeCloud_.speedErr = 0.0f;
     smokeCloud_.size = { 0.5f,0.5f };
     smokeCloud_.sizeErr = { 0.0f,0.0f };
     smokeCloud_.scale = { 1.0f,1.0f };
-    smokeCloud_.color = { 1.0f,1.0f,1.0f,0.04 };
-    smokeCloud_.deltaColor = { 0.0f,0.0f,0.0f,-0.003f };
+    smokeCloud_.color = { 1.0f,1.0f,1.0f,0.2f };
+    smokeCloud_.deltaColor = { 0.0f,0.0f,0.0f,-0.005f };
 }
 
+void ParticlePackage::SetGrass()
+{
+    //草地
+    landingGrass_.textureFileName = "image\\PaticleAssets\\flashA_W.png";
+    landingGrass_.position = { 0.0f,0.0f,0.0f };
+    landingGrass_.positionErr = { 0.5f,0.5f,0.5f };
+    landingGrass_.delay = 0;
+    landingGrass_.number = 1;
+    landingGrass_.lifeTime = 30;
+    landingGrass_.gravity = 0.01f;
+    landingGrass_.dir = { 0.0f,1.0f,0.0f };
+    landingGrass_.dirErr = { 50.0f,50.0f,50.0f };
+    landingGrass_.speed = 0.1f;
+    landingGrass_.speedErr = 0.5f;
+    landingGrass_.size = { 0.5f,0.5f };
+    landingGrass_.sizeErr = { 0.5f,0.5f };
+    landingGrass_.scale = { 1.0f,1.0f };
+    landingGrass_.color = { 0.1f,1.0f,0.0f,0.5f };
+    landingGrass_.deltaColor = { 0.0f,0.0f,0.0f,0.0f };
+}
 #if 0
 //初期化
 void TestScene::Initialize()

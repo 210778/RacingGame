@@ -118,6 +118,7 @@ void VehiclePlayer::PlayerUI_Draw()
 
     //順位表示
     string rank = to_string(ranking_) + "/" + to_string(population_);
+
     pTextLap_->Draw(30, 150, rank.c_str());
 
 #ifdef _DEBUG
@@ -158,10 +159,18 @@ void VehiclePlayer::PlayerParticle()
     }
 
     //走行中のタイヤの軌跡
-    if (wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
+    if (landingType_ != Ground::turf
+        && wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
     {
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
+    }
+
+    //草地乗り上げ
+    if (landingType_ == Ground::turf && landingFlag_
+        && wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
+    {
+        ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
     }
 }
 #if 0
