@@ -29,6 +29,9 @@ Vehicle::Vehicle(GameObject* parent)
     , hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , VectorX_({ 1.0f,0.0f,0.0f,0.0f }), VectorY_({ 0.0f,1.0f,0.0f,0.0f }), VectorZ_({ 0.0f,0.0f,1.0f,0.0f })
+    , vehicleVectorX_({ 1.0f,0.0f,0.0f,0.0f })
+    , vehicleVectorY_({ 0.0f,1.0f,0.0f,0.0f })
+    , vehicleVectorZ_({ 0.0f,0.0f,1.0f,0.0f })
     , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
@@ -144,6 +147,37 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
+    //行列を用意
+    //それぞれの値に合わせて軸回転させる行列
+    XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
+    XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
+    XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(transform_.rotate_.z));
+    //逆回転行列
+    XMMATRIX matRotateX_R = XMMatrixRotationX(XMConvertToRadians(-transform_.rotate_.x));
+    XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+    XMMATRIX matRotateZ_R = XMMatrixRotationZ(XMConvertToRadians(-transform_.rotate_.z));
+
+    //メモ：全部をメンバ変数（定数）、単位ベクトルにするべきでは？
+    XMVECTOR vecX = { moveSPD_, 0.0f, 0.0f ,0.0f };
+    XMVECTOR vecY = { 0.0f, moveSPD_, 0.0f ,0.0f };
+    XMVECTOR vecZ = { 0.0f, 0.0f, moveSPD_ ,0.0f };
+
+    //ベクトル * 行列
+    vecZ = XMVector3TransformCoord(vecZ, matRotateY);
+    vecX = XMVector3TransformCoord(vecX, matRotateY);
+
+    //坂道に対応
+    vehicleVectorX_ = XMVector3TransformCoord(VectorX_, matRotateY);
+    vehicleVectorX_ = XMVector3TransformCoord(VectorX_, matRotateZ);
+
+    vehicleVectorY_ = XMVector3TransformCoord(VectorY_, matRotateX);
+    vehicleVectorY_ = XMVector3TransformCoord(VectorY_, matRotateZ);
+
+    vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateX);
+    vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateY);
+
+
+
     //クールタイム
     if (coolTime_ > 0)
         coolTime_--;
@@ -155,26 +189,6 @@ void Vehicle::Update()
     //Ｇゴール  
     if (lapCount_ >= lapMax_)
         goalFlag_ = true;
-
-    //それぞれの値に合わせて軸回転させる行列
-    XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
-    XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
-    XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(transform_.rotate_.z));
-
-    //現在位置をベクトルにしておく
-    XMVECTOR vecPos = XMLoadFloat3(&transform_.position_);
-
-    //行列を用意
-
-    //メモ：全部をメンバ変数（定数）、単位ベクトルにするべきでは？
-
-    XMVECTOR vecX = { moveSPD_, 0.0f, 0.0f ,0.0f };
-    XMVECTOR vecY = { 0.0f, moveSPD_, 0.0f ,0.0f };
-    XMVECTOR vecZ = { 0.0f, 0.0f, moveSPD_ ,0.0f };
-
-    //ベクトル * 行列
-    vecZ = XMVector3TransformCoord(vecZ, matRotateY);
-    vecX = XMVector3TransformCoord(vecX, matRotateY);
 
     //前向きに進んでるか後ろ向きか判定
     accZDirection_ = 1;
@@ -207,12 +221,12 @@ void Vehicle::Update()
         //全身後退
         if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
         {
-            acceleration_ += vecZ;
+            acceleration_ += vehicleVectorZ_ * moveSPD_;
         }
 
         if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
         {
-            acceleration_ -= vecZ;
+            acceleration_ -= vehicleVectorZ_ * moveSPD_;
         }
     }
 
@@ -245,11 +259,9 @@ void Vehicle::Update()
 
     if (Input::IsKey(DIK_E))
     {
-        vecPos += vecX;
     }
     if (Input::IsKey(DIK_Q))
     {
-        vecPos -= vecX;
     }
 
     //上昇
@@ -285,7 +297,6 @@ void Vehicle::Update()
         case Ground::abyss:
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = startTransform_.position_;
-            vecPos = XMLoadFloat3(&startTransform_.position_);
             transform_.rotate_ = startTransform_.rotate_;
             break;
         }
@@ -377,11 +388,13 @@ void Vehicle::Update()
     //長さの調整
     SpeedLimit(acceleration_, speedLimit_);
 
-    //位置ベクトル　＋　加速度ベクトル
-    vecPos += acceleration_;
-
+    //位置　＋　加速度ベクトル
+        //vecPos += acceleration_;
     //ベクトルを位置に入れる
-    XMStoreFloat3(&transform_.position_, vecPos);
+        //XMStoreFloat3(&transform_.position_, vecPos);
+    transform_.position_.x += XMVectorGetX(acceleration_);
+    transform_.position_.y += XMVectorGetY(acceleration_);
+    transform_.position_.z += XMVectorGetZ(acceleration_);
 
     //接地、壁衝突
     VehicleCollide();

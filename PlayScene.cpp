@@ -63,7 +63,7 @@ void PlayScene::Initialize()
 				, i);
 		}
 	}
-	//順位をセット
+	//参加人数をセット
 	for (auto& i : vehicles_)
 	{
 		(*i).SetPopulation(vehicles_.size());
