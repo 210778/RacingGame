@@ -27,8 +27,8 @@ void Ground::Initialize()
     //コース１
     CircuitUnion circuit_1("circuit_1",1);
     //パーツ
-    CircuitParts circuit_1_R(Model::Load("model\\Ground15-R.fbx"), road);
-    CircuitParts circuit_1_G(Model::Load("model\\Ground15-G.fbx"), turf);
+    CircuitParts circuit_1_R(Model::Load("model\\Ground16-R.fbx"), road);
+    CircuitParts circuit_1_G(Model::Load("model\\Ground16-G.fbx"), turf);
     CircuitParts circuit_1_A(Model::Load("model\\bottomWater.fbx"), abyss);
     //まとめ
     circuit_1.parts_.push_back(circuit_1_R);

@@ -147,6 +147,32 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
+    std::chrono::system_clock::time_point  start, end; // 型は auto で可
+    start = std::chrono::system_clock::now(); // 計測開始時間
+    long long elapsed = 0;
+    string message = "";
+/*
+    // 計測開始時間
+    start = std::chrono::system_clock::now();
+
+    // 計測終了時間
+    end = std::chrono::system_clock::now();
+
+    //処理に要した時間をミリ秒に変換
+    elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    message = "Debug::vehicleのupdate後半:";
+    message += std::to_string(elapsed);
+    Debug::Log(message.c_str(), true);
+*/
+
+#define chronoS start = std::chrono::system_clock::now();
+#define chronoG end = std::chrono::system_clock::now();elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();\
+ message = "Debug::";\
+message += std::to_string(elapsed);\
+Debug::Log(message.c_str(), true);
+
+
+
     //行列を用意
     //それぞれの値に合わせて軸回転させる行列
     XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
@@ -176,8 +202,6 @@ void Vehicle::Update()
     vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateX);
     vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateY);
 
-
-
     //クールタイム
     if (coolTime_ > 0)
         coolTime_--;
@@ -189,6 +213,9 @@ void Vehicle::Update()
     //Ｇゴール  
     if (lapCount_ >= lapMax_)
         goalFlag_ = true;
+
+    //計測開始時間
+    start = std::chrono::system_clock::now();
 
     //前向きに進んでるか後ろ向きか判定
     accZDirection_ = 1;
@@ -385,16 +412,24 @@ void Vehicle::Update()
         acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * ajust;
     }
 
-    //長さの調整
-    SpeedLimit(acceleration_, speedLimit_);
 
-    //位置　＋　加速度ベクトル
-        //vecPos += acceleration_;
-    //ベクトルを位置に入れる
-        //XMStoreFloat3(&transform_.position_, vecPos);
-    transform_.position_.x += XMVectorGetX(acceleration_);
-    transform_.position_.y += XMVectorGetY(acceleration_);
-    transform_.position_.z += XMVectorGetZ(acceleration_);
+    //長さの調整
+    //いらなくね
+    //SpeedLimit(acceleration_, speedLimit_);
+
+    chronoS;
+    static long long count3 = 0;
+    static long long time3 = 0;
+    static string ave3 = "";
+    XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
+    Debug::Log("位置にベクトル・バージョン３");
+    chronoG;
+    count3++;
+    time3 += elapsed;
+    ave3 = std::to_string((long double)time3 / (long double)count3);
+    ave3 += "/time:" + std::to_string(time3) + "/count:" + std::to_string(count3);
+    Debug::Log(ave3.c_str(), true);
+    Debug::Log("", true);
 
     //接地、壁衝突
     VehicleCollide();
@@ -408,7 +443,6 @@ void Vehicle::Update()
 
     //エフェクト
     PlayerParticle();
-
 #if 0
     //テスト 正面にマーカーを設置
     XMVECTOR vecMark = { 0, 10, -1, 0 };    //後ろに伸びるベクトルを用意

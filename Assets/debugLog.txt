@@ -1,0 +1,19 @@
+	06/16
+
+
+    transform_.position_.x += XMVectorGetX(acceleration_);
+    transform_.position_.y += XMVectorGetY(acceleration_);
+    transform_.position_.z += XMVectorGetZ(acceleration_);
+位置にベクトル・バージョン1Debug::79200
+253455.645458/time:1378291800/count:5438
+
+
+    XMVECTOR vecPos = XMLoadFloat3(&transform_.position_);
+    XMStoreFloat3(&transform_.position_, acceleration_ + vecPos);
+位置にベクトル・バージョン2Debug::87400
+130891.816844/time:711789700/count:5438
+
+
+    XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
+位置にベクトル・バージョン３Debug::128700
+122940.327326/time:668549500/count:5438

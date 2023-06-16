@@ -32,4 +32,11 @@ namespace Global
 	void SetCurrentFPS(int);
 	//Œ»İ‚ÌFPS
 	int GetCurrentFPS();
+
+};
+
+namespace TimeLog
+{
+	//ŠÔŒv‘ª
+	int StartTimerLog(int n);
 };
