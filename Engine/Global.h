@@ -34,9 +34,3 @@ namespace Global
 	int GetCurrentFPS();
 
 };
-
-namespace TimeLog
-{
-	//ŽžŠÔŒv‘ª
-	int StartTimerLog(int n);
-};

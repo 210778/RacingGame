@@ -147,31 +147,23 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
-    std::chrono::system_clock::time_point  start, end; // 型は auto で可
-    start = std::chrono::system_clock::now(); // 計測開始時間
-    long long elapsed = 0;
-    string message = "";
-/*
-    // 計測開始時間
-    start = std::chrono::system_clock::now();
-
-    // 計測終了時間
-    end = std::chrono::system_clock::now();
-
-    //処理に要した時間をミリ秒に変換
-    elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-    message = "Debug::vehicleのupdate後半:";
-    message += std::to_string(elapsed);
-    Debug::Log(message.c_str(), true);
-*/
-
-#define chronoS start = std::chrono::system_clock::now();
-#define chronoG end = std::chrono::system_clock::now();elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();\
- message = "Debug::";\
-message += std::to_string(elapsed);\
-Debug::Log(message.c_str(), true);
+    Debug::TimerLogStart("for100000 + sincos");
+        double a = rand();
+        for (int j = 0; j < 100000; j++)
+        {
+            a = sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(a))))))))))))))))))))));
+        }
+    Debug::TimerLogEnd("for100000 + sincos");
+    a = 0;
 
 
+    Debug::TimerLogStart("短い");
+        transform_.position_.z = 0;
+    Debug::TimerLogEnd("短い");
+
+
+
+    Debug::TimerLogStart("vehicle最初");
 
     //行列を用意
     //それぞれの値に合わせて軸回転させる行列
@@ -202,6 +194,8 @@ Debug::Log(message.c_str(), true);
     vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateX);
     vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateY);
 
+    Debug::TimerLogEnd("vehicle最初");
+
     //クールタイム
     if (coolTime_ > 0)
         coolTime_--;
@@ -214,9 +208,6 @@ Debug::Log(message.c_str(), true);
     if (lapCount_ >= lapMax_)
         goalFlag_ = true;
 
-    //計測開始時間
-    start = std::chrono::system_clock::now();
-
     //前向きに進んでるか後ろ向きか判定
     accZDirection_ = 1;
     if (0 > XMVectorGetZ(XMVector3TransformCoord(acceleration_, XMMatrixRotationY(
@@ -225,6 +216,7 @@ Debug::Log(message.c_str(), true);
         accZDirection_ = -1;
     }
 
+    Debug::TimerLogStart("vehicle操作受けつけ");
     //ハンドルの操作
     handleFlag_ = false;
     if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
@@ -307,6 +299,7 @@ Debug::Log(message.c_str(), true);
         acceleration_ += vecX;
     }
 #endif
+    Debug::TimerLogEnd("vehicle操作受けつけ");
 
     //地面の種類によって
     if (landingFlag_)
@@ -373,8 +366,8 @@ Debug::Log(message.c_str(), true);
     //タイヤの角度と減速
     //正面やタイヤの方向へは減速しないが、タイヤの方向と平行のほうこうへは減速する
     //タイヤの方向と平行なら何もしないが、垂直に近いほどタイヤの方向にベクトルを発生させる
-
     //メモ：これのせいで重い可能性があるから変えるべきかもしれない
+    Debug::TimerLogStart("vehicleタイヤ横押し");
     if (landingFlag_)
     {
         XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
@@ -411,32 +404,24 @@ Debug::Log(message.c_str(), true);
 
         acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * ajust;
     }
+    Debug::TimerLogEnd("vehicleタイヤ横押し");
 
 
     //長さの調整
     //いらなくね
     //SpeedLimit(acceleration_, speedLimit_);
 
-    chronoS;
-    static long long count3 = 0;
-    static long long time3 = 0;
-    static string ave3 = "";
+    //位置　＋　ベクトル
     XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
-    Debug::Log("位置にベクトル・バージョン３");
-    chronoG;
-    count3++;
-    time3 += elapsed;
-    ave3 = std::to_string((long double)time3 / (long double)count3);
-    ave3 += "/time:" + std::to_string(time3) + "/count:" + std::to_string(count3);
-    Debug::Log(ave3.c_str(), true);
-    Debug::Log("", true);
 
+    Debug::TimerLogStart("vehicle壁衝突");
     //接地、壁衝突
     VehicleCollide();
+    Debug::TimerLogEnd("vehicle壁衝突");
 
     //タイヤの値セット
-    pWheels_->SetWheelSpeedRotate(
-        *XMVector3LengthEst(acceleration_).m128_f32 * wheelSpeedAdd_ * accZDirection_, handleRotate_);
+    pWheels_->SetWheelSpeedRotate(*XMVector3LengthEst(acceleration_).m128_f32
+        * wheelSpeedAdd_ * accZDirection_, handleRotate_);
 
     //スピードメーター
     PlayerUI_Update();

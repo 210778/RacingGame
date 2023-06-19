@@ -37,6 +37,21 @@ void Ground::Initialize()
     //追加
     circuits_.push_back(circuit_1);
 
+    //コース2
+    CircuitUnion circuit_2("circuit_2", 1);
+    //パーツ
+    CircuitParts circuit_2_R(Model::Load("model\\Ground16-R.fbx"), road);
+    circuit_2.parts_.push_back(circuit_2_R);
+
+    CircuitParts circuit_2_G(Model::Load("model\\Ground16-G.fbx"), turf);
+    circuit_2.parts_.push_back(circuit_2_G);
+
+    circuit_2.parts_.push_back(circuit_1_A);
+    //追加
+    circuits_.push_back(circuit_2);
+
+
+
     //チェックポイント設置
     MakeCheckPoint();
 
