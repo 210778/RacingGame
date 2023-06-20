@@ -110,7 +110,7 @@ public:
     //使用しているコースのポインタ 安全対策されていて、失敗したらnullptr
     CircuitUnion* GetCircuitUnion()
     {
-        if (chosenCircuit_ <= 0 && chosenCircuit_ < circuits_.size())
+        if (chosenCircuit_ >= 0 && chosenCircuit_ < circuits_.size())
             return &circuits_[chosenCircuit_];
         else
             return nullptr;

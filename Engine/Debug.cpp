@@ -46,6 +46,8 @@ namespace Debug
 	//実行時間を測定して平均を求めたい
 	class TimeLogClass
 	{
+	public:
+
 		unsigned long long count_;
 		long double time_;
 		long double average_;
@@ -53,24 +55,27 @@ namespace Debug
 		system_clock::time_point startTime_;
 		system_clock::time_point  endTime_;
 
-	public:
+		int nameType_;
+
 		TimeLogClass()
 		{
 			count_ = 0;
 			time_ = 0;
 			average_ = 0.0l;
+			nameType_ = _microseconds;
 		}
 		~TimeLogClass() {};
 		//カウント
 		void TimeCount(long double addTime)
 		{
 			count_++;
-			time_ += addTime;
 
-			long double alfa = (addTime - average_);
-			long double bravo = (long double)count_;
-			long double charlie = (addTime - average_) / (long double)count_;
-			long double delta = average_ + (addTime - average_) / (long double)count_;
+			//なんとなく最初の値を無視してみる
+			if (count_ < 10){
+				return;
+			};
+
+			time_ += addTime;
 
 			average_ = average_ + (addTime - average_) / (long double)count_;
 		}
@@ -83,6 +88,9 @@ namespace Debug
 		void TimeCountEnd(int timeType)
 		{
 			endTime_ = system_clock::now();
+
+			auto alfa = duration_cast<milliseconds>(endTime_ - startTime_).count();
+			auto bravo = endTime_ - startTime_;
 
 			//頭がわるい気がする
 			switch (timeType){
@@ -101,10 +109,6 @@ namespace Debug
 				TimeCount(duration_cast<minutes>(endTime_ - startTime_).count()); break;
 			}
 		}
-		//ゲッター
-		unsigned long long GetCount() { return count_; }
-		long double GetTime() { return time_; };
-		long double GetAverage() { return average_; }
 	};
 
 	map<string, TimeLogClass> timeLog_;
@@ -145,8 +149,8 @@ namespace Debug
 
 		string debugMessage = "Timer log::";
 		debugMessage += message + "\n";
-		debugMessage += "\t平均時間「" + to_string(timeLog_[name].GetAverage()) + unit + "」\n";
-		debugMessage += "\t合計回数「" + to_string(timeLog_[name].GetCount()) + "」\n";
+		debugMessage += "\t平均時間「" + to_string(timeLog_[name].average_) + unit + "」\n";
+		debugMessage += "\t合計回数「" + to_string(timeLog_[name].count_) + "」\n";
 		Debug::Log(debugMessage, true);
 	}
 	//カウント終了
@@ -159,7 +163,7 @@ namespace Debug
 		//カウント終了
 		timeLog_[name].TimeCountEnd(timeType);
 		//表示
-		TimerLogPrint(name, timeType, message);
+		//TimerLogPrint(name, timeType, message);
 	}
 	//カウント終了　メッセージ省略版
 	void TimerLogEnd(string name, int timeType)
@@ -169,7 +173,17 @@ namespace Debug
 	//キーのみ
 	void TimerLogEnd(string name)
 	{
-		TimerLogEnd(name, _nanoseconds, name);
+		TimerLogEnd(name, timeLog_[name].nameType_, name);
+	}
+
+	void TimerLogPrintAll()
+	{
+		for (const auto& itr : timeLog_)
+		{
+			string name = (itr).first;
+			//表示
+			TimerLogPrint(name, timeLog_[name].nameType_, name);
+		}
 	}
 };
 

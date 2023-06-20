@@ -16,7 +16,9 @@ namespace Debug
 	void TimerLogEnd(std::string name, int timeType, std::string message);
 	//時間計測終了　name:キー、表示したい文字列　timeType:時間の単位
 	void TimerLogEnd(std::string name, int timeType);
-	//時間計測終了　name:キー、表示したい文字列　時間の単位はミリ秒
+	//時間計測終了　name:キー、表示したい文字列　時間の単位は別に設定して
 	void TimerLogEnd(std::string name);
+	//計測した時間を表示
+	void TimerLogPrintAll();
 };
 

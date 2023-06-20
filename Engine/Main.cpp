@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Input.h"
 #include "Audio.h"
+#include "Debug.h"
 
 //デバッグ用
 #include <cstdlib>
@@ -219,6 +220,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 	//ウィンドウを閉じた
 	case WM_DESTROY:
+
+		//計測時間表示
+		Debug::TimerLogPrintAll();
+
 		PostQuitMessage(0);	//プログラム終了
 		return 0;
 

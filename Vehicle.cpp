@@ -147,26 +147,11 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
-    Debug::TimerLogStart("for100000 + sincos");
-        double a = rand();
-        for (int j = 0; j < 100000; j++)
-        {
-            a = sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(sin(cos(a))))))))))))))))))))));
-        }
-    Debug::TimerLogEnd("for100000 + sincos");
-    a = 0;
-
-
-    Debug::TimerLogStart("短い");
-        transform_.position_.z = 0;
-    Debug::TimerLogEnd("短い");
-
-
-
     Debug::TimerLogStart("vehicle最初");
 
     //行列を用意
     //それぞれの値に合わせて軸回転させる行列
+    //メンバーにするべきか
     XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
     XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
     XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(transform_.rotate_.z));
@@ -176,13 +161,12 @@ void Vehicle::Update()
     XMMATRIX matRotateZ_R = XMMatrixRotationZ(XMConvertToRadians(-transform_.rotate_.z));
 
     //メモ：全部をメンバ変数（定数）、単位ベクトルにするべきでは？
-    XMVECTOR vecX = { moveSPD_, 0.0f, 0.0f ,0.0f };
-    XMVECTOR vecY = { 0.0f, moveSPD_, 0.0f ,0.0f };
-    XMVECTOR vecZ = { 0.0f, 0.0f, moveSPD_ ,0.0f };
-
+    //XMVECTOR vecX = { moveSPD_, 0.0f, 0.0f ,0.0f };
+    //XMVECTOR vecY = { 0.0f, moveSPD_, 0.0f ,0.0f };
+    //XMVECTOR vecZ = { 0.0f, 0.0f, moveSPD_ ,0.0f };
     //ベクトル * 行列
-    vecZ = XMVector3TransformCoord(vecZ, matRotateY);
-    vecX = XMVector3TransformCoord(vecX, matRotateY);
+    //vecZ = XMVector3TransformCoord(vecZ, matRotateY);
+    //vecX = XMVector3TransformCoord(vecX, matRotateY);
 
     //坂道に対応
     vehicleVectorX_ = XMVector3TransformCoord(VectorX_, matRotateY);
@@ -193,6 +177,13 @@ void Vehicle::Update()
 
     vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateX);
     vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateY);
+
+    XMVECTOR vecX = moveSPD_ * vehicleVectorX_;
+    XMVECTOR vecY = moveSPD_ * vehicleVectorY_;
+    XMVECTOR vecZ = moveSPD_ * vehicleVectorZ_;
+
+    //その都度加速度を回転させるんじゃなくて最後に回転したほうがいいかも
+
 
     Debug::TimerLogEnd("vehicle最初");
 
@@ -240,29 +231,29 @@ void Vehicle::Update()
         //全身後退
         if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
         {
-            acceleration_ += vehicleVectorZ_ * moveSPD_;
+            acceleration_ += vecZ;
         }
 
         if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
         {
-            acceleration_ -= vehicleVectorZ_ * moveSPD_;
+            acceleration_ -= vecZ;
         }
     }
 
     //滑る
-    if (Input::IsKeyDown(DIK_SPACE))
-        slideFlag_ = true;
-    if (Input::IsKeyUp(DIK_SPACE))
-        slideFlag_ = false;
-
-    //
     if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
     {
+        slideFlag_ = true;
+
         acceleration_ += vecZ;
 
         XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
         boosterPos.y += Size.toCenter_;
         ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+    }
+    else
+    {
+        slideFlag_ = false;
     }
 
 #ifdef _DEBUG
@@ -415,8 +406,8 @@ void Vehicle::Update()
     XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
 
     Debug::TimerLogStart("vehicle壁衝突");
-    //接地、壁衝突
-    VehicleCollide();
+        //接地、壁衝突
+        VehicleCollide();
     Debug::TimerLogEnd("vehicle壁衝突");
 
     //タイヤの値セット
@@ -428,18 +419,9 @@ void Vehicle::Update()
 
     //エフェクト
     PlayerParticle();
-#if 0
-    //テスト 正面にマーカーを設置
-    XMVECTOR vecMark = { 0, 10, -1, 0 };    //後ろに伸びるベクトルを用意
-    vecMark = XMVector3TransformCoord(vecMark, matRotateX);        //それを戦車の向きに合わせて回転
-    vecMark = XMVector3TransformCoord(vecMark, matRotateY);        //それを戦車の向きに合わせて回転2
-    vecMark = XMVector3TransformCoord(vecMark, matRotateZ);        //それを戦車の向きに合わせて回転3
-
-    XMVECTOR rearVec = vecMark + vecPos;
-    XMVECTOR frontVec = { transform_.position_.x,transform_.position_.y + 10,transform_.position_.z,0 };
-    XMVECTOR bulletVec = frontVec - rearVec;
+#if 1
     //テスト
-    bulletVec = XMVector3Normalize(frontVec_);
+    XMVECTOR bulletVec = XMVector3Normalize(frontVec_);
 
     //弾を発射
     if (Input::IsMouseButton(0) && coolTime_ <= 0)
@@ -463,6 +445,8 @@ void Vehicle::Update()
 //何かに当たった
 void Vehicle::OnCollision(GameObject* pTarget)
 {
+    Debug::TimerLogStart("vehicleチェックポイント");
+
     //当たったときの処理
     if (pTarget->GetObjectName() == "CheckPoint")
     {
@@ -478,15 +462,21 @@ void Vehicle::OnCollision(GameObject* pTarget)
             lapCount_++;
         }
     }
+
+    Debug::TimerLogEnd("vehicleチェックポイント");
 }
 
 //描画
 void Vehicle::Draw()
 {
+    Debug::TimerLogStart("vehicle描画");
+
     Model::SetTransform(hModel_, transform_);
     Model::Draw(hModel_);
 
     PlayerUI_Draw();
+
+    Debug::TimerLogEnd("vehicle描画");
 }
 
 //開放
@@ -570,16 +560,21 @@ void Vehicle::VehicleCollide()
     //種類の分だけ
     for (int i = 0; i < pGround_->GetCircuitUnion()->parts_.size(); i++)
     {
-        //地面
-        if (!isLanding)
-        {
-            isLanding = Landing(pGround_->GetCircuitUnion()->parts_[i].model_
-                , pGround_->GetCircuitUnion()->parts_[i].type_);
-        }
-        
-        //壁
-        CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
-            , pGround_->GetCircuitUnion()->parts_[i].type_);
+        Debug::TimerLogStart("vehicle地面当たり判定");
+            //地面
+            if (!isLanding)
+            { 
+                isLanding = Landing(pGround_->GetCircuitUnion()->parts_[i].model_
+                    , pGround_->GetCircuitUnion()->parts_[i].type_);
+            }
+        Debug::TimerLogEnd("vehicle地面当たり判定");
+
+
+        Debug::TimerLogStart("vehicle壁当たり判定");
+            //壁
+//            CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
+//                , pGround_->GetCircuitUnion()->parts_[i].type_);
+        Debug::TimerLogEnd("vehicle壁当たり判定");
     }
 }
 
@@ -612,6 +607,23 @@ bool Vehicle::Landing(int hModel,int type)
             //位置を下げる
             acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
             landingFlag_ = false;
+        }
+
+
+        if (landingFlag_)
+        {
+            //角度を変える
+            XMVECTOR parallelVec = XMVector3NormalizeEst(data.normal - XMLoadFloat3(&data.end));
+
+            //ベクトルから角度を計算
+            transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(VectorX_, parallelVec).m128_f32
+                / (*XMVector3Length(VectorX_).m128_f32 * *XMVector3Length(parallelVec).m128_f32)));
+
+            //外積を使わないと0 ~ 180　になってしまう
+            XMVECTOR cross = XMVector3Cross(VectorX_, parallelVec - VectorX_);
+            if (*XMVector3Dot(cross, VectorZ_).m128_f32 > 0.0f)
+                transform_.rotate_.x += 180;
+
         }
     }
 
