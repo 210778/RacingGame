@@ -20,6 +20,15 @@ class VehicleWheel : public GameObject
         XMFLOAT3 posFL_;  //左斜め前　タイヤの位置
         XMFLOAT3 posRR_;  //右斜め後ろ　タイヤの位置
         XMFLOAT3 posRL_;  //左斜め後ろ　タイヤの位置
+
+        XMVECTOR cToFR_; //中央から右前　までのベクトル
+        XMVECTOR cToFL_; //中央から左前　までのベクトル
+        XMVECTOR cToRR_; //中央から右後ろ　までのベクトル
+        XMVECTOR cToRL_; //中央から左後ろ　までのベクトル
+
+        XMVECTOR centerToLeft_;     //モデルの中心から左までのベクトル
+        XMVECTOR centerToRight_;    //モデルの中心から右までのベクトル
+        XMVECTOR centerToBottom_;   //モデルの中心から底までのベクトル
     }Wheels;
 
 public:
@@ -66,4 +75,6 @@ public:
         rotateSpeedX_ = speed;
         handleRotateY_ = rotate;
     }
+
+
 };

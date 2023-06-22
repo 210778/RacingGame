@@ -106,7 +106,7 @@ protected:
         float toFront_;   //前方　までの距離
         float toRear_;    //後方　までの距離
         float toTop_;     //上端　までの距離
-        float toCenter_;  //上端までの距離の１／２
+        float toBottom_;  //下端　までの距離
         float rightToLeft_;     //右端　から　左端　までの距離
         float frontToRear_;     //前方　から　後方　までの距離
         float toFrontRight_;  //右斜め前　までの距離
@@ -118,6 +118,7 @@ protected:
         XMFLOAT3 wheelRR_;  //右斜め後ろ　タイヤの位置
         XMFLOAT3 wheelRL_;  //左斜め後ろ　タイヤの位置
         float wheelHeight_; //タイヤの高さ
+        float wheelRemainder_;//車体とタイヤの位置の差分の高さ
     }Size;
 
     const short handleRight_;
@@ -194,15 +195,21 @@ public:
     /// <param name="hModel">モデル番号</param>
     void MakeWheels(int hModel);
 
-    //タイヤの高さセッター
-    void SetWheelHeight(float height) { Size.wheelHeight_ = height; }
+    //タイヤの高さセッター //車体との差分も計算
+    void SetWheelHeight(float height)
+    {
+        Size.wheelHeight_ = height;
+        
+        Size.wheelRemainder_ = height - Size.wheelFL_.y;
+        if (Size.wheelRemainder_ < 0.0f)
+            Size.wheelRemainder_ = 0;
+    }
+
     //モデルの大きさセッター
     void SetVehicleSize(int hModel);
 
     //車両の操作、入力の受付
     virtual void InputOperate();
-
-
 
     //ハンドルの操作
     void HandleTurnLR(int LR);

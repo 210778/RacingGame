@@ -50,15 +50,15 @@ void PlayScene::Initialize()
 		{
 			VehiclePlayer* pVehiclePlayer = nullptr;
 			SetVehicle<VehiclePlayer>(pVehiclePlayer
-				, "model\\Car01_blue.fbx"
-				, "model\\wheel_race_1_white.fbx"
+				, "model\\car_race_1_blue.fbx"
+				, "model\\wheel_test_1.fbx"
 				, i);
 		}
 		else
 		{
 			VehicleOpponent* pVehicleOpponent = nullptr;
 			SetVehicle<VehicleOpponent>(pVehicleOpponent
-				, "model\\Car01_red.fbx"
+				, "model\\car_race_1_blue.fbx"
 				, "model\\wheel_industry_1_yellow.fbx"
 				, i);
 		}

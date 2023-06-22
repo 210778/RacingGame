@@ -127,7 +127,7 @@ void Vehicle::Initialize()
     MakeWheels(hWheelModel_);
 
     //当たり判定
-    SphereCollider* collision = new SphereCollider({ 0.0f, Size.toCenter_, 0.0f } , Size.frontToRear_ * 0.5f);
+    SphereCollider* collision = new SphereCollider(Model::GetBonePosition(hModel_, "center"), Size.frontToRear_ * 0.5f);
     AddCollider(collision);
 
     //エフェクトのポインタとそれのまとめ
@@ -248,7 +248,6 @@ void Vehicle::Update()
         acceleration_ += vecZ;
 
         XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
-        boosterPos.y += Size.toCenter_;
         ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
     }
     else
@@ -427,8 +426,7 @@ void Vehicle::Update()
     if (Input::IsMouseButton(0) && coolTime_ <= 0)
     {
         Bullet* pBullet = Instantiate<Bullet>(GetParent());
-        XMFLOAT3 BulletPos = transform_.position_;
-        BulletPos.y += Size.toCenter_;
+        XMFLOAT3 BulletPos = Model::GetBonePosition(hModel_, "center");
         pBullet->SetPosition(BulletPos);
 
         float power = bulletPower_;
@@ -583,7 +581,7 @@ bool Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
     data.start = transform_.position_;  //レイの発射位置
-    data.start.y -= Size.wheelHeight_;  //この値ぶんだけ地面から浮く タイヤの高さにする
+    data.start.y -= Size.wheelRemainder_;  //この値ぶんだけ地面から浮く タイヤの高さにする
     data.dir = { 0.0f, -1.0f, 0.0f };      //レイの方向
     Model::RayCast(hModel, &data);      //レイを発射
     
@@ -610,20 +608,20 @@ bool Vehicle::Landing(int hModel,int type)
         }
 
 
-        if (landingFlag_)
+        if (false)
         {
             //角度を変える
             XMVECTOR parallelVec = XMVector3NormalizeEst(data.normal - XMLoadFloat3(&data.end));
 
             //ベクトルから角度を計算
-            transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(VectorX_, parallelVec).m128_f32
-                / (*XMVector3Length(VectorX_).m128_f32 * *XMVector3Length(parallelVec).m128_f32)));
+            transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(VectorZ_, parallelVec).m128_f32
+                / (*XMVector3Length(VectorZ_).m128_f32 * *XMVector3Length(parallelVec).m128_f32)))
+                - 90.0f;
 
             //外積を使わないと0 ~ 180　になってしまう
-            XMVECTOR cross = XMVector3Cross(VectorX_, parallelVec - VectorX_);
-            if (*XMVector3Dot(cross, VectorZ_).m128_f32 > 0.0f)
+            XMVECTOR cross = XMVector3Cross(VectorZ_, parallelVec - VectorZ_);
+            if (*XMVector3Dot(cross, vehicleVectorX_).m128_f32 > 0.0f)
                 transform_.rotate_.x += 180;
-
         }
     }
 
@@ -662,8 +660,7 @@ void Vehicle::CollideWall(int hModel, int type)
     //前後左右編
     for (int i = 0; i < wallCollideVertical.size(); i++)
     {
-        wallCollideVertical[i].start = transform_.position_;
-        wallCollideVertical[i].start.y += Size.toCenter_;
+        wallCollideVertical[i].start = Model::GetBonePosition(hModel_, "center");
 
         //90度ずつ回転
         XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(90 * i));	//Ｙ軸で回転させる行列    
@@ -840,6 +837,7 @@ void Vehicle::MakeWheels(int hModel)
 void Vehicle::SetVehicleSize(int hModel)
 {
     //ボーン
+    XMFLOAT3 vehicleCenter  = Model::GetBonePosition(hModel, "center");
     XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel, "bottom");
     XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel, "top");
     XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel, "left");
@@ -850,13 +848,21 @@ void Vehicle::SetVehicleSize(int hModel)
     Size.wheelFL_ = Model::GetBonePosition(hModel, "wheelFL");
     Size.wheelRR_ = Model::GetBonePosition(hModel, "wheelRR");
     Size.wheelRL_ = Model::GetBonePosition(hModel, "wheelRL");
+
     //車両の大きさ計算
-    Size.toRight_   = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32;
-    Size.toLeft_    = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32;
-    Size.toFront_   = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32;
-    Size.toRear_    = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32;
-    Size.toTop_     = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32;
-    Size.toCenter_  = Size.toTop_ * 0.5f;
+    Size.toRight_   = *XMVector3Length(XMLoadFloat3(&vehicleRight)).m128_f32 
+        - *XMVector3Length(XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toLeft_    = *XMVector3Length(XMLoadFloat3(&vehicleLeft)).m128_f32
+        - *XMVector3Length(XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toFront_   = *XMVector3Length(XMLoadFloat3(&vehicleFront)).m128_f32
+        - *XMVector3Length(XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toRear_    = *XMVector3Length(XMLoadFloat3(&vehicleRear)).m128_f32
+        - *XMVector3Length(XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toTop_     = *XMVector3Length(XMLoadFloat3(&vehicleTop)).m128_f32
+        - *XMVector3Length(XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toBottom_  = *XMVector3Length(XMLoadFloat3(&vehicleBottom)).m128_f32
+        - *XMVector3Length(XMLoadFloat3(&vehicleCenter)).m128_f32;
+
     Size.rightToLeft_   = Size.toRight_ + Size.toLeft_;
     Size.frontToRear_   = Size.toFront_ + Size.toRear_;
     Size.toFrontRight_  = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
