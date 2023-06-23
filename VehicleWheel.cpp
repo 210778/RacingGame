@@ -36,65 +36,48 @@ void VehicleWheel::Draw()
 
     //４つのタイヤをそれぞれの位置、回転で表示する
     Transform wheelTrans;
+    XMFLOAT3 addPos;
+    XMFLOAT3 wheelPos;
+    float addRotateY;
+
     for (int i = 0; i < 4; i++)
     {
         wheelTrans = transform_;
+        addRotateY = 0;
 
         switch (i)
         {
         default:
-            wheelTrans.position_.x += Wheels.posFL_.x;
-            wheelTrans.position_.y += Wheels.posFL_.y;
-            wheelTrans.position_.z += Wheels.posFL_.z;
-
-            XMFLOAT3 addPos;
             XMStoreFloat3(&addPos, Wheels.centerToLeft_);
-
-            wheelTrans.position_.x += addPos.x;//+= Wheels.posFL_.x;
-            wheelTrans.position_.y += addPos.y;
-            wheelTrans.position_.z += addPos.z;
-
-            wheelTrans.rotate_.x += rotateSpeedX_;
-            wheelTrans.rotate_.y += handleRotateY_;
-            //wheelTrans.rotate_.x = wheelTrans.rotate_.x * -1.0f + rotateSpeedX_;
-            //wheelTrans.rotate_.y += handleRotateY_ + 180.0f;
+            wheelPos = Wheels.posFL_;
+            addRotateY = handleRotateY_;
             break;
 
         case 1:
-            wheelTrans.position_.x += Wheels.posFR_.x;
-            wheelTrans.position_.y += Wheels.posFR_.y;
-            wheelTrans.position_.z += Wheels.posFR_.z;
-
-            //wheelTrans.position_.x = Model::GetBonePosition(hModel_, "left").x;
-            //wheelTrans.position_.y = Model::GetBonePosition(hModel_, "left").y;
-            //wheelTrans.position_.z = Model::GetBonePosition(hModel_, "left").z;
-
-            wheelTrans.rotate_.x += rotateSpeedX_;
-            wheelTrans.rotate_.y += handleRotateY_;
+            XMStoreFloat3(&addPos, Wheels.centerToRight_);
+            wheelPos = Wheels.posFR_;
+            addRotateY = handleRotateY_;
             break;
         case 2:
-            wheelTrans.position_.x += Wheels.posRL_.x;
-            wheelTrans.position_.y += Wheels.posRL_.y;
-            wheelTrans.position_.z += Wheels.posRL_.z;
-
-            //wheelTrans.position_.x = Model::GetBonePosition(hModel_, "right").x;
-            //wheelTrans.position_.y = Model::GetBonePosition(hModel_, "right").y;
-            //wheelTrans.position_.z = Model::GetBonePosition(hModel_, "right").z;
-
-            wheelTrans.rotate_.x += rotateSpeedX_;
+            XMStoreFloat3(&addPos, Wheels.centerToLeft_);
+            wheelPos = Wheels.posRL_;
             break;
         case 3:
-            wheelTrans.position_.x += Wheels.posRR_.x;
-            wheelTrans.position_.y += Wheels.posRR_.y;
-            wheelTrans.position_.z += Wheels.posRR_.z;
-
-            //wheelTrans.position_.x = Model::GetBonePosition(hModel_, "left").x;
-            //wheelTrans.position_.y = Model::GetBonePosition(hModel_, "left").y;
-            //wheelTrans.position_.z = Model::GetBonePosition(hModel_, "left").z;
-
-            wheelTrans.rotate_.x += rotateSpeedX_;
+            XMStoreFloat3(&addPos, Wheels.centerToRight_);
+            wheelPos = Wheels.posRR_;
             break;
         }
+
+        wheelTrans.position_.x += addPos.x + wheelPos.x;
+        wheelTrans.position_.y += addPos.y + wheelPos.y;
+        wheelTrans.position_.z += addPos.z + wheelPos.z;
+
+        wheelTrans.rotate_.x += rotateSpeedX_;
+        wheelTrans.rotate_.y += addRotateY;
+
+        //今は左右対称だけど前後対象にしたいなら
+        //wheelTrans.rotate_.x = wheelTrans.rotate_.x * -1.0f + rotateSpeedX_;
+        //wheelTrans.rotate_.y += addRotateY + 180.0f;
 
         Model::SetTransform(hModel_, wheelTrans);
         Model::Draw(hModel_);
