@@ -28,17 +28,13 @@ Vehicle::Vehicle(GameObject* parent)
     :GameObject(parent, "Vehicle")
     , hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
-    , VectorX_({ 1.0f,0.0f,0.0f,0.0f }), VectorY_({ 0.0f,1.0f,0.0f,0.0f }), VectorZ_({ 0.0f,0.0f,1.0f,0.0f })
-    , vehicleVectorX_({ 1.0f,0.0f,0.0f,0.0f })
-    , vehicleVectorY_({ 0.0f,1.0f,0.0f,0.0f })
-    , vehicleVectorZ_({ 0.0f,0.0f,1.0f,0.0f })
     , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
     , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(0.98f)
     , slideFlag_(false)
-    , sideFriction_(0.2f), sideSlideFriction_(0.1f)
+    , sideWheelFriction_(0.2f), sideSlideFriction_(0.1f)
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
@@ -68,19 +64,20 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
     //ベクトル
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
-    , VectorX_({ 1.0f,0.0f,0.0f,0.0f }), VectorY_({ 0.0f,1.0f,0.0f,0.0f }), VectorZ_({ 0.0f,0.0f,1.0f,0.0f })
-    , vehicleVectorX_({ 1.0f,0.0f,0.0f,0.0f })
-    , vehicleVectorY_({ 0.0f,1.0f,0.0f,0.0f })
-    , vehicleVectorZ_({ 0.0f,0.0f,1.0f,0.0f })
     //スピードなど
     , moveSPD_(0.01f), rotateSPD_(1.0f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
+
     //ハンドル関係
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(0.98f)
+    //摩擦
+    , wheelFriction_(0.99f), airFriction_(0.999f), turfFriction_(0.98f)
+    , iceFriction_(0.999f)
     , slideFlag_(false)
-    , sideFriction_(0.2f), sideSlideFriction_(0.1f)
+    , sideWheelFriction_(0.2f), sideSlideFriction_(0.1f)
+    , landingFriction_(1.0f), sideFriction_(1.0f)
+
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
     , slideHandleRotateAdd_(2.0f)
     , handleFlag_(false), handleRotateMax_(60.0f)
@@ -101,6 +98,16 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , startTransform_()
     , handleRight_(1), handleLeft_(-1)
 {
+    matRotateX = XMMatrixIdentity();
+    matRotateY = XMMatrixIdentity();
+    matRotateZ = XMMatrixIdentity();
+    matRotateX_R = XMMatrixIdentity();
+    matRotateY_R = XMMatrixIdentity();
+    matRotateZ_R = XMMatrixIdentity();
+
+    worldVector_.Set({ 1.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f,0.0f });
+    vehicleVector_.Set({ 1.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f,0.0f });
+
     Size.wheelHeight_ = 0.1f;
 }
 
@@ -151,14 +158,13 @@ void Vehicle::Update()
 
     //行列を用意
     //それぞれの値に合わせて軸回転させる行列
-    //メンバーにするべきか
-    XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
-    XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
-    XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(transform_.rotate_.z));
+    matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
+    matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
+    matRotateZ = XMMatrixRotationZ(XMConvertToRadians(transform_.rotate_.z));
     //逆回転行列
-    XMMATRIX matRotateX_R = XMMatrixRotationX(XMConvertToRadians(-transform_.rotate_.x));
-    XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
-    XMMATRIX matRotateZ_R = XMMatrixRotationZ(XMConvertToRadians(-transform_.rotate_.z));
+    matRotateX_R = XMMatrixRotationX(XMConvertToRadians(-transform_.rotate_.x));
+    matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+    matRotateZ_R = XMMatrixRotationZ(XMConvertToRadians(-transform_.rotate_.z));
 
     //メモ：全部をメンバ変数（定数）、単位ベクトルにするべきでは？
     //XMVECTOR vecX = { moveSPD_, 0.0f, 0.0f ,0.0f };
@@ -169,18 +175,18 @@ void Vehicle::Update()
     //vecX = XMVector3TransformCoord(vecX, matRotateY);
 
     //坂道に対応
-    vehicleVectorX_ = XMVector3TransformCoord(VectorX_, matRotateY);
-    vehicleVectorX_ = XMVector3TransformCoord(VectorX_, matRotateZ);
+    vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateY);
+    vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateZ);
 
-    vehicleVectorY_ = XMVector3TransformCoord(VectorY_, matRotateX);
-    vehicleVectorY_ = XMVector3TransformCoord(VectorY_, matRotateZ);
+    vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateX);
+    vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateZ);
 
-    vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateX);
-    vehicleVectorZ_ = XMVector3TransformCoord(VectorZ_, matRotateY);
+    vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateX);
+    vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateY);
 
-    XMVECTOR vecX = moveSPD_ * vehicleVectorX_;
-    XMVECTOR vecY = moveSPD_ * vehicleVectorY_;
-    XMVECTOR vecZ = moveSPD_ * vehicleVectorZ_;
+    XMVECTOR vecX = moveSPD_ * vehicleVector_.x;
+    XMVECTOR vecY = moveSPD_ * vehicleVector_.y;
+    XMVECTOR vecZ = moveSPD_ * vehicleVector_.z;
 
     //その都度加速度を回転させるんじゃなくて最後に回転したほうがいいかも
 
@@ -300,45 +306,39 @@ void Vehicle::Update()
         //なんでもない
         default:
         //通常道路
-        case Ground::road: acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f}; break;
-        //芝生
-        case Ground::turf: acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f}; break;
+        case Ground::road:
+            acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
+            landingFriction_ = wheelFriction_;
+            sideFriction_ = sideWheelFriction_;
+            break;
+        //芝生　と　砂地
+        case Ground::dirt:
+        case Ground::turf:
+            acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
+            landingFriction_ = wheelFriction_;
+            sideFriction_ = sideIceFriction_;
+            break;
         //奈落に落下
         case Ground::abyss:
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = startTransform_.position_;
             transform_.rotate_ = startTransform_.rotate_;
             break;
+        //氷床
+        case Ground::ice:
+            acceleration_ *= {iceFriction_, 1.0f, iceFriction_, 1.0f};
+            landingFriction_ = iceFriction_;
+            sideFriction_ = sideIceFriction_;
+            break;
+        //加速床
+        case Ground::boost:
+            acceleration_ += vecZ;
+            acceleration_ *= {iceFriction_, 1.0f, iceFriction_, 1.0f};
+            landingFriction_ = iceFriction_;
+            sideFriction_ = sideIceFriction_;
+            break;
         }
-#if 0
-        if (landingType_ == Ground::road)
-        {
-            //通常道路
-            acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
-        }
-        else if (landingType_ == Ground::turf)
-        {
-            //芝生
-            acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
-        }
-        else if (landingType_ == Ground::abyss)
-        {
-            //奈落に落下
-            acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
-            transform_.position_ = startTransform_.position_;
-            vecPos = XMLoadFloat3(&startTransform_.position_);
-            transform_.rotate_ = startTransform_.rotate_;
-        }
-        else
-        {
-            //何でもない
-            acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
-        }
-#endif
     }
-
-    //正面の行列を用意
-    frontVec_ = XMVector3NormalizeEst(vecZ);
 
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
     //地上ならハンドルに合わせて回転
@@ -360,39 +360,7 @@ void Vehicle::Update()
     Debug::TimerLogStart("vehicleタイヤ横押し");
     if (landingFlag_)
     {
-        XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
-        //進行方向と、車両の正面の、角度
-        //これは精度を犠牲にして高速らしい。角度は0 ~ 180 の間なのでなんとか方向を判別したい
-        //XMVector3NormalizeEst は長さが０だとバグるっぽい
-        /*
-        https://www.hiramine.com/programming/graphics/2d_vectorangle.html
-        ２次元の２つのベクトル（ベクトルＡ、ベクトルＢ）の外積 (OA × OB) を求めたとき、外積の値が、
-        正の値のとき、ベクトルＢは、ベクトルＡの進行方向に対して、左側を向いている、
-        負の値のとき、ベクトルＢは、ベクトルＡの進行方向に対して、右側を向いている、という性質があります。
-        */
-
-        //左だとy軸が上向き+、右だと下向き-
-        XMVECTOR outerProduct = XMVector3Cross(frontVec_, normalAcc);
-        //回転して利用する
-        XMMATRIX MatRotateZ = XMMatrixRotationZ(XMConvertToRadians(90));
-        outerProduct = XMVector3TransformCoord(outerProduct, MatRotateZ);
-        //外積を回転
-        outerProduct = XMVector3TransformCoord(outerProduct, matRotateY);
-
-        /*
-        * 遅いときは遠心力が弱く、速いときは強い、摩擦の影響を受ける
-        * 
-        * やりたいこと：車の前後へは抵抗が少ないが、左右方向への抵抗は多い。
-        *               左右から押された場合(カーブなど)は辻つま合わせで押されている反対方向へ押し返す。
-        *               これは押す力(車の左右方向の力)が強いほど摩擦が負けて弱い力で押し返す
-        * 　問題：滑りを切り替えた時に左右に動く
-        */
-
-        float ajust = sideFriction_;
-        if (slideFlag_)
-            ajust = sideSlideFriction_;
-
-        acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * ajust;
+        TurnWheel();
     }
     Debug::TimerLogEnd("vehicleタイヤ横押し");
 
@@ -420,7 +388,7 @@ void Vehicle::Update()
     PlayerParticle();
 #if 1
     //テスト
-    XMVECTOR bulletVec = XMVector3Normalize(frontVec_);
+    XMVECTOR bulletVec = XMVector3Normalize(vehicleVector_.z);
 
     //弾を発射
     if (Input::IsMouseButton(0) && coolTime_ <= 0)
@@ -547,8 +515,50 @@ void Vehicle::AngleLimit(float& angle, const float limit)
             angle *= -1;
         }
     }
+    //XMVector3ClampLength
 }
 
+//タイヤ回転
+void Vehicle::TurnWheel()
+{
+    XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
+    //進行方向と、車両の正面の、角度
+    //これは精度を犠牲にして高速らしい。角度は0 ~ 180 の間なのでなんとか方向を判別したい
+    //XMVector3NormalizeEst は長さが０だとバグるっぽい
+    /*
+    https://www.hiramine.com/programming/graphics/2d_vectorangle.html
+    ２次元の２つのベクトル（ベクトルＡ、ベクトルＢ）の外積 (OA × OB) を求めたとき、外積の値が、
+    正の値のとき、ベクトルＢは、ベクトルＡの進行方向に対して、左側を向いている、
+    負の値のとき、ベクトルＢは、ベクトルＡの進行方向に対して、右側を向いている、という性質があります。
+    */
+
+    //左だとy軸が上向き+、右だと下向き-
+    XMVECTOR outerProduct = XMVector3Cross(vehicleVector_.z, normalAcc);
+    //回転して利用する
+    XMMATRIX MatRotateZ = XMMatrixRotationZ(XMConvertToRadians(90));
+    outerProduct = XMVector3TransformCoord(outerProduct, MatRotateZ);
+    //外積を回転
+    outerProduct = XMVector3TransformCoord(outerProduct, matRotateY);
+
+    /*
+    * 遅いときは遠心力が弱く、速いときは強い、摩擦の影響を受ける
+    *
+    * やりたいこと：車の前後へは抵抗が少ないが、左右方向への抵抗は多い。
+    *               左右から押された場合(カーブなど)は辻つま合わせで押されている反対方向へ押し返す。
+    *               これは押す力(車の左右方向の力)が強いほど摩擦が負けて弱い力で押し返す
+    * 　問題：滑りを切り替えた時に左右に動く
+    */
+
+    /*
+    float ajust = sideWheelFriction_;
+    if (slideFlag_)
+        ajust = sideSlideFriction_;
+    if (landingType_ == Ground::ice || landingType_ == Ground::boost)
+        ajust = 0.01f;
+    */
+
+    acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * sideFriction_;
+}
 
 //地面、壁、敵との衝突をまとめる？？
 void Vehicle::VehicleCollide()
@@ -580,9 +590,10 @@ void Vehicle::VehicleCollide()
 bool Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
-    data.start = transform_.position_;  //レイの発射位置
-    data.start.y -= Size.wheelRemainder_;  //この値ぶんだけ地面から浮く タイヤの高さにする
-    data.dir = { 0.0f, -1.0f, 0.0f };      //レイの方向
+    data.start = transform_.position_;      //レイの発射位置
+    data.start.y -= Size.wheelRemainder_;   //この値ぶんだけ地面から浮く タイヤの高さにする
+    data.dir = { 0.0f, -1.0f, 0.0f };     //レイの方向
+    //XMStoreFloat3(&data.dir, -vehicleVector_.y);
     Model::RayCast(hModel, &data);      //レイを発射
     
     bool isHit = false;
@@ -608,20 +619,28 @@ bool Vehicle::Landing(int hModel,int type)
         }
 
 
-        if (false)
+        if (landingFlag_)
         {
             //角度を変える
-            XMVECTOR parallelVec = XMVector3NormalizeEst(data.normal - XMLoadFloat3(&data.end));
+            XMVECTOR parallelVec = data.normal;
+
+            //parallelVec = XMVector3TransformCoord(parallelVec, matRotateY);
+            XMVECTOR eToN = data.normal - XMLoadFloat3(&data.end);
 
             //ベクトルから角度を計算
-            transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(VectorZ_, parallelVec).m128_f32
-                / (*XMVector3Length(VectorZ_).m128_f32 * *XMVector3Length(parallelVec).m128_f32)))
-                - 90.0f;
+            transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(vehicleVector_.y, parallelVec).m128_f32
+                / (*XMVector3Length(vehicleVector_.y).m128_f32 * *XMVector3Length(parallelVec).m128_f32)))
+                + 180.0f;
+
+            //ベクトルから角度を計算
+            //transform_.rotate_.z = XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.x, parallelVec).m128_f32
+            /// (*XMVector3Length(worldVector_.x).m128_f32 * *XMVector3Length(parallelVec).m128_f32)))
+            //- 90.0f;
 
             //外積を使わないと0 ~ 180　になってしまう
-            XMVECTOR cross = XMVector3Cross(VectorZ_, parallelVec - VectorZ_);
-            if (*XMVector3Dot(cross, vehicleVectorX_).m128_f32 > 0.0f)
-                transform_.rotate_.x += 180;
+            XMVECTOR cross = XMVector3Cross(vehicleVector_.y, parallelVec - vehicleVector_.y);
+            if (*XMVector3Dot(cross, worldVector_.z).m128_f32 < 0.0f)
+                ;// transform_.rotate_.x *= -1;
         }
     }
 
@@ -664,7 +683,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
         //90度ずつ回転
         XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(90 * i));	//Ｙ軸で回転させる行列    
-        XMStoreFloat3(&wallCollideVertical[i].dir, XMVector3TransformCoord(frontVec_, matRot));//ベクトルを行列で変形
+        XMStoreFloat3(&wallCollideVertical[i].dir, XMVector3TransformCoord(vehicleVector_.z, matRot));//ベクトルを行列で変形
 
         Model::RayCast(hModel, &wallCollideVertical[i]);  //レイを発射
         //当たったら
@@ -731,7 +750,7 @@ void Vehicle::CollideWall(int hModel, int type)
     //z軸からの角度
     float theta = acos(vehicleSizeHalf_.z / vehicleSizeOblique_);
 
-    XMVECTOR rotVec = frontVec_;
+    XMVECTOR rotVec = vehicleVector_.z;
 
     //配列にする
     vector<RayCastData> rayCar(4);
@@ -742,7 +761,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
         //90度ずつ回転
         XMMATRIX mat = XMMatrixRotationY(XMConvertToRadians(90 * i));	//Ｙ軸で回転させる行列    
-        rotVec = XMVector3TransformCoord(frontVec_, mat);	//ベクトルを行列で変形
+        rotVec = XMVector3TransformCoord(vehicleVector_.z, mat);	//ベクトルを行列で変形
 
         XMStoreFloat3(&rayCar[i].dir, rotVec);
 
@@ -787,7 +806,7 @@ void Vehicle::CollideWall(int hModel, int type)
             //横からあたると低反発
             else if ((i == 1 || i == 3) && (rayCar[i].dist < vehicleSizeHalf_.x))
             {
-                //acceleration_ += rayCar[i].normal * hitSpeed * -0.25f / sideFriction_;
+                //acceleration_ += rayCar[i].normal * hitSpeed * -0.25f / sideWheelFriction_;
             }
         }
     }
@@ -812,7 +831,7 @@ void Vehicle::CollideWall(int hModel, int type)
             angle = -theta; break;
         }
         XMMATRIX mat = XMMatrixRotationY(angle);	//Ｙ軸で回転させる行列    
-        rotVec = XMVector3TransformCoord(frontVec_, mat);	//ベクトルを行列で変形
+        rotVec = XMVector3TransformCoord(vehicleVector_.z, mat);	//ベクトルを行列で変形
         XMStoreFloat3(&rayCarOblique[i].dir, rotVec);
 
         Model::RayCast(hModel, &rayCarOblique[i]);  //レイを発射

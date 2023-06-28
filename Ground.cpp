@@ -27,12 +27,18 @@ void Ground::Initialize()
     //コース１
     CircuitUnion circuit_1("circuit_1",1);
     //パーツ
-    CircuitParts circuit_1_R(Model::Load("model\\Ground16-R.fbx"), road);
-    CircuitParts circuit_1_G(Model::Load("model\\Ground16-G.fbx"), turf);
+    CircuitParts circuit_1_R(Model::Load("model\\Ground17-R.fbx"), road);
+    CircuitParts circuit_1_G(Model::Load("model\\Ground17-I.fbx"), ice);
+    CircuitParts circuit_1_D(Model::Load("model\\Ground17-D.fbx"), dirt);
+    CircuitParts circuit_1_B(Model::Load("model\\Ground17-Rainbow.fbx"), boost);
     CircuitParts circuit_1_A(Model::Load("model\\bottomWater.fbx"), abyss);
     //まとめ
     circuit_1.parts_.push_back(circuit_1_R);
     circuit_1.parts_.push_back(circuit_1_G);
+
+    circuit_1.parts_.push_back(circuit_1_D);
+    circuit_1.parts_.push_back(circuit_1_B);
+
     circuit_1.parts_.push_back(circuit_1_A);
     //追加
     circuits_.push_back(circuit_1);
@@ -50,7 +56,18 @@ void Ground::Initialize()
     //追加
     circuits_.push_back(circuit_2);
 
+    //コース3
+    CircuitUnion circuit_3("circuit_3", 1);
+    //パーツ
+    CircuitParts circuit_3_R(Model::Load("model\\Ground16-R.fbx"), road);
+    circuit_3.parts_.push_back(circuit_3_R);
 
+    CircuitParts circuit_3_G(Model::Load("model\\Ground16-G.fbx"), turf);
+    circuit_3.parts_.push_back(circuit_3_G);
+
+    circuit_3.parts_.push_back(circuit_1_A);
+    //追加
+    circuits_.push_back(circuit_3);
 
     //チェックポイント設置
     MakeCheckPoint();

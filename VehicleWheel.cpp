@@ -52,7 +52,6 @@ void VehicleWheel::Draw()
             wheelPos = Wheels.posFL_;
             addRotateY = handleRotateY_;
             break;
-
         case 1:
             XMStoreFloat3(&addPos, Wheels.centerToRight_);
             wheelPos = Wheels.posFR_;

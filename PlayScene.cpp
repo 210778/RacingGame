@@ -36,12 +36,12 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(0);
+	pGround_->SetChosenCircuit(2);
 
 	//エフェクト用
 	ParticlePackage::Initialize();
 
-	int population = 2;
+	int population = 1;
 	int playerNumber = 0;
 	//車両をセット
 	for (int i = 0; i < population; i++)
@@ -50,7 +50,7 @@ void PlayScene::Initialize()
 		{
 			VehiclePlayer* pVehiclePlayer = nullptr;
 			SetVehicle<VehiclePlayer>(pVehiclePlayer
-				, "model\\car_race_1_blue.fbx"
+				, "model\\car_race_1_green.fbx"
 				, "model\\wheel_race_1_white.fbx"
 				, i);
 		}
@@ -58,7 +58,7 @@ void PlayScene::Initialize()
 		{
 			VehicleOpponent* pVehicleOpponent = nullptr;
 			SetVehicle<VehicleOpponent>(pVehicleOpponent
-				, "model\\car_race_1_blue.fbx"
+				, "model\\car_race_1_red.fbx"
 				, "model\\wheel_industry_1_yellow.fbx"
 				, i);
 		}

@@ -1,6 +1,7 @@
 #pragma once
+#include <map>
 #include "Engine/GameObject.h"
-#include <chrono>
+
 
 class Particle;
 class Ground;
@@ -16,16 +17,42 @@ protected:
         int hWheelModel_;
 
     //重要ベクトル系
+        //ベクトル３つ
+        struct TriVector
+        {
+            XMVECTOR x, y, z;
+            //ゼロで初期化コンストラクタ
+            TriVector() {
+                x = { 0.0f,0.0f,0.0f,0.0f };
+                y = { 0.0f,0.0f,0.0f,0.0f };
+                z = { 0.0f,0.0f,0.0f,0.0f };}
+            //引数ありコンストラクタ
+            TriVector(XMVECTOR alfa,XMVECTOR bravo,XMVECTOR charlie) {
+                x = alfa;
+                y = bravo;
+                z = charlie;}
+            //セッター
+            void Set(XMVECTOR alfa, XMVECTOR bravo, XMVECTOR charlie) {
+                x = alfa;
+                y = bravo;
+                z = charlie;}
+        };
         //加速度
         XMVECTOR acceleration_;
         //それぞれの軸の単位ベクトル　定数
-        const XMVECTOR VectorX_;    //X軸単位ベクトル
-        const XMVECTOR VectorY_;    //Y軸単位ベクトル
-        const XMVECTOR VectorZ_;    //Z軸単位ベクトル
+        TriVector worldVector_;
         //車両から見た各軸の単位ベクトル
-        XMVECTOR vehicleVectorX_;   //車両から見たX軸単位ベクトル
-        XMVECTOR vehicleVectorY_;   //車両から見たY軸単位ベクトル
-        XMVECTOR vehicleVectorZ_;   //車両から見たZ軸単位ベクトル
+        TriVector vehicleVector_;
+
+    //回転用行列
+    XMMATRIX matRotateX;
+    XMMATRIX matRotateY;
+    XMMATRIX matRotateZ;
+
+    XMMATRIX matRotateX_R;
+    XMMATRIX matRotateY_R;
+    XMMATRIX matRotateZ_R;
+
 
     //移動、回転の速さ
     float moveSPD_;
@@ -52,10 +79,22 @@ protected:
         float wheelFriction_;       //タイヤ摩擦
         float airFriction_;         //空気摩擦
         float turfFriction_;        //芝生摩擦
+        float iceFriction_;         //氷摩擦
 
         bool  slideFlag_;           //走行、滑走
-        float sideFriction_;        //横向きの摩擦
+        float sideWheelFriction_;   //横向きの摩擦
         float sideSlideFriction_;   //横向き空中摩擦
+        float sideIceFriction_;     //横向き氷摩擦
+
+        float landingFriction_;
+        float sideFriction_;
+
+        struct LandingValue
+        {
+            int landing;
+            int side;
+            int acceleration;
+        };
 
     //弾丸系
     int coolTime_;  //弾丸用
@@ -159,7 +198,7 @@ public:
    //引数：pTarget 当たった相手
     void OnCollision(GameObject* pTarget) override;
 
-    //加速度を位置に加算する。アップデートの最初においとく
+    //加速度を位置に加算する。アップデートの最初においとく つもりだった
     void Accelerator();
 
     //加速度の制限 vector
@@ -171,6 +210,9 @@ public:
     //（変更したい角度、最大角度）
     //変更したい角度の絶対値が最大角度の絶対値を超えていたら丸め込む
     void AngleLimit(float& angle, const float limit);
+
+    //タイヤを回転させるときの物理
+    void TurnWheel();
 
     //壁や床との接触
     void VehicleCollide();

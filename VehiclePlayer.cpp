@@ -118,7 +118,7 @@ void VehiclePlayer::PlayerUI_Draw()
 
     //‡ˆÊ•\Ž¦
     string rank = to_string(ranking_) + "/" + to_string(population_);
-
+    pTextRanking_->Draw(30, 150, rank.c_str());
 #if 0
     //pTextLap_->Draw(30, 150, rank.c_str());
     string all = "!\"#$%&\'()*+,-./0123456789:;<=>?@\

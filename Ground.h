@@ -72,6 +72,9 @@ public:
         road = 0,   //í èÌìπòH 
         turf,       //é≈ê∂
         abyss,      //ìﬁóé
+        ice,        //ïX
+        dirt,       //çªín
+        boost,      //â¡ë¨è∞
         other,      //Ç«ÇÍÇ≈Ç‡Ç»Ç¢
         circuitMax  //èIì_
     };
