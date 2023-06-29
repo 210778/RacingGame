@@ -36,7 +36,7 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(2);
+	pGround_->SetChosenCircuit(0);
 
 	//エフェクト用
 	ParticlePackage::Initialize();

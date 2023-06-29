@@ -149,7 +149,10 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     //ベクトルY軸で回転用行列
     XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
     XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
-    string accStr = "X:" + to_string(floAcc.x) + " Y:" + to_string(floAcc.y) + " Z:" + to_string(floAcc.z);
+    //string accStr = "X:" + to_string(floAcc.x) + " Y:" + to_string(floAcc.y) + " Z:" + to_string(floAcc.z);
+    string accStr = "X:" + to_string(transform_.rotate_.x)
+                 + " Y:" + to_string(transform_.rotate_.y)
+                 + " Z:" + to_string(transform_.rotate_.z);
     pTextAcceleration_->Draw(280, 30, accStr.c_str());
 #endif
 }

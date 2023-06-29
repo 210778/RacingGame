@@ -27,15 +27,15 @@ protected:
                 y = { 0.0f,0.0f,0.0f,0.0f };
                 z = { 0.0f,0.0f,0.0f,0.0f };}
             //引数ありコンストラクタ
-            TriVector(XMVECTOR alfa,XMVECTOR bravo,XMVECTOR charlie) {
-                x = alfa;
-                y = bravo;
-                z = charlie;}
+            TriVector(XMVECTOR vecX,XMVECTOR vecY,XMVECTOR vecZ) {
+                x = vecX;
+                y = vecX;
+                z = vecX;}
             //セッター
-            void Set(XMVECTOR alfa, XMVECTOR bravo, XMVECTOR charlie) {
-                x = alfa;
-                y = bravo;
-                z = charlie;}
+            void Set(XMVECTOR vecX, XMVECTOR vecY, XMVECTOR vecZ) {
+                x = vecX;
+                y = vecY;
+                z = vecZ;}
         };
         //加速度
         XMVECTOR acceleration_;
@@ -89,12 +89,27 @@ protected:
         float landingFriction_;
         float sideFriction_;
 
-        struct LandingValue
+        //地面のタイプによる摩擦のまとめ
+        struct GroundTypeValue
         {
-            int landing;
-            int side;
-            int acceleration;
+            float acceleration;   //加速力に乗算される値
+            float landing;    //走行摩擦
+            float side;       //カーブ中に横向きに押す力
+
+            //引数なしコンストラクタ
+            GroundTypeValue(){
+                acceleration = 1.0f;
+                landing = 0.99f;
+                side = 0.2f;
+            }
+            //引数ありコンストラクタ
+            GroundTypeValue(float _acceleration, float _landing, float _side) {
+                acceleration = _acceleration;
+                landing = _landing;
+                side = _side;
+            }
         };
+        std::map<int, GroundTypeValue> GroundTypeFriction_;    //地面のタイプによる摩擦のまとめ
 
     //弾丸系
     int coolTime_;  //弾丸用
@@ -147,6 +162,7 @@ protected:
         float toTop_;     //上端　までの距離
         float toBottom_;  //下端　までの距離
         float rightToLeft_;     //右端　から　左端　までの距離
+        float topToBottom_;     //上端　から　下端　までの距離
         float frontToRear_;     //前方　から　後方　までの距離
         float toFrontRight_;  //右斜め前　までの距離
         float toFrontLeft_;   //左斜め前　までの距離
