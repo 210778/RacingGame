@@ -194,12 +194,12 @@ void Vehicle::Update()
 
     //坂道に対応
     vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateY);
-    //vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateZ);
+    vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateZ);
 
     vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateX);
     vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateZ);
 
-    //vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateX);
+    vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateX);
     vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateY);
 
     XMVECTOR vecX = moveSPD_ * vehicleVector_.x;
@@ -255,7 +255,7 @@ void Vehicle::Update()
         //全身後退
         if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
         {
-            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration * 10.0f;
+            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
         }
 
         if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
@@ -269,7 +269,7 @@ void Vehicle::Update()
     {
         slideFlag_ = true;
 
-        acceleration_ += vecZ;
+        acceleration_ += vecZ * 10.0f;
 
         XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
         ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
@@ -701,7 +701,8 @@ void Vehicle::CollideWall(int hModel, int type)
     //前後左右編
     for (int i = 0; i < wallCollideVertical.size(); i++)
     {
-        wallCollideVertical[i].start = Model::GetBonePosition(hModel_, "center");
+        wallCollideVertical[i].start = transform_.position_;
+        wallCollideVertical[i].start.y += Size.toTop_ * 0.5f;
 
         //90度ずつ回転
         XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(90.0f * i));	//Ｙ軸で回転させる行列    
@@ -711,11 +712,10 @@ void Vehicle::CollideWall(int hModel, int type)
         //当たったら
         if (wallCollideVertical[i].hit)
         { 
-
             XMFLOAT3 floAcc;
             //ベクトルY軸で回転用行列
-            //XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
-            //XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+            XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
+            XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
 
             XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
 
@@ -752,9 +752,6 @@ void Vehicle::CollideWall(int hModel, int type)
 
             if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
             {
-                acceleration_ = {0,0.3,0,0};
-                /*
-                
                 //衝突する直前で止まった時の壁までの距離
                 XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
                 ajustVec = XMVector3TransformCoord(ajustVec, matRot);
@@ -763,12 +760,13 @@ void Vehicle::CollideWall(int hModel, int type)
                 transform_.position_.x += XMVectorGetX(ajustVec);
                 transform_.position_.z += XMVectorGetZ(ajustVec);
 
-                //平行移動させる
-                float accY = XMVectorGetY(acceleration_);
-                acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32;
-                acceleration_ = XMVectorSetY(acceleration_, accY);
 
-                */
+                //平行移動させる
+                //float accY = XMVectorGetY(acceleration_);
+                //acceleration_ = wallCollideVertical[i].parallelism * *XMVector3LengthEst(acceleration_).m128_f32;
+                //acceleration_ = XMVectorSetY(acceleration_, accY);
+                float accLen = *XMVector3LengthEst(acceleration_).m128_f32;
+                acceleration_ = -acceleration_ * 0.5f;
             }
         }
     }
