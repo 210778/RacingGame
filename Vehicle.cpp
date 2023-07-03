@@ -598,7 +598,7 @@ void Vehicle::VehicleCollide()
         Debug::TimerLogStart("vehicle壁当たり判定");
             //壁
             //CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
-            //   , pGround_->GetCircuitUnion()->parts_[i].type_);
+            //    , pGround_->GetCircuitUnion()->parts_[i].type_);
         Debug::TimerLogEnd("vehicle壁当たり判定");
     }
 }
@@ -607,9 +607,9 @@ void Vehicle::VehicleCollide()
 bool Vehicle::Landing(int hModel,int type)
 {
     RayCastData data;
-    data.start = transform_.position_;      //レイの発射位置
-    //data.start = Model::GetBonePosition(hModel_, "bottom");
-    data.start.y -= Size.wheelRemainder_;   //この値ぶんだけ地面から浮く タイヤの高さにする
+    //data.start = transform_.position_;      //レイの発射位置
+    data.start = Model::GetBonePosition(hModel_, "center");
+    //data.start.y -= Size.wheelRemainder_;   //この値ぶんだけ地面から浮く タイヤの高さにする
     data.dir = { 0.0f, -1.0f, 0.0f };     //レイの方向
     //XMStoreFloat3(&data.dir, -vehicleVector_.y);
     Model::RayCast(hModel, &data);      //レイを発射
@@ -622,10 +622,19 @@ bool Vehicle::Landing(int hModel,int type)
         landingType_ = type;
         isHit = true;
 
-        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.wheelRemainder_)
+        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.toWheelBottom_)
         {
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             transform_.position_.y -= data.dist;
+
+            //車両とタイヤの高さの分あげる
+            XMFLOAT3 wheelFlo;
+            XMStoreFloat3(&wheelFlo, data.normal * -Size.toWheelBottom_);
+
+            transform_.position_.x += wheelFlo.x;
+            transform_.position_.y += wheelFlo.y;
+            transform_.position_.z += wheelFlo.z;
+
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
             landingFlag_ = true;
         }
@@ -639,6 +648,9 @@ bool Vehicle::Landing(int hModel,int type)
 
         if (landingFlag_)
         {
+            //坂道落下(?)
+            acceleration_ += data.normal * gravity_;
+
             //角度を変える
             XMVECTOR normalVec = data.normal;
             //回転
@@ -713,9 +725,9 @@ bool Vehicle::Landing(int hModel,int type)
         //天井にぶつかったとき
         else if (data.dist < XMVectorGetY(acceleration_) + Size.topToBottom_ + Size.wheelRemainder_)
         {
-            //その分位置を上げる
-            transform_.position_.y += data.dist - Size.topToBottom_;
-            acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
+            //その分位置を下げる
+            //transform_.position_.y -= data.dist + Size.topToBottom_;
+            //acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
     }
 

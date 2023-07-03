@@ -174,6 +174,7 @@ protected:
         XMFLOAT3 wheelRL_;  //左斜め後ろ　タイヤの位置
         float wheelHeight_; //タイヤの高さ
         float wheelRemainder_;//車体とタイヤの位置の差分の高さ
+        float toWheelBottom_;   //中心からタイヤの底辺までの高さ
     }Size;
 
     const short handleRight_;
@@ -261,6 +262,8 @@ public:
         Size.wheelRemainder_ = height - Size.wheelFL_.y;
         if (Size.wheelRemainder_ < 0.0f)
             Size.wheelRemainder_ = 0;
+
+        Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
     }
 
     //モデルの大きさセッター
