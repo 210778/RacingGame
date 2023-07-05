@@ -193,11 +193,12 @@ void Vehicle::Update()
     matRotateZ_R = XMMatrixRotationZ(XMConvertToRadians(-transform_.rotate_.z));
 
     //坂道に対応
-    vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateY);
+    //順番はZXY
     vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateZ);
+    vehicleVector_.x = XMVector3TransformCoord(worldVector_.x, matRotateY);
 
-    vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateX);
     vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateZ);
+    vehicleVector_.y = XMVector3TransformCoord(worldVector_.y, matRotateX);
 
     vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateX);
     vehicleVector_.z = XMVector3TransformCoord(worldVector_.z, matRotateY);
@@ -269,7 +270,7 @@ void Vehicle::Update()
     {
         slideFlag_ = true;
 
-        acceleration_ += vecZ * 10.0f;
+        acceleration_ += vecZ * 2.0f;
 
         XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
         ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
@@ -334,7 +335,7 @@ void Vehicle::Update()
         case Ground::turf:
             acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
             landingFriction_ = wheelFriction_;
-            sideFriction_ = sideIceFriction_;
+            sideFriction_ = sideWheelFriction_;
             break;
         //奈落に落下
         case Ground::abyss:
@@ -538,7 +539,19 @@ void Vehicle::AngleLimit(float& angle, const float limit)
 //タイヤ回転
 void Vehicle::TurnWheel()
 {
-    XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
+    //XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
+    XMVECTOR normalAcc = XMVector3Normalize(acceleration_);     //一応縦軸を無視  正規化
+
+    normalAcc = XMVector3TransformCoord(normalAcc, matRotateZ);
+    normalAcc = XMVector3TransformCoord(normalAcc, matRotateX);
+    normalAcc = XMVector3TransformCoord(normalAcc, matRotateY);
+
+    normalAcc *= {1.0f, 0.0f, 1.0f, 1.0f};
+
+    normalAcc = XMVector3TransformCoord(normalAcc, matRotateY_R);
+    normalAcc = XMVector3TransformCoord(normalAcc, matRotateX_R);
+    normalAcc = XMVector3TransformCoord(normalAcc, matRotateZ_R);
+
     //進行方向と、車両の正面の、角度
     //これは精度を犠牲にして高速らしい。角度は0 ~ 180 の間なのでなんとか方向を判別したい
     //XMVector3NormalizeEst は長さが０だとバグるっぽい
@@ -552,10 +565,15 @@ void Vehicle::TurnWheel()
     //左だとy軸が上向き+、右だと下向き-
     XMVECTOR outerProduct = XMVector3Cross(vehicleVector_.z, normalAcc);
     //回転して利用する
-    XMMATRIX MatRotateZ = XMMatrixRotationZ(XMConvertToRadians(90));
+    XMMATRIX MatRotateZ;
+    MatRotateZ = XMMatrixRotationZ(XMConvertToRadians(90));
+    //MatRotateZ = XMMatrixRotationNormal(vehicleVector_.z, XM_PIDIV2);
     outerProduct = XMVector3TransformCoord(outerProduct, MatRotateZ);
+
     //外積を回転
+    outerProduct = XMVector3TransformCoord(outerProduct, matRotateZ);
     outerProduct = XMVector3TransformCoord(outerProduct, matRotateY);
+    outerProduct = XMVector3TransformCoord(outerProduct, matRotateX);
 
     /*
     * 遅いときは遠心力が弱く、速いときは強い、摩擦の影響を受ける
@@ -606,9 +624,24 @@ void Vehicle::VehicleCollide()
 //接地 
 bool Vehicle::Landing(int hModel,int type)
 {
+    RayCastData vehicleData;
+    //vehicleData.start = Model::GetBonePosition(hModel_, "center");
+    vehicleData.start = transform_.position_;
+    XMStoreFloat3(&vehicleData.dir, -vehicleVector_.y);
+    Model::RayCast(hModel, &vehicleData);      //レイを発射
+    if (vehicleData.hit)
+    {
+        if (Calculator::IsEqualFloat(Size.wheelRemainder_, vehicleData.dist))
+        {
+            ;// acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
+        }
+    }
+
     RayCastData data;
     //data.start = transform_.position_;      //レイの発射位置
+
     data.start = Model::GetBonePosition(hModel_, "center");
+
     //data.start.y -= Size.wheelRemainder_;   //この値ぶんだけ地面から浮く タイヤの高さにする
     data.dir = { 0.0f, -1.0f, 0.0f };     //レイの方向
     //XMStoreFloat3(&data.dir, -vehicleVector_.y);
@@ -629,7 +662,7 @@ bool Vehicle::Landing(int hModel,int type)
 
             //車両とタイヤの高さの分あげる
             XMFLOAT3 wheelFlo;
-            XMStoreFloat3(&wheelFlo, data.normal * -Size.toWheelBottom_);
+            XMStoreFloat3(&wheelFlo, vehicleVector_.y * Size.toWheelBottom_);
 
             transform_.position_.x += wheelFlo.x;
             transform_.position_.y += wheelFlo.y;
@@ -640,21 +673,34 @@ bool Vehicle::Landing(int hModel,int type)
         }
         else
         {
-            //位置を下げる
-            acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
+            //落下
             landingFlag_ = false;
+            acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};           
         }
 
+        //重力
+        //acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
 
         if (landingFlag_)
         {
             //坂道落下(?)
-            acceleration_ += data.normal * gravity_;
+            //acceleration_ -= data.normal * gravity_;
 
             //角度を変える
             XMVECTOR normalVec = data.normal;
             //回転
             normalVec = XMVector3TransformCoord(normalVec, matRotateY_R);
+
+            {
+                //Z軸
+                transform_.rotate_.z = (XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.x, normalVec).m128_f32
+                    / (*XMVector3Length(worldVector_.x).m128_f32 * *XMVector3Length(normalVec).m128_f32)))
+                    - 90.0f) * -1.0f;
+                //外積
+                XMVECTOR cross = XMVector3Cross(worldVector_.x, normalVec - worldVector_.x);
+                if (*XMVector3Dot(cross, worldVector_.y).m128_f32 > 0.0f)
+                    ;// transform_.rotate_.z *= -1;
+            }
 
             {
                 //X軸の角度を取得
@@ -667,44 +713,6 @@ bool Vehicle::Landing(int hModel,int type)
                 if (*XMVector3Dot(cross, worldVector_.y).m128_f32 > 0.0f)
                     ;// transform_.rotate_.x *= -1;
             }
-
-            {
-
-                //Z軸
-                transform_.rotate_.z = (XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.x, normalVec).m128_f32
-                    / (*XMVector3Length(worldVector_.x).m128_f32 * *XMVector3Length(normalVec).m128_f32)))
-                    - 90.0f) * -1.0f;
-                //外積
-                XMVECTOR cross = XMVector3Cross(worldVector_.x, normalVec - worldVector_.x);
-                if (*XMVector3Dot(cross, worldVector_.y).m128_f32 > 0.0f)
-                    ;// transform_.rotate_.z *= -1;
-            }
-
-
-            /*
-
-            //角度を変える
-            XMVECTOR parallelVec = data.normal;
-
-            //parallelVec = XMVector3TransformCoord(parallelVec, matRotateY);
-            XMVECTOR eToN = data.normal - XMLoadFloat3(&data.end);
-
-            //ベクトルから角度を計算
-            transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(vehicleVector_.y, parallelVec).m128_f32
-                / (*XMVector3Length(vehicleVector_.y).m128_f32 * *XMVector3Length(parallelVec).m128_f32)))
-                + 180.0f;
-
-            //ベクトルから角度を計算
-            //transform_.rotate_.z = XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.x, parallelVec).m128_f32
-            /// (*XMVector3Length(worldVector_.x).m128_f32 * *XMVector3Length(parallelVec).m128_f32)))
-            //- 90.0f;
-
-            //外積を使わないと0 ~ 180　になってしまう
-            XMVECTOR cross = XMVector3Cross(vehicleVector_.y, parallelVec - vehicleVector_.y);
-            if (*XMVector3Dot(cross, worldVector_.z).m128_f32 < 0.0f)
-                ;// transform_.rotate_.x *= -1;
-
-            */
         }
     }
 
@@ -716,18 +724,18 @@ bool Vehicle::Landing(int hModel,int type)
     if (data.hit)
     {   
         //ちょっと地面に埋まったとき
-        if (data.dist < Size.topToBottom_ + Size.wheelRemainder_)
+        if (data.dist < Size.toTop_)
         {
             //その分位置を上げる
             transform_.position_.y += data.dist + Size.wheelRemainder_;
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
         //天井にぶつかったとき
-        else if (data.dist < XMVectorGetY(acceleration_) + Size.topToBottom_ + Size.wheelRemainder_)
+        else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_)
         {
             //その分位置を下げる
             //transform_.position_.y -= data.dist + Size.topToBottom_;
-            //acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
+            acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
     }
 
@@ -747,6 +755,7 @@ void Vehicle::CollideWall(int hModel, int type)
     {
         wallCollideVertical[i].start = transform_.position_;
         wallCollideVertical[i].start.y += Size.toTop_ * 0.5f;
+        //wallCollideVertical[i].start = Model::GetBonePosition(hModel_, "center");
 
         //90度ずつ回転
         XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(90.0f * i));	//Ｙ軸で回転させる行列    
@@ -756,13 +765,6 @@ void Vehicle::CollideWall(int hModel, int type)
         //当たったら
         if (wallCollideVertical[i].hit)
         { 
-            XMFLOAT3 floAcc;
-            //ベクトルY軸で回転用行列
-            XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(transform_.rotate_.y));
-            XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
-
-            XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
-
             //方向ごとの加速度
             float dirAcc;
             //方向ごとの車体の長さ
@@ -799,8 +801,11 @@ void Vehicle::CollideWall(int hModel, int type)
                 //衝突する直前で止まった時の壁までの距離
                 XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
                 ajustVec = XMVector3TransformCoord(ajustVec, matRot);
-                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
+
                 ajustVec = XMVector3TransformCoord(ajustVec, matRotateZ);
+                ajustVec = XMVector3TransformCoord(ajustVec, matRotateX);
+                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
+
                 transform_.position_.x += XMVectorGetX(ajustVec);
                 transform_.position_.z += XMVectorGetZ(ajustVec);
 
@@ -965,17 +970,48 @@ void Vehicle::MakeWheels(int hModel)
 void Vehicle::SetVehicleSize(int hModel)
 {
     //ボーン
-    XMFLOAT3 vehicleCenter  = Model::GetBonePosition(hModel, "center");
-    XMFLOAT3 vehicleBottom  = Model::GetBonePosition(hModel, "bottom");
-    XMFLOAT3 vehicleTop     = Model::GetBonePosition(hModel, "top");
-    XMFLOAT3 vehicleLeft    = Model::GetBonePosition(hModel, "left");
-    XMFLOAT3 vehicleRight   = Model::GetBonePosition(hModel, "right");
-    XMFLOAT3 vehicleRear    = Model::GetBonePosition(hModel, "rear");
-    XMFLOAT3 vehicleFront   = Model::GetBonePosition(hModel, "front");
-    Size.wheelFR_ = Model::GetBonePosition(hModel, "wheelFR");
-    Size.wheelFL_ = Model::GetBonePosition(hModel, "wheelFL");
-    Size.wheelRR_ = Model::GetBonePosition(hModel, "wheelRR");
-    Size.wheelRL_ = Model::GetBonePosition(hModel, "wheelRL");
+    XMFLOAT3 vehicleCenter;
+    if (!(Model::GetBonePosition(&vehicleCenter, hModel, "center"))) {
+        Debug::Log("failed get bone:center", true);
+    }
+    XMFLOAT3 vehicleBottom;
+    if (!(Model::GetBonePosition(&vehicleBottom, hModel, "bottom"))) {
+        Debug::Log("failed get bone:bottom", true);
+    }
+    XMFLOAT3 vehicleTop;
+    if (!(Model::GetBonePosition(&vehicleTop, hModel, "top"))) {
+        Debug::Log("failed get bone:top", true);
+    }
+    XMFLOAT3 vehicleLeft;
+    if (!(Model::GetBonePosition(&vehicleLeft, hModel, "left"))) {
+        Debug::Log("failed get bone:left", true);
+    }
+    XMFLOAT3 vehicleRight;
+    if (!(Model::GetBonePosition(&vehicleRight, hModel, "right"))) {
+        Debug::Log("failed get bone:right", true);
+    }
+    XMFLOAT3 vehicleRear;
+    if (!(Model::GetBonePosition(&vehicleRear, hModel, "rear"))) {
+        Debug::Log("failed get bone:rear", true);
+    }
+    XMFLOAT3 vehicleFront;
+    if (!(Model::GetBonePosition(&vehicleFront, hModel, "front"))) {
+        Debug::Log("failed get bone:front", true);
+    }
+
+
+    if (!(Model::GetBonePosition(&Size.wheelFR_, hModel, "wheelFR"))) {
+        Debug::Log("failed get bone:wheelFR", true);
+    }
+    if (!(Model::GetBonePosition(&Size.wheelFL_, hModel, "wheelFL"))) {
+        Debug::Log("failed get bone:wheelFL", true);
+    }
+    if (!(Model::GetBonePosition(&Size.wheelRR_, hModel, "wheelRR"))) {
+        Debug::Log("failed get bone:wheelRR", true);
+    }
+    if (!(Model::GetBonePosition(&Size.wheelRL_, hModel, "wheelRL"))) {
+        Debug::Log("failed get bone:wheelRL", true);
+    }
 
     //車両の大きさ計算
     Size.toRight_ = *XMVector3Length(XMLoadFloat3(&vehicleRight)    - XMLoadFloat3(&vehicleCenter)).m128_f32;

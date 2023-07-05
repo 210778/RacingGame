@@ -61,3 +61,15 @@ int Global::GetCurrentFPS()
 {
 	return currentFPS_;
 }
+
+
+
+bool Calculator::IsEqualFloat(float alfa, float bravo)
+{
+	//î‰är
+	if (fabsf(alfa - bravo) <= FLT_EPSILON * fmaxf(1.f, fmaxf(fabsf(alfa), fabsf(bravo))))
+	{
+		return true;
+	}
+	return false;
+}

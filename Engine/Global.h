@@ -34,3 +34,9 @@ namespace Global
 	int GetCurrentFPS();
 
 };
+
+namespace Calculator
+{
+	//float‚Ç‚¤‚µ‚Ì”äŠr
+	bool IsEqualFloat(float alfa, float bravo);
+};
