@@ -40,9 +40,9 @@ void Viewer::Update()
     XMFLOAT3 parentRot = pVehicle->GetRotate();
 
     //transform_.rotate_.Xの値に合わせてX軸回転させる行列
-    XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(parentRot.y));
+    XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(parentRot.z));
     XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(parentRot.x));
-    //XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(transform_.rotate_.z));
+    XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(parentRot.y));    
 
     //現在位置をベクトルにしておく
     XMVECTOR vecPos = XMLoadFloat3(&parentPos);
@@ -70,6 +70,7 @@ void Viewer::Update()
     matRotateX += XMMatrixRotationX(XMConvertToRadians(camX));//回した分追加で回転
 
     XMVECTOR vecCam = XMLoadFloat3(&camFlo_);    //後ろ上方に伸びるベクトルを用意
+    vecCam = XMVector3TransformCoord(vecCam, matRotateZ);
     vecCam = XMVector3TransformCoord(vecCam, matRotateX);   //それを向きに合わせて回転(1)
     vecCam = XMVector3TransformCoord(vecCam, matRotateY);   //それを向きに合わせて回転(2)
     

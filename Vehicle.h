@@ -261,7 +261,7 @@ public:
         
         Size.wheelRemainder_ = height - Size.wheelFL_.y;
         if (Size.wheelRemainder_ < 0.0f)
-            Size.wheelRemainder_ = 0;
+            Size.wheelRemainder_ = 0.0f;
 
         Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
     }
