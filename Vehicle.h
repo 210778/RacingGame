@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <unordered_map>
 #include "Engine/GameObject.h"
 
 
@@ -109,7 +110,7 @@ protected:
                 side = _side;
             }
         };
-        std::map<int, GroundTypeValue> GroundTypeFriction_;    //地面のタイプによる摩擦のまとめ
+        std::unordered_map<int, GroundTypeValue> GroundTypeFriction_;    //地面のタイプによる摩擦のまとめ
 
     //弾丸系
     int coolTime_;  //弾丸用

@@ -124,17 +124,15 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Ground::turf].landing = GroundTypeFriction_[Ground::turf].landing;
     GroundTypeFriction_[Ground::turf].side = GroundTypeFriction_[Ground::turf].side;
     //氷床
-    GroundTypeFriction_[Ground::ice].acceleration = 0.94f;
+    GroundTypeFriction_[Ground::ice].acceleration = 0.5f;
     GroundTypeFriction_[Ground::ice].landing = 0.999f;
     GroundTypeFriction_[Ground::ice].side = 0.02f;
     //加速床
     GroundTypeFriction_[Ground::boost].acceleration = 1.0f;
-    GroundTypeFriction_[Ground::boost].landing = 1.0f;
+    GroundTypeFriction_[Ground::boost].landing = 1.05f;
     GroundTypeFriction_[Ground::boost].side = 0.2f;
-    //どれでもない
-    GroundTypeFriction_[Ground::other]; //作るだけ
     //奈落
-    GroundTypeFriction_[Ground::abyss];
+    GroundTypeFriction_[Ground::abyss]; //作るだけ
 }
 
 //デストラクタ
@@ -319,43 +317,15 @@ void Vehicle::Update()
     //地面の種類によって
     if (landingFlag_)
     {
-        //switchのほうが軽いかはわからない
-        switch (landingType_)
+        acceleration_ *= { GroundTypeFriction_[landingType_].landing, 1.0f
+                         , GroundTypeFriction_[landingType_].landing, 1.0f };
+
+        if (landingType_ == Ground::abyss)
         {
-        //なんでもない
-        default:
-        //通常道路
-        case Ground::road:
-            acceleration_ *= {wheelFriction_, 1.0f, wheelFriction_, 1.0f};
-            landingFriction_ = wheelFriction_;
-            sideFriction_ = sideWheelFriction_;
-            break;
-        //芝生　と　砂地
-        case Ground::dirt:
-        case Ground::turf:
-            acceleration_ *= {turfFriction_, 1.0f, turfFriction_, 1.0f};
-            landingFriction_ = wheelFriction_;
-            sideFriction_ = sideWheelFriction_;
-            break;
-        //奈落に落下
-        case Ground::abyss:
+            //奈落に落下
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = startTransform_.position_;
-            transform_.rotate_ = startTransform_.rotate_;
-            break;
-        //氷床
-        case Ground::ice:
-            acceleration_ *= {iceFriction_, 1.0f, iceFriction_, 1.0f};
-            landingFriction_ = iceFriction_;
-            sideFriction_ = sideIceFriction_;
-            break;
-        //加速床
-        case Ground::boost:
-            acceleration_ += vecZ;
-            acceleration_ *= {iceFriction_, 1.0f, iceFriction_, 1.0f};
-            landingFriction_ = iceFriction_;
-            sideFriction_ = sideIceFriction_;
-            break;
+            transform_.rotate_   = startTransform_.rotate_;
         }
     }
 
@@ -539,74 +509,6 @@ void Vehicle::AngleLimit(float& angle, const float limit)
 //タイヤ回転
 void Vehicle::TurnWheel()
 {
-#if 0
-    XMVECTOR normalAcc = XMVector3Normalize(acceleration_ /** XMVECTOR{ 1.0f,0.0f,1.0f,1.0f }*/);
-
-    //左だとy軸が上向き+、右だと下向き-
-    XMVECTOR outerProduct = XMVector3Cross(vehicleVector_.z, normalAcc);
-    //回転して利用する
-    XMMATRIX MatRotateZ = XMMatrixRotationZ(XMConvertToRadians(90));
-    outerProduct = XMVector3TransformCoord(outerProduct, MatRotateZ);
-    //外積を回転
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateY);
-
-    acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * sideFriction_;
-#endif
-#if 0
-    XMVECTOR normalAcc = acceleration_;
-
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateZ);
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateX);
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateY);
-
-    //normalAcc *= {1.0f, 0.0f, 1.0f, 1.0f};
-    //normalAcc = XMVector3Normalize(acceleration_);  //正規化
-
-    float vecX = XMVectorGetX(normalAcc);
-
-    acceleration_ += vehicleVector_.x * -vecX * 1.05f * moveSPD_ * XMVector3Length(normalAcc);
-#endif
-#if 0
-    //XMVECTOR normalAcc = XMVector3Normalize(acceleration_ * XMVECTOR{ 1.0f,0.0f,1.0f,1.0f });     //一応縦軸を無視  正規化
-    XMVECTOR normalAcc = XMVector3Normalize(acceleration_);     //正規化
-
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateZ);
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateX);
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateY);
-
-    normalAcc *= {1.0f, 0.0f, 1.0f, 1.0f};
-
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateY_R);
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateX_R);
-    normalAcc = XMVector3TransformCoord(normalAcc, matRotateZ_R);
-
-    //進行方向と、車両の正面の、角度
-    //これは精度を犠牲にして高速らしい。角度は0 ~ 180 の間なのでなんとか方向を判別したい
-    //XMVector3NormalizeEst は長さが０だとバグるっぽい
-    /*
-    https://www.hiramine.com/programming/graphics/2d_vectorangle.html
-    ２次元の２つのベクトル（ベクトルＡ、ベクトルＢ）の外積 (OA × OB) を求めたとき、外積の値が、
-    正の値のとき、ベクトルＢは、ベクトルＡの進行方向に対して、左側を向いている、
-    負の値のとき、ベクトルＢは、ベクトルＡの進行方向に対して、右側を向いている、という性質があります。
-    */
-
-    //左だとy軸が上向き+、右だと下向き-
-    XMVECTOR outerProduct = XMVector3Cross(vehicleVector_.z, normalAcc);
-    
-    //回転して利用する
-
-    XMMATRIX MatRotateZ;
-    //MatRotateZ = XMMatrixRotationZ(XMConvertToRadians(90));
-    MatRotateZ = XMMatrixRotationNormal(vehicleVector_.z, XM_PIDIV2);
-    outerProduct = XMVector3TransformCoord(outerProduct, MatRotateZ);
-
-    //外積を回転
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateZ_R);
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateY_R);
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateX_R);
-
-    acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * sideFriction_;
-#endif
     XMVECTOR normalAcc = XMVector3Normalize(acceleration_);
 
     //左だとy軸が上向き+、右だと下向き-
@@ -622,7 +524,8 @@ void Vehicle::TurnWheel()
     outerProduct = XMVector3TransformCoord(outerProduct, matRotateX);
     outerProduct = XMVector3TransformCoord(outerProduct, matRotateY);
 
-    acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32) * outerProduct * sideFriction_;
+    acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32)
+                      * outerProduct * GroundTypeFriction_[landingType_].side;
 }
 
 //地面、壁、敵との衝突をまとめる？？
@@ -654,9 +557,19 @@ void Vehicle::VehicleCollide()
 //接地 
 bool Vehicle::Landing(int hModel,int type)
 {
+    XMFLOAT3 pos = transform_.position_;
+    XMVECTOR up = vehicleVector_.y * Size.toBottom_;
+    XMFLOAT3 upF;
+    XMStoreFloat3(&upF, up);
+    pos.x += upF.x;
+    pos.y += upF.y;
+    pos.z += upF.z;
+
+    //XMFLOAT3 bp = Model::GetBonePosition(hModel_, "center");
+
     RayCastData data;
 
-    data.start = transform_.position_;      //レイの発射位置
+    data.start = pos;      //レイの発射位置
 
     data.dir = { 0.0f, -1.0f, 0.0f };     //レイの方向
     //XMStoreFloat3(&data.dir, -vehicleVector_.y);
@@ -670,13 +583,13 @@ bool Vehicle::Landing(int hModel,int type)
         landingType_ = type;
         isHit = true;
 
-        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.wheelRemainder_)
+        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.toWheelBottom_)
         {
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             transform_.position_.y -= data.dist;
 
             XMFLOAT3 wheelFlo;
-            XMStoreFloat3(&wheelFlo, vehicleVector_.y * Size.wheelRemainder_);
+            XMStoreFloat3(&wheelFlo, vehicleVector_.y * Size.toWheelBottom_);
             //transform_.position_.x += wheelFlo.x;
             transform_.position_.y += wheelFlo.y;
             //transform_.position_.z += wheelFlo.z;
@@ -759,12 +672,11 @@ bool Vehicle::Landing(int hModel,int type)
     if (data.hit)
     {   
         //ちょっと地面に埋まったとき
-        if (data.dist < Size.topToBottom_)
+        if (data.dist < Size.toTop_)
         {
             //その分位置を上げる
             XMFLOAT3 upVec;
-            XMStoreFloat3(&upVec, data.normal * (data.dist + Size.wheelRemainder_));
-            //transform_.position_.y += data.dist + Size.wheelRemainder_;
+            XMStoreFloat3(&upVec, data.normal * -(data.dist + Size.toWheelBottom_));
             transform_.position_.x += upVec.x;
             transform_.position_.y += upVec.y;
             transform_.position_.z += upVec.z;
@@ -772,10 +684,10 @@ bool Vehicle::Landing(int hModel,int type)
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
         //天井にぶつかったとき
-        else if (data.dist < XMVectorGetY(acceleration_) + Size.topToBottom_)
+        else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_)
         {
-            //その分位置を下げる
-            transform_.position_.y += data.dist - Size.topToBottom_ - Size.wheelRemainder_;
+            //止める
+            //transform_.position_.y += data.dist - Size.toTop_ - Size.wheelRemainder_;
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
     }
