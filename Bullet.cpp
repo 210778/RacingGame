@@ -9,7 +9,7 @@ Bullet::Bullet(GameObject* parent)
     :GameObject(parent, "Bullet"), hModel_(-1),
     acceleration_(0.0f, 0.0f, 0.0f), life_(20)
 {
-    life_ *= 60;
+    life_ *= 1;
 }
 
 //デストラクタ
@@ -20,11 +20,11 @@ Bullet::~Bullet()
 //初期化
 void Bullet::Initialize()
 {
-    hModel_ = Model::Load("model\\EnemyKinoko.fbx");//model\\TestBullet.fbx
+    hModel_ = Model::Load("model\\measure_pole.fbx");//model\\TestBullet.fbx
     assert(hModel_ >= 0);
 
     transform_.rotate_ = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    transform_.scale_  = XMFLOAT3(0.8f, 0.8f, 0.8f);
+    transform_.scale_;// = XMFLOAT3(0.4f, 0.4f, 0.4f);
 }
 
 //更新
@@ -55,6 +55,7 @@ XMStoreFloat3(&f, v);
     XMStoreFloat3(&transform_.rotate_, accVec * rotVec);
     MessageBox(NULL, L"a", L" puzzleList_.size() ", MB_OK);
 */ 
+#if 0
     Ground* pGround = (Ground*)FindObject("Ground"); //ステージオブジェクトを探す
     int hGroundModel = pGround->GetModelHandle();    //モデル番号を取得
     RayCastData data;
@@ -78,7 +79,7 @@ XMStoreFloat3(&f, v);
         //加速度に入れる
         XMStoreFloat3(&acceleration_, accVec);
     }
-
+#endif
     //墓
 #if 0
     XMVECTOR dirVec = XMLoadFloat3(&acceleration_);
@@ -206,7 +207,7 @@ void Bullet::Release()
 
 void Bullet::Accelerator()
 {
-    transform_.position_.x += acceleration_.x;
-    transform_.position_.y += acceleration_.y;
-    transform_.position_.z += acceleration_.z;
+    transform_.position_.x += acceleration_.x * 0.5f;
+    transform_.position_.y += acceleration_.y * 0.5f;
+    transform_.position_.z += acceleration_.z * 0.5f;
 }

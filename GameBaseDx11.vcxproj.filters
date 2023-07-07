@@ -155,6 +155,9 @@
     <ClCompile Include="VehicleOpponent.cpp">
       <Filter>04Play\Vehicle</Filter>
     </ClCompile>
+    <ClCompile Include="MeasurePole.cpp">
+      <Filter>04Play\Others</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -270,6 +273,9 @@
     </ClInclude>
     <ClInclude Include="VehicleOpponent.h">
       <Filter>04Play\Vehicle</Filter>
+    </ClInclude>
+    <ClInclude Include="MeasurePole.h">
+      <Filter>04Play\Others</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

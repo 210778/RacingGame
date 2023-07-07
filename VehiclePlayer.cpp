@@ -57,9 +57,6 @@ void VehiclePlayer::Release()
 //UIの初期化
 void VehiclePlayer::PlayerUI_Initialize()
 {
-    //スピードメーター
-    pSpeedometer_ = Instantiate<Speedometer>(this);
-
     //文字
     pTextSpeed_ = new Text;
     pTextSpeed_->Initialize();
@@ -77,6 +74,9 @@ void VehiclePlayer::PlayerUI_Initialize()
     pTextAcceleration_->Initialize();
 
     pSample_ = Instantiate<Sample>(GetParent());
+
+    //スピードメーター
+    pSpeedometer_ = Instantiate<Speedometer>(GetParent());
 }
 
 //UIの表示

@@ -181,15 +181,6 @@ protected:
     const short handleRight_;
     const short handleLeft_;
 
-    //レイキャストの時つかう
-    enum Direction
-    {
-        front = 0,
-        right = 1,
-        rear = 2,
-        left = 3,
-    };
-
 public:
     //コンストラクタ
     Vehicle(GameObject* parent);

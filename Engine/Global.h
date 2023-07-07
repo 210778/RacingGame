@@ -39,4 +39,7 @@ namespace Calculator
 {
 	//floatどうしの比較
 	bool IsEqualFloat(float alfa, float bravo);
+
+	//二つのベクトルの角度を求める
+	float AngleBetweelVector(const XMVECTOR& alfa, const XMVECTOR& bravo);
 };

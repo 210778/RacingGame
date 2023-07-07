@@ -73,3 +73,17 @@ bool Calculator::IsEqualFloat(float alfa, float bravo)
 	}
 	return false;
 }
+
+/*
+* 
+//X軸の角度を取得
+	//XMVECTOR eToN = data.normal - XMLoadFloat3(&data.end);
+transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.z, normalVec).m128_f32
+	/ (*XMVector3Length(worldVector_.z).m128_f32 * *XMVector3Length(normalVec).m128_f32)))
+	- 90.0f;
+//外積を使わないと0 ~ 180　になってしまう
+XMVECTOR cross = XMVector3Cross(worldVector_.z, normalVec - worldVector_.z);
+if (*XMVector3Dot(cross, worldVector_.y).m128_f32 < 0.0f)
+	transform_.rotate_.x *= -1;
+
+*/

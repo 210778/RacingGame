@@ -13,7 +13,7 @@ class Bullet : public GameObject
 public:
     //コンストラクタ
     Bullet(GameObject* parent);
-
+    
     //デストラクタ
     ~Bullet();
 
