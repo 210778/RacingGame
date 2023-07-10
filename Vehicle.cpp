@@ -620,29 +620,11 @@ bool Vehicle::Landing(int hModel,int type)
             normalVec = XMVector3TransformCoord(normalVec, matRotateY_R);
 
 
-            {
-                //X軸の角度を取得
-                    //XMVECTOR eToN = data.normal - XMLoadFloat3(&data.end);
-                transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.z, normalVec).m128_f32
-                    / (*XMVector3Length(worldVector_.z).m128_f32 * *XMVector3Length(normalVec).m128_f32)))
-                    - 90.0f;
-                //外積を使わないと0 ~ 180　になってしまう
-                XMVECTOR cross = XMVector3Cross(worldVector_.z, normalVec - worldVector_.z);
-                if (*XMVector3Dot(cross, worldVector_.y).m128_f32 < 0.0f)
-                    ;// transform_.rotate_.x *= -1;
-            }
-
-            {
-                //Z軸
-                transform_.rotate_.z = (XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.x, normalVec).m128_f32
-                    / (*XMVector3Length(worldVector_.x).m128_f32 * *XMVector3Length(normalVec).m128_f32)))
-                    - 90.0f) * -1;
-                //外積
-                XMVECTOR cross = XMVector3Cross(worldVector_.x, normalVec - worldVector_.x);
-                if (*XMVector3Dot(cross, worldVector_.y).m128_f32 > 0.0f)
-                    ;// transform_.rotate_.z *= -1;
-            }
-
+            //X軸の角度を取得
+            transform_.rotate_.x = Calculator::AngleBetweelVector(worldVector_.z, normalVec, worldVector_.y) - 90.0f;
+           
+            //Z軸
+            transform_.rotate_.z = Calculator::AngleBetweelVector(worldVector_.x, -normalVec, worldVector_.y) - 90.0f;
         }
     }
 
@@ -759,7 +741,29 @@ void Vehicle::CollideWall(int hModel, int type)
             pBullet->SetPosition(pos);
             pBullet->SetSpeed(wallCollideVertical[3].dir);
 
-            coolTime_ = heatAdd_;
+            coolTime_ = heatAdd_ * 0.5f;
+        }
+
+        if(false){
+            //回転
+            //XMVECTOR meesureVec = XMVector3TransformCoord(XMLoadFloat3(&wallCollideVertical[i].dir), matRotateY_R);
+            MeasurePole* pMp = Instantiate<MeasurePole>(GetParent());
+            pMp->ViewRayCast(&pos, &wallCollideVertical[i].dir, 10.0f);
+            pMp->SetPosition(pos);
+        }
+
+        if (false) {
+            MeasurePole* pMp = Instantiate<MeasurePole>(GetParent());
+            pMp->ViewRayCast(&pos, &vehicleVector_.x, 10.0f);
+            pMp->SetPosition(pos);
+
+            pMp = Instantiate<MeasurePole>(GetParent());
+            pMp->ViewRayCast(&pos, &vehicleVector_.y, 10.0f);
+            pMp->SetPosition(pos);
+
+            pMp = Instantiate<MeasurePole>(GetParent());
+            pMp->ViewRayCast(&pos, &vehicleVector_.z, 10.0f);
+            pMp->SetPosition(pos);
         }
 
         Model::RayCast(hModel, &wallCollideVertical[i]);  //レイを発射

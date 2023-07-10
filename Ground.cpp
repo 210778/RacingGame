@@ -224,10 +224,13 @@ void Ground::MakeStartPoint()
                             dirSuccess = true;
                             last++;
 
+                            
                             XMVECTOR startVec = XMVector3Normalize(XMLoadFloat3(&startPos) - XMLoadFloat3(&dirPos));
+                            /*
                             //正規化しなくていいはず
                             XMVECTOR vecZ = { 0.0f,0.0f,1.0f,0.0f };
                             XMVECTOR vecUp = { 0.0f,1.0f,0.0f,0.0f };
+
 
                             //ベクトルから角度を計算
                             defaultStartRotate_ = XMConvertToDegrees(acos(*XMVector3Dot(startVec, vecZ).m128_f32
@@ -237,6 +240,13 @@ void Ground::MakeStartPoint()
                             XMVECTOR cro = XMVector3Cross(startVec, vecZ - startVec);
                             if (*XMVector3Dot(cro, vecUp).m128_f32 > 0.0f)
                                 defaultStartRotate_ += 180;
+                            */
+
+                            defaultStartRotate_ = Calculator::AngleBetweelVector(startVec
+                                                            , { 0.0f,0.0f,1.0f,0.0f }
+                                                            , { 0.0f,1.0f,0.0f,0.0f });
+
+                            defaultStartRotate_ += 180;
 
                             //更新
                             Transform startTrans;

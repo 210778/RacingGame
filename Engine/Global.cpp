@@ -74,16 +74,28 @@ bool Calculator::IsEqualFloat(float alfa, float bravo)
 	return false;
 }
 
-/*
-* 
-//X軸の角度を取得
-	//XMVECTOR eToN = data.normal - XMLoadFloat3(&data.end);
-transform_.rotate_.x = XMConvertToDegrees(acos(*XMVector3Dot(worldVector_.z, normalVec).m128_f32
-	/ (*XMVector3Length(worldVector_.z).m128_f32 * *XMVector3Length(normalVec).m128_f32)))
-	- 90.0f;
-//外積を使わないと0 ~ 180　になってしまう
-XMVECTOR cross = XMVector3Cross(worldVector_.z, normalVec - worldVector_.z);
-if (*XMVector3Dot(cross, worldVector_.y).m128_f32 < 0.0f)
-	transform_.rotate_.x *= -1;
+//二つのベクトルの角度を求める
+float Calculator::AngleBetweelVector(const XMVECTOR& alfa, const XMVECTOR& bravo)
+{
+	//正規化
+	XMVECTOR nAlfa = XMVector3Normalize(alfa)
+			, nBravo = XMVector3Normalize(bravo);
+	
+	return XMConvertToDegrees(acos(*XMVector3Dot(nAlfa, nBravo).m128_f32
+		/ (*XMVector3Length(nAlfa).m128_f32 * *XMVector3Length(nBravo).m128_f32)));
+}
 
-*/
+//二つのベクトルの角度を求める
+float Calculator::AngleBetweelVector(const XMVECTOR& alfa, const XMVECTOR& bravo, const XMVECTOR& up)
+{
+	//正規化
+	XMVECTOR nAlfa = XMVector3Normalize(alfa)
+			, nBravo = XMVector3Normalize(bravo);
+
+	if (*XMVector3Dot(XMVector3Cross(nAlfa, nBravo - nAlfa), XMVector3Normalize(up)).m128_f32 < 0.0f)
+	{
+		return XMConvertToDegrees(*XMVectorACos(XMVector3Dot(nAlfa, nBravo)).m128_f32);
+	}
+
+	return XMConvertToDegrees(-(XM_2PI - *XMVectorACos(XMVector3Dot(nAlfa, nBravo)).m128_f32));
+}

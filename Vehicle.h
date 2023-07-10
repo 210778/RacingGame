@@ -209,6 +209,8 @@ public:
 
     //加速度を位置に加算する。アップデートの最初においとく つもりだった
     void Accelerator();
+    //加速度を取得
+    XMVECTOR GetAcceleration() { return acceleration_; };
 
     //加速度の制限 vector
     void SpeedLimit(XMVECTOR& speed, const float limit);

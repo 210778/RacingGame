@@ -40,6 +40,20 @@ namespace Calculator
 	//floatどうしの比較
 	bool IsEqualFloat(float alfa, float bravo);
 
-	//二つのベクトルの角度を求める
+	/// <summary>
+	/// 二つのベクトルの角度を求める
+	/// </summary>
+	/// <param name="alfa">ベクトル１(正規化する必要とかはない)</param>
+	/// <param name="bravo">ベクトル２(同上)</param>
+	/// <returns>-90 ~ 90の角度</returns>
 	float AngleBetweelVector(const XMVECTOR& alfa, const XMVECTOR& bravo);
+
+	/// <summary>
+	/// 二つのベクトルの角度を求める
+	/// </summary>
+	/// <param name="alfa">ベクトル１(正規化する必要とかはない)</param>
+	/// <param name="bravo">ベクトル２(同上)</param>
+	/// <param name="up">世界の上方向のベクトル(同上)</param>
+	/// <returns>0 ~ 360の角度</returns>
+	float AngleBetweelVector(const XMVECTOR& alfa, const XMVECTOR& bravo, const XMVECTOR& up);
 };

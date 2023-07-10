@@ -7,7 +7,7 @@ class Vehicle;
 class Viewer : public GameObject
 {
     //Vehicle* pVehicle;
-    GameObject* pVehicle;
+    Vehicle* pVehicle;
 
     float cameraLength_;//モデルの表示用
     //移動、回転の速さ

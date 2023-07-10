@@ -20,11 +20,11 @@ Bullet::~Bullet()
 //èâä˙âª
 void Bullet::Initialize()
 {
-    hModel_ = Model::Load("model\\measure_pole.fbx");//model\\TestBullet.fbx
+    hModel_ = Model::Load("model\\low_ball.fbx");//model\\TestBullet.fbx
     assert(hModel_ >= 0);
 
     transform_.rotate_ = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    transform_.scale_;// = XMFLOAT3(0.4f, 0.4f, 0.4f);
+    transform_.scale_ = XMFLOAT3(0.2f, 0.2f, 0.2f);
 }
 
 //çXêV
@@ -207,7 +207,7 @@ void Bullet::Release()
 
 void Bullet::Accelerator()
 {
-    transform_.position_.x += acceleration_.x * 0.5f;
-    transform_.position_.y += acceleration_.y * 0.5f;
-    transform_.position_.z += acceleration_.z * 0.5f;
+    transform_.position_.x += acceleration_.x * 0.25f;
+    transform_.position_.y += acceleration_.y * 0.25f;
+    transform_.position_.z += acceleration_.z * 0.25f;
 }

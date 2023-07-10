@@ -5,6 +5,8 @@
 class MeasurePole : public GameObject
 {
     int hModel_;    //モデル番号
+    int life_;  //寿命
+
 public:
     //コンストラクタ
     MeasurePole(GameObject* parent);
@@ -31,4 +33,5 @@ public:
     /// <param name="direction">レイの方向</param>
     /// <param name="length">判定する長さ</param>
     void ViewRayCast(const XMFLOAT3* start, const XMVECTOR* direction, const float length);
+    void ViewRayCast(const XMFLOAT3* start, const XMFLOAT3* direction, const float length);
 };

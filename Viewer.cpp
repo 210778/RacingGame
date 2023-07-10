@@ -28,7 +28,7 @@ Viewer::~Viewer()
 //初期化
 void Viewer::Initialize()
 {
-    pVehicle = GetParent();
+    pVehicle = (Vehicle*)GetParent();
     assert(pVehicle != nullptr);
 }
 
@@ -38,6 +38,9 @@ void Viewer::Update()
     //親のトランスフォームを取得
     XMFLOAT3 parentPos = pVehicle->GetPosition();
     XMFLOAT3 parentRot = pVehicle->GetRotate();
+    //加速度取得
+    XMFLOAT3 vehicleAcc;
+    XMStoreFloat3(&vehicleAcc, pVehicle->GetAcceleration());
 
     //transform_.rotate_.Xの値に合わせてX軸回転させる行列
     XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(parentRot.z));
@@ -70,9 +73,9 @@ void Viewer::Update()
     matRotateX += XMMatrixRotationX(XMConvertToRadians(camX));//回した分追加で回転
 
     XMVECTOR vecCam = XMLoadFloat3(&camFlo_);    //後ろ上方に伸びるベクトルを用意
-    vecCam = XMVector3TransformCoord(vecCam, matRotateZ);
-    vecCam = XMVector3TransformCoord(vecCam, matRotateX);   //それを向きに合わせて回転(1)
-    vecCam = XMVector3TransformCoord(vecCam, matRotateY);   //それを向きに合わせて回転(2)
+    vecCam = XMVector3TransformCoord(vecCam, matRotateZ);   //それを向きに合わせて回転(1)
+    vecCam = XMVector3TransformCoord(vecCam, matRotateX);   //それを向きに合わせて回転(2)
+    vecCam = XMVector3TransformCoord(vecCam, matRotateY);   //それを向きに合わせて回転(3)
     
 #if 0
     Camera::SetPosition(vecPos + vecCam);     //現在の位置とベクトルを足してカメラの位置にする
