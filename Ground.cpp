@@ -242,11 +242,7 @@ void Ground::MakeStartPoint()
                                 defaultStartRotate_ += 180;
                             */
 
-                            defaultStartRotate_ = Calculator::AngleBetweelVector(startVec
-                                                            , { 0.0f,0.0f,1.0f,0.0f }
-                                                            , { 0.0f,1.0f,0.0f,0.0f });
-
-                            defaultStartRotate_ += 180;
+                            defaultStartRotate_ = Calculator::AngleBetweenVector(startVec, { 0.0f,0.0f,1.0f,0.0f });
 
                             //çXêV
                             Transform startTrans;

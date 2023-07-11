@@ -550,8 +550,8 @@ void Vehicle::VehicleCollide()
 
         Debug::TimerLogStart("vehicle•Ç“–‚½‚è”»’è");
             //•Ç
-            CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
-                , pGround_->GetCircuitUnion()->parts_[i].type_);
+            //CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
+            //    , pGround_->GetCircuitUnion()->parts_[i].type_);
         Debug::TimerLogEnd("vehicle•Ç“–‚½‚è”»’è");
     }
 }
@@ -621,10 +621,12 @@ bool Vehicle::Landing(int hModel,int type)
 
 
             //XŽ²‚ÌŠp“x‚ðŽæ“¾
-            transform_.rotate_.x = Calculator::AngleBetweelVector(worldVector_.z, normalVec, worldVector_.y) - 90.0f;
-           
+            //transform_.rotate_.x = Calculator::AngleBetweenVector(worldVector_.z, normalVec, worldVector_.y) - 90.0f;
+            transform_.rotate_.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.z, normalVec).m128_f32) - 90.0f;
+
             //ZŽ²
-            transform_.rotate_.z = Calculator::AngleBetweelVector(worldVector_.x, -normalVec, worldVector_.y) - 90.0f;
+            //transform_.rotate_.z = Calculator::AngleBetweenVector(worldVector_.x, -normalVec, worldVector_.y) - 90.0f;
+            transform_.rotate_.z = -(XMConvertToDegrees(* XMVector3AngleBetweenNormals(worldVector_.x, normalVec).m128_f32) - 90.0f);
         }
     }
 
@@ -722,7 +724,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
         XMStoreFloat3(&wallCollideVertical[i].dir, dirVec);
 
-        if (coolTime_ <= 0 && i == 3)
+        if (coolTime_ <= 0 && i == 3 && false)
         {
             
             Bullet* pBullet = Instantiate<Bullet>(GetParent());
@@ -752,8 +754,9 @@ void Vehicle::CollideWall(int hModel, int type)
             pMp->SetPosition(pos);
         }
 
-        if (false) {
-            MeasurePole* pMp = Instantiate<MeasurePole>(GetParent());
+        if (true) {
+            MeasurePole* pMp;
+            pMp = Instantiate<MeasurePole>(GetParent());
             pMp->ViewRayCast(&pos, &vehicleVector_.x, 10.0f);
             pMp->SetPosition(pos);
 

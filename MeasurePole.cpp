@@ -49,7 +49,10 @@ void MeasurePole::ViewRayCast(const XMFLOAT3* start, const XMVECTOR* direction, 
 
     XMVECTOR sToE = XMVector3Normalize(*direction) - XMVector3Normalize((XMLoadFloat3(start)));
     XMVECTOR vecS = (XMLoadFloat3(start));
-    XMVECTOR vecZ = { 1.0f,0.0f,0.0f,0.0f };
+    XMVECTOR vecZ = { 0.0f,0.0f,1.0f,0.0f };
+    XMVECTOR vecX = { 1.0f,0.0f,1.0f,0.0f };
+    XMVECTOR vecY = { 0.0f,1.0f,0.0f,0.0f };
+
     //float toX = XMConvertToDegrees(*XMVector3AngleBetweenVectors(sToE, { 1.0f,0.0f,0.0f,0.0f }).m128_f32);
     //float toY = XMConvertToDegrees(*XMVector3AngleBetweenVectors(sToE, { 0.0f,1.0f,0.0f,0.0f }).m128_f32);
     //float toZ = XMConvertToDegrees(*XMVector3AngleBetweenVectors(sToE, { 0.0f,0.0f,1.0f,0.0f }).m128_f32);
@@ -57,9 +60,11 @@ void MeasurePole::ViewRayCast(const XMFLOAT3* start, const XMVECTOR* direction, 
     //transform_.rotate_.y = toY;
     //transform_.rotate_.z = toZ;
 
-    //transform_.rotate_.x = Calculator::AngleBetweelVector(*direction, vecZ, { 0.0f,1.0f,0.0f,0.0f });
-    transform_.rotate_.y = Calculator::AngleBetweelVector(*direction, vecZ, { 0.0f,1.0f,0.0f,0.0f });
-    //transform_.rotate_.z = Calculator::AngleBetweelVector(*direction, vecZ, { 0.0f,1.0f,0.0f,0.0f });
+    //float ang = XMConvertToDegrees(*XMVector3AngleBetweenVectors(*direction, vecZ).m128_f32);
+
+    transform_.rotate_.x = Calculator::AngleBetweenVector(*direction, vecZ);
+    transform_.rotate_.y = Calculator::AngleBetweenVector(*direction, vecX) + 180;
+    //transform_.rotate_.z = Calculator::AngleBetweenVector(*direction, vecZ, vecY);
 }
 
 //オーバーロード
