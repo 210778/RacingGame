@@ -550,8 +550,8 @@ void Vehicle::VehicleCollide()
 
         Debug::TimerLogStart("vehicle壁当たり判定");
             //壁
-            //CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
-            //    , pGround_->GetCircuitUnion()->parts_[i].type_);
+            CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
+                , pGround_->GetCircuitUnion()->parts_[i].type_);
         Debug::TimerLogEnd("vehicle壁当たり判定");
     }
 }
@@ -715,16 +715,15 @@ void Vehicle::CollideWall(int hModel, int type)
 
         XMVECTOR dirVec = vehicleVector_.z;
         
-        dirVec = XMVector3TransformCoord(dirVec, matRotateX);
-        dirVec = XMVector3TransformCoord(dirVec, matRotateZ);
+        //dirVec = XMVector3TransformCoord(dirVec, matRotateZ);
+        //dirVec = XMVector3TransformCoord(dirVec, matRotateX);    
         dirVec = XMVector3TransformCoord(dirVec, matRot);
 
         //dirVec = XMVector3TransformCoord(dirVec, matRotateY);
 
-
         XMStoreFloat3(&wallCollideVertical[i].dir, dirVec);
 
-        if (coolTime_ <= 0 && i == 3 && false)
+        if (coolTime_ <= 0 && i == 3)
         {
             
             Bullet* pBullet = Instantiate<Bullet>(GetParent());
@@ -743,9 +742,8 @@ void Vehicle::CollideWall(int hModel, int type)
             pBullet->SetPosition(pos);
             pBullet->SetSpeed(wallCollideVertical[3].dir);
 
-            coolTime_ = heatAdd_ * 0.5f;
+            coolTime_ = heatAdd_ * 0.25f;
         }
-
         if(false){
             //回転
             //XMVECTOR meesureVec = XMVector3TransformCoord(XMLoadFloat3(&wallCollideVertical[i].dir), matRotateY_R);
@@ -753,20 +751,19 @@ void Vehicle::CollideWall(int hModel, int type)
             pMp->ViewRayCast(&pos, &wallCollideVertical[i].dir, 10.0f);
             pMp->SetPosition(pos);
         }
+        if (false) {
+            //MeasurePole* pMp;
+            MeasurePole* pMp1 = Instantiate<MeasurePole>(GetParent());
+            pMp1->ViewRayCast(&pos, &vehicleVector_.x, 10.0f);
+            pMp1->SetPosition(pos);
 
-        if (true) {
-            MeasurePole* pMp;
-            pMp = Instantiate<MeasurePole>(GetParent());
-            pMp->ViewRayCast(&pos, &vehicleVector_.x, 10.0f);
-            pMp->SetPosition(pos);
+            MeasurePole* pMp2 = Instantiate<MeasurePole>(GetParent());
+            pMp2->ViewRayCast(&pos, &vehicleVector_.y, 10.0f);
+            pMp2->SetPosition(pos);
 
-            pMp = Instantiate<MeasurePole>(GetParent());
-            pMp->ViewRayCast(&pos, &vehicleVector_.y, 10.0f);
-            pMp->SetPosition(pos);
-
-            pMp = Instantiate<MeasurePole>(GetParent());
-            pMp->ViewRayCast(&pos, &vehicleVector_.z, 10.0f);
-            pMp->SetPosition(pos);
+            MeasurePole* pMp3 = Instantiate<MeasurePole>(GetParent());
+            pMp3->ViewRayCast(&pos, &vehicleVector_.z, 10.0f);
+            pMp3->SetPosition(pos);
         }
 
         Model::RayCast(hModel, &wallCollideVertical[i]);  //レイを発射
@@ -783,22 +780,27 @@ void Vehicle::CollideWall(int hModel, int type)
             switch (i)
             {
                 //前方、その他
-            default:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            default:
+            case Direction::front:
+                //dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = Size.toFront_;
                 dirPlusMinus = 1.0f;
                 break;
                 //右
-            case Direction::right:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            case Direction::right:
+                //dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = Size.toRight_;
                 dirPlusMinus = 1.0f;
                 break;
                 //後ろ
-            case Direction::rear:dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            case Direction::rear:
+                //dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = -Size.toRear_;
                 dirPlusMinus = -1.0f;
                 break;
                 //左
-            case Direction::left:dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
+            case Direction::left:
+                //dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY_R));
                 dirSize = -Size.toLeft_;
                 dirPlusMinus = -1.0f;
                 break;
@@ -815,6 +817,7 @@ void Vehicle::CollideWall(int hModel, int type)
                 ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
 
                 transform_.position_.x += XMVectorGetX(ajustVec);
+                transform_.position_.y += XMVectorGetY(ajustVec);
                 transform_.position_.z += XMVectorGetZ(ajustVec);
 
 

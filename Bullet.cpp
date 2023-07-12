@@ -24,7 +24,7 @@ void Bullet::Initialize()
     assert(hModel_ >= 0);
 
     transform_.rotate_ = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    transform_.scale_ = XMFLOAT3(0.2f, 0.2f, 0.2f);
+    transform_.scale_ = XMFLOAT3(0.1f, 0.1f, 0.1f);
 }
 
 //çXêV
