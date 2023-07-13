@@ -559,8 +559,9 @@ void FbxParts::RayCast(RayCastData * data)
 
 			BOOL  hit = FALSE;
 			float dist = 0.0f;
+			XMFLOAT3 end;
 
-			hit = Direct3D::Intersect(data->start, data->dir, ver[0], ver[1], ver[2], &dist, data->end);
+			hit = Direct3D::Intersect(data->start, data->dir, ver[0], ver[1], ver[2], &dist, end);
 
 
 			//–½’†
@@ -568,6 +569,7 @@ void FbxParts::RayCast(RayCastData * data)
 			{
 				data->hit = TRUE;
 				data->dist = dist;
+				data->end = end;
 
 				//–½’†‚µ‚½‚ç–@ü‚ğ‹‚ß‚é
 				XMVECTOR vecVer0 = XMLoadFloat3(&ver[0]);

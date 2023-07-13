@@ -42,11 +42,6 @@ void Camera::Initialize()
 //更新（ビュー行列作成）
 void Camera::Update()
 {
-	//assert(!XMVector3Equal(EyeDirection, XMVectorZero()));
-	//assert(!XMVector3IsInfinite(EyeDirection));
-	//assert(!XMVector3Equal(UpDirection, XMVectorZero()));
-	//assert(!XMVector3IsInfinite(UpDirection));
-
 	//安全
 	if (XMVector3Equal(position_, target_))
 		return;

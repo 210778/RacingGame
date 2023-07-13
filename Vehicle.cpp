@@ -511,23 +511,34 @@ void Vehicle::AngleLimit(float& angle, const float limit)
 //タイヤ回転
 void Vehicle::TurnWheel()
 {
+    //加速度を正規化
+    //左だとy軸が上向き+、右だと下向き-
+    //回転して加速度に足す
+
+    acceleration_ +=  *XMVector3LengthEst(acceleration_).m128_f32
+
+                      * XMVector3TransformCoord(XMVector3Cross(vehicleVector_.z
+                      , XMVector3Normalize(acceleration_))
+                      , XMMatrixRotationNormal(vehicleVector_.z, XM_PIDIV2))
+
+                      * GroundTypeFriction_[landingType_].side;
+
+#if 0
+    //読みやすいコード
+
+    //加速度を正規化
     XMVECTOR normalAcc = XMVector3Normalize(acceleration_);
 
     //左だとy軸が上向き+、右だと下向き-
     XMVECTOR outerProduct = XMVector3Cross(vehicleVector_.z, normalAcc);
 
     //回転して利用する
-    XMMATRIX MatRotateZ = XMMatrixRotationZ(XM_PIDIV2);
-    //MatRotateZ = XMMatrixRotationNormal(vehicleVector_.z, XM_PIDIV2);
+    XMMATRIX MatRotateZ = XMMatrixRotationNormal(vehicleVector_.z, XM_PIDIV2);
     outerProduct = XMVector3TransformCoord(outerProduct, MatRotateZ);
 
-    //外積を回転
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateZ);
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateX);
-    outerProduct = XMVector3TransformCoord(outerProduct, matRotateY);
-
     acceleration_ += (*XMVector3LengthEst(acceleration_).m128_f32)
-                      * outerProduct * GroundTypeFriction_[landingType_].side;
+        * outerProduct * GroundTypeFriction_[landingType_].side;
+#endif
 }
 
 //地面、壁、敵との衝突をまとめる？？
@@ -559,101 +570,96 @@ void Vehicle::VehicleCollide()
 //接地 
 bool Vehicle::Landing(int hModel,int type)
 {
-    XMFLOAT3 pos = transform_.position_;
-    XMVECTOR up = vehicleVector_.y * Size.toBottom_;
-    XMFLOAT3 upF;
-    XMStoreFloat3(&upF, up);
-    pos.x += upF.x;
-    pos.y += upF.y;
-    pos.z += upF.z;
-
-    //XMFLOAT3 bp = Model::GetBonePosition(hModel_, "center");
-
+    //レイの発射位置
     RayCastData data;
+    data.start = transform_.position_;
+    XMFLOAT3 upF;
+    XMStoreFloat3(&upF, vehicleVector_.y * Size.toBottom_);
+    data.start.x += upF.x;
+    data.start.y += upF.y;
+    data.start.z += upF.z;
 
-    data.start = pos;      //レイの発射位置
-
-    data.dir = { 0.0f, -1.0f, 0.0f };     //レイの方向
-    //XMStoreFloat3(&data.dir, -vehicleVector_.y);
+    data.dir = { 0.0f, -1.0f, 0.0f };   //レイの方向
     Model::RayCast(hModel, &data);      //レイを発射
     
-    bool isHit = false;
+    bool isHit = false; //何かに当たったか??
 
     //レイが当たったら
     if (data.hit)
     {
-        landingType_ = type;
-        isHit = true;
+        landingType_ = type;    //地面のタイプ
+        isHit = true;           //何かに当たった
 
-        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.toWheelBottom_)
-        {
-            //下方向の加速度が大きいなら　地面にワープ　落下速度を０
-            transform_.position_.y -= data.dist;
-
-            XMFLOAT3 wheelFlo;
-            XMStoreFloat3(&wheelFlo, vehicleVector_.y * Size.toWheelBottom_);
-            //transform_.position_.x += wheelFlo.x;
-            transform_.position_.y += wheelFlo.y;
-            //transform_.position_.z += wheelFlo.z;
-
-            acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
-            landingFlag_ = true;
-        }
-        else
-        {
-            //落下
-            landingFlag_ = false;
-            acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};           
-        }
-
-        //重力
-        //acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
-
+        //角度を変える
         if (landingFlag_)
         {
-            //坂道落下(?)
-            //acceleration_ -= data.normal * gravity_;
-
-            //角度を変える
             //回転
             XMVECTOR normalVec = XMVector3TransformCoord(data.normal, matRotateY_R);
 
             //X軸の角度を取得
             transform_.rotate_.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
-                                    worldVector_.z, normalVec).m128_f32) - 90.0f;
-
+                worldVector_.z, normalVec).m128_f32) - 90.0f;
             //Z軸
             transform_.rotate_.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
-                                    worldVector_.x, normalVec).m128_f32) - 90.0f);
+                worldVector_.x, normalVec).m128_f32) - 90.0f);
+        }
+
+        if (-data.dist > XMVectorGetY(acceleration_) - gravity_ - Size.toWheelBottom_)
+        {
+            //下方向の加速度が大きいなら　地面にワープ　落下速度を０
+            if (!landingFlag_)
+            {
+                transform_.position_.y -= data.dist - Size.toWheelBottom_;
+                acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
+                landingFlag_ = true;
+            }
+        }
+        else
+        {
+            //落下 ここにあるとうまくいく
+            if (!landingFlag_)
+                acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
+
+            landingFlag_ = false;
+        }
+
+        //角度を変える
+        if (false)
+        {
+            //回転
+            XMVECTOR normalVec = XMVector3TransformCoord(data.normal, matRotateY_R);
+            //X軸の角度を取得
+            transform_.rotate_.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
+                worldVector_.z, normalVec).m128_f32) - 90.0f;
+            //Z軸
+            transform_.rotate_.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
+                worldVector_.x, normalVec).m128_f32) - 90.0f);
         }
     }
 
-    //坂道を移動してるときに坂道に張り付く
-    //急すぎると効果なし
+    //接地位置調整
+    //あと坂道を移動してるときに坂道に張り付く　急すぎると効果なし
     RayCastData vehicleData;
-    //vehicleData.start = transform_.position_;
-    //vehicleData.start = pos;
+    vehicleData.start = data.start;
     XMStoreFloat3(&vehicleData.dir, -vehicleVector_.y);
     Model::RayCast(hModel, &vehicleData);      //レイを発射
     if (vehicleData.hit)
     {
         //高低差がタイヤの直径ぐらいの時
-        if (vehicleData.dist > 0.0f && vehicleData.dist < Size.toWheelBottom_)
+        if (vehicleData.dist > 0.0f && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
         {
             XMFLOAT3 wheelFlo;
-            XMStoreFloat3(&wheelFlo, vehicleVector_.y * (vehicleData.dist - Size.toWheelBottom_));
-            //transform_.position_.x -= wheelFlo.x;
-            //transform_.position_.y -= wheelFlo.y;
-            //transform_.position_.z -= wheelFlo.z;
+            XMStoreFloat3(&wheelFlo, -vehicleVector_.y * (vehicleData.dist - Size.toWheelBottom_));
+            transform_.position_.x += wheelFlo.x;
+            transform_.position_.y += wheelFlo.y;
+            transform_.position_.z += wheelFlo.z;
+            landingFlag_ = true;
         }
-
     }
-
 
     //天井 ほんとは分割するべきだろうけど天井に当たることは珍しいし重そうだからここに置く
     XMStoreFloat3(&data.dir, vehicleVector_.y);
     Model::RayCast(hModel, &data);  //レイを発射
-
     if (data.hit)
     {   
         //ちょっと地面に埋まったとき
@@ -710,9 +716,7 @@ void Vehicle::CollideWall(int hModel, int type)
         XMVECTOR dirVec = worldVector_.z;
         
         dirVec = XMVector3TransformCoord(dirVec, matRot);
-        dirVec = XMVector3TransformCoord(dirVec, matRotateZ);
-        dirVec = XMVector3TransformCoord(dirVec, matRotateX);    
-        dirVec = XMVector3TransformCoord(dirVec, matRotateY);
+        VectorRotateMatrixZXY(dirVec);
 
         XMStoreFloat3(&wallCollideVertical[i].dir, dirVec);
 
@@ -808,9 +812,8 @@ void Vehicle::CollideWall(int hModel, int type)
                 XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
                 ajustVec = XMVector3TransformCoord(ajustVec, matRot);
 
-                ajustVec = XMVector3TransformCoord(ajustVec, matRotateZ);
-                ajustVec = XMVector3TransformCoord(ajustVec, matRotateX);
-                ajustVec = XMVector3TransformCoord(ajustVec, matRotateY);
+                //回転
+                VectorRotateMatrixZXY(ajustVec);
 
                 transform_.position_.x += XMVectorGetX(ajustVec);
                 transform_.position_.y += XMVectorGetY(ajustVec);
@@ -1158,34 +1161,27 @@ float Vehicle::GetNextCheckDistance()
         - *XMVector3LengthEst(XMLoadFloat3(&transform_.position_)).m128_f32;
 }
 
+//ベクトルを回転行列で回転 (ZXY順)
+void Vehicle::VectorRotateMatrixZXY(XMVECTOR& vec)
+{
+    vec = XMVector3TransformCoord(vec, matRotateZ);
+    vec = XMVector3TransformCoord(vec, matRotateX);
+    vec = XMVector3TransformCoord(vec, matRotateY);
+}
+
 //UIの関数群　プレイヤー限定で作用する
-//UIの初期化
-void Vehicle::PlayerUI_Initialize()
-{
-}
-//UIの表示
-void Vehicle::PlayerUI_Draw()
-{
-}
-//UIの情報更新
-void Vehicle::PlayerUI_Update()
-{
-}
-
-//カメラの用意
-void Vehicle::PlayerCamera_Initialize()
-{
-}
-
-//エフェクトを表示
-void Vehicle::PlayerParticle()
-{
-}
-
-//車両の操作、入力の受付
-void Vehicle::InputOperate()
-{
-}
+    //UIの初期化
+    void Vehicle::PlayerUI_Initialize() {};
+    //UIの表示
+    void Vehicle::PlayerUI_Draw() {};
+    //UIの情報更新
+    void Vehicle::PlayerUI_Update() {};
+    //カメラの用意
+    void Vehicle::PlayerCamera_Initialize() {};
+    //エフェクトを表示
+    void Vehicle::PlayerParticle() {};
+    //車両の操作、入力の受付
+    void Vehicle::InputOperate() {};
 
 #if 0
 物理演算に関するメモ

@@ -272,6 +272,9 @@ public:
     //スタートの位置
     void SetStartTransform(Transform value) { startTransform_ = value; }
 
+    //ベクトルを回転行列で回転 (ZXY順)
+    void VectorRotateMatrixZXY(XMVECTOR& vec);
+
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得
         int GetPointCount() { return pointCount_; }
