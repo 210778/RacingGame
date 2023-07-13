@@ -30,6 +30,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent)
 //コンストラクタ
 VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::string wheelName)
     :Vehicle(parent, "VehiclePlayer")
+    , pViewer(nullptr)
     , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
     , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
     , km_hAdd(120.0f)
@@ -170,8 +171,14 @@ void VehiclePlayer::PlayerUI_Update()
 //カメラの用意
 void VehiclePlayer::PlayerCamera_Initialize()
 {
-    Viewer* pViewer = Instantiate<Viewer>(this);
+    pViewer = Instantiate<Viewer>(this);
     pViewer->SetPosition(transform_.position_);
+}
+
+//カメラ更新
+void VehiclePlayer::PlayerCamera_Update()
+{
+    pViewer->SetViewValue(transform_, acceleration_, handleRotate_);
 }
 
 void VehiclePlayer::PlayerParticle()

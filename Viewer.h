@@ -6,12 +6,10 @@ class Vehicle;
 //◆◆◆を管理するクラス
 class Viewer : public GameObject
 {
-    //Vehicle* pVehicle;
     Vehicle* pVehicle;
 
     float cameraLength_;//モデルの表示用
     //移動、回転の速さ
-    //float moveSPD_;
     float rotateSPD_;
     //カメラが1回転しないための
     float upLim_;
@@ -48,4 +46,12 @@ public:
 
     //開放
     void Release() override;
+
+    /// <summary>
+    /// 視点情報をセット
+    /// </summary>
+    /// <param name="transform">見るもののトランスフォーム</param>
+    /// <param name="speed">加速度</param>
+    /// <param name="handle">追加で回転したい値</param>
+    void SetViewValue(const Transform& transform,const XMVECTOR& speed, const float handle);
 };

@@ -156,26 +156,27 @@ protected:
     //車両の各サイズ
     struct
     {
-        float toRight_;   //右端　までの距離
-        float toLeft_;    //左端　までの距離
-        float toFront_;   //前方　までの距離
-        float toRear_;    //後方　までの距離
-        float toTop_;     //上端　までの距離
-        float toBottom_;  //下端　までの距離
-        float rightToLeft_;     //右端　から　左端　までの距離
-        float topToBottom_;     //上端　から　下端　までの距離
-        float frontToRear_;     //前方　から　後方　までの距離
-        float toFrontRight_;  //右斜め前　までの距離
-        float toFrontLeft_;   //左斜め前　までの距離
-        float toRearRight_;   //右斜め後ろ　までの距離
-        float toRearLeft_;    //左斜め後ろ　までの距離
-        XMFLOAT3 wheelFR_;  //右斜め前　タイヤの位置
-        XMFLOAT3 wheelFL_;  //左斜め前　タイヤの位置
-        XMFLOAT3 wheelRR_;  //右斜め後ろ　タイヤの位置
-        XMFLOAT3 wheelRL_;  //左斜め後ろ　タイヤの位置
-        float wheelHeight_; //タイヤの高さ
-        float wheelRemainder_;//車体とタイヤの位置の差分の高さ
-        float toWheelBottom_;   //中心からタイヤの底辺までの高さ
+        float toRight_ = 1.0f;  //右端　までの距離
+        float toLeft_ = 1.0f;   //左端　までの距離
+        float toFront_ = 1.0f;  //前方　までの距離
+        float toRear_ = 1.0f;   //後方　までの距離
+        float toTop_ = 1.0f;    //上端　までの距離
+        float toBottom_ = 1.0f; //下端　までの距離
+        float rightToLeft_ = 1.0f;  //右端　から　左端　までの距離
+        float topToBottom_ = 1.0f;  //上端　から　下端　までの距離
+        float frontToRear_ = 1.0f;  //前方　から　後方　までの距離
+        float toFrontRight_ = 1.0f; //右斜め前　までの距離
+        float toFrontLeft_ = 1.0f;  //左斜め前　までの距離
+        float toRearRight_ = 1.0f;  //右斜め後ろ　までの距離
+        float toRearLeft_ = 1.0f;   //左斜め後ろ　までの距離
+        XMFLOAT3 wheelFR_;      //右斜め前　タイヤの位置
+        XMFLOAT3 wheelFL_;      //左斜め前　タイヤの位置
+        XMFLOAT3 wheelRR_;      //右斜め後ろ　タイヤの位置
+        XMFLOAT3 wheelRL_;      //左斜め後ろ　タイヤの位置
+        float wheelHeight_ = 0.1f;      //タイヤの高さ
+        float wheelRemainder_ = 1.0f;   //車体とタイヤの位置の差分の高さ
+        float toWheelBottom_ = 1.0f;    //中心からタイヤの底辺までの高さ
+        float topToWheelBottom_ = 1.0f; //上端からタイヤ底辺までの高さ
     }Size;
 
     const short handleRight_;
@@ -258,6 +259,7 @@ public:
             Size.wheelRemainder_ = 0.0f;
 
         Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
+        Size.topToWheelBottom_ = Size.toWheelBottom_ + Size.toTop_;
     }
 
     //モデルの大きさセッター
@@ -302,6 +304,8 @@ public:
         virtual void PlayerUI_Update();
         //カメラの用意
         virtual void PlayerCamera_Initialize();
+        //カメラ更新
+        virtual void PlayerCamera_Update();
         //エフェクトを表示(重くなるのでNPCはやらない)
         virtual void PlayerParticle();
 };

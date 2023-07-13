@@ -13,11 +13,6 @@ Viewer::Viewer(GameObject* parent)
     , camFlo_(XMFLOAT3(0.0f, 10.0f, -20.0f)), camX(0.0f)
     , toFutureLength_(0.15f)/*0.1f*/, camTarPlusVec({0.0f, 0.0f, 0.0f, 0.0f})// camTarPlusVec({ 0.0f, 4.0f, 0.0f, 0.0f })
 {
-    /*
-    , rotateSPD_(1.0), upLim_(55.0), downLim_(110.0)
-    , nearLim_(4.0f), farLim_(120.0f), zoomUp_(0.95f), zoomOut_(1.05f)
-    , camFlo_(XMFLOAT3(0.0f, 10.0f, -20.0f)), camX(0.0f)
-    */
 }
 
 //デストラクタ
@@ -131,4 +126,9 @@ void Viewer::Draw()
 //開放
 void Viewer::Release()
 {
+}
+
+void Viewer::SetViewValue(const Transform& transform, const XMVECTOR& speed, const float handle)
+{
+
 }

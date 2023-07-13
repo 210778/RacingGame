@@ -109,8 +109,6 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     worldVector_.Set({ 1.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f,0.0f });
     vehicleVector_.Set({ 1.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f,0.0f });
 
-    Size.wheelHeight_ = 0.1f;
-
     //地面のタイプ
     //通常道路
     GroundTypeFriction_[Ground::road].acceleration = 1.0f;
@@ -370,6 +368,9 @@ void Vehicle::Update()
     pWheels_->SetWheelSpeedRotate(*XMVector3LengthEst(acceleration_).m128_f32
         * wheelSpeedAdd_ * accZDirection_, handleRotate_);
 
+    //カメラ更新
+    PlayerCamera_Update();
+
     //スピードメーター
     PlayerUI_Update();
 
@@ -591,7 +592,7 @@ bool Vehicle::Landing(int hModel,int type)
         isHit = true;           //何かに当たった
 
         //角度を変える
-        if (landingFlag_)
+        if (false)
         {
             //回転
             XMVECTOR normalVec = XMVector3TransformCoord(data.normal, matRotateY_R);
@@ -624,7 +625,7 @@ bool Vehicle::Landing(int hModel,int type)
         }
 
         //角度を変える
-        if (false)
+        if (landingFlag_ || data.dist < Size.toWheelBottom_ + Size.toTop_)
         {
             //回転
             XMVECTOR normalVec = XMVector3TransformCoord(data.normal, matRotateY_R);
@@ -635,6 +636,7 @@ bool Vehicle::Landing(int hModel,int type)
             transform_.rotate_.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
                 worldVector_.x, normalVec).m128_f32) - 90.0f);
         }
+
     }
 
     //接地位置調整
@@ -648,6 +650,9 @@ bool Vehicle::Landing(int hModel,int type)
         //高低差がタイヤの直径ぐらいの時
         if (vehicleData.dist > 0.0f && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
         {
+            landingType_ = type;    //地面のタイプ
+            isHit = true;           //何かに当たった
+
             XMFLOAT3 wheelFlo;
             XMStoreFloat3(&wheelFlo, -vehicleVector_.y * (vehicleData.dist - Size.toWheelBottom_));
             transform_.position_.x += wheelFlo.x;
@@ -1182,6 +1187,8 @@ void Vehicle::VectorRotateMatrixZXY(XMVECTOR& vec)
     void Vehicle::PlayerParticle() {};
     //車両の操作、入力の受付
     void Vehicle::InputOperate() {};
+    //カメラ更新
+    void Vehicle::PlayerCamera_Update() {};
 
 #if 0
 物理演算に関するメモ

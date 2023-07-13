@@ -4,10 +4,14 @@
 class Speedometer;
 class Text;
 class Sample;
+class Viewer;
 
 //◆◆◆を管理するクラス
 class VehiclePlayer : public Vehicle
 {
+    //カメラ
+    Viewer* pViewer;
+
     //スピードメーター
     Speedometer* pSpeedometer_;
 
@@ -44,7 +48,8 @@ public:
     void PlayerCamera_Initialize() override;
     //エフェクト表示
     void PlayerParticle() override;
-
+    //カメラ更新
+    void PlayerCamera_Update() override;
 #if 0
     //初期化
     void Initialize() override;
