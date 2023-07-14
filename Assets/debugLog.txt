@@ -1,4 +1,4 @@
-	06/16
+12:22 2023/07/14	06/16
 
 
     transform_.position_.x += XMVectorGetX(acceleration_);
@@ -267,4 +267,55 @@ Timer log::自作バージョン
 	平均時間「2.406111μs」
 	合計回数「594123」
 
+	7/14
+Timer log::vehicleタイヤ横押し
+	平均時間「2.659223μs」
+	合計回数「30630」
+Timer log::vehicleチェックポイント
+	平均時間「2.412913μs」
+	合計回数「666」
+Timer log::vehicle最初
+	平均時間「5.836663μs」
+	合計回数「30630」
+Timer log::vehicle操作受けつけ
+	平均時間「15.098694μs」
+	合計回数「30630」
+Timer log::vehicle地面当たり判定
+	平均時間「1056.173447μs」
+	合計回数「91890」
+Timer log::vehicle描画
+	平均時間「1537.600751μs」
+	合計回数「30630」
+Timer log::vehicle壁衝突
+	平均時間「7922.798531μs」
+	合計回数「30630」
+Timer log::vehicle壁当たり判定
+	平均時間「1578.091479μs」
+	合計回数「91890」
+
+
+Timer log::vehicleタイヤ横押し
+	平均時間「2.358133μs」
+	合計回数「47851」
+Timer log::vehicleチェックポイント
+	平均時間「2.372832μs」
+	合計回数「5190」
+Timer log::vehicle最初
+	平均時間「4.484002μs」
+	合計回数「47851」
+Timer log::vehicle操作受けつけ
+	平均時間「126.107500μs」
+	合計回数「47851」
+Timer log::vehicle地面当たり判定
+	平均時間「896.201911μs」
+	合計回数「143553」
+Timer log::vehicle描画
+	平均時間「1428.521159μs」
+	合計回数「47851」
+Timer log::vehicle壁衝突
+	平均時間「7368.906230μs」
+	合計回数「47851」
+Timer log::vehicle壁当たり判定
+	平均時間「1553.813393μs」
+	合計回数「143553」
 

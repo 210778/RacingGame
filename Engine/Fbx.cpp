@@ -85,7 +85,6 @@ void Fbx::CheckNode(FbxNode * pNode, std::vector<FbxParts*>* pPartsList)
 		pPartsList->push_back(pParts);
 	}
 
-
 	//子ノードにもデータがあるかも！！
 	{
 		//子供の数を調べて
@@ -113,7 +112,6 @@ XMFLOAT3 Fbx::GetBonePosition(std::string boneName)
 		if (parts_[i]->GetBonePosition(boneName, &position))
 			break;
 	}
-
 
 	return position;
 }
@@ -157,7 +155,6 @@ void Fbx::Draw(Transform& transform, int frame)
 		}
 	}
 }
-
 
 //レイキャスト（レイを飛ばして当たり判定）
 void Fbx::RayCast(RayCastData * data)

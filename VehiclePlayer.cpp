@@ -172,7 +172,6 @@ void VehiclePlayer::PlayerUI_Update()
 void VehiclePlayer::PlayerCamera_Initialize()
 {
     pViewer = Instantiate<Viewer>(this);
-    pViewer->SetPosition(transform_.position_);
 }
 
 //ƒJƒƒ‰XV

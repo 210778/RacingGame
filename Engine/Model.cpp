@@ -64,8 +64,6 @@ namespace Model
 			return (int)_datas.size() - 1;
 	}
 
-
-
 	//描画
 	void Draw(int handle)
 	{
@@ -88,7 +86,6 @@ namespace Model
 			_datas[handle]->pFbx->Draw(_datas[handle]->transform, (int)_datas[handle]->nowFrame);
 		}
 	}
-
 
 	//任意のモデルを開放
 	void Release(int handle)
@@ -120,7 +117,6 @@ namespace Model
 		SAFE_DELETE(_datas[handle]);
 	}
 
-
 	//全てのモデルを解放
 	void AllRelease()
 	{
@@ -134,20 +130,17 @@ namespace Model
 		_datas.clear();
 	}
 
-
 	//アニメーションのフレーム数をセット
 	void SetAnimFrame(int handle, int startFrame, int endFrame, float animSpeed)
 	{
 		_datas[handle]->SetAnimFrame(startFrame, endFrame, animSpeed);
 	}
 
-
 	//現在のアニメーションのフレームを取得
 	int GetAnimFrame(int handle)
 	{
 		return (int)_datas[handle]->nowFrame;
 	}
-
 
 	//任意のボーンの位置を取得
 	XMFLOAT3 GetBonePosition(int handle, std::string boneName)

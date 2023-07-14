@@ -318,7 +318,7 @@ void FbxParts::InitSkelton(FbxMesh * pMesh)
 		int * piIndex = ppCluster_[i]->GetControlPointIndices();       //ボーン/ウェイト情報の番号
 		double * pdWeight = ppCluster_[i]->GetControlPointWeights();     //頂点ごとのウェイト情報
 
-																				 //頂点側からインデックスをたどって、頂点サイドで整理する
+		//頂点側からインデックスをたどって、頂点サイドで整理する
 		for (int k = 0; k < numIndex; k++)
 		{
 			// 頂点に関連付けられたウェイト情報がボーン５本以上の場合は、重みの大きい順に４本に絞る
@@ -339,7 +339,6 @@ void FbxParts::InitSkelton(FbxMesh * pMesh)
 					break;
 				}
 			}
-
 		}
 	}
 
@@ -487,7 +486,6 @@ void FbxParts::DrawSkinAnime(Transform& transform, FbxTime time)
 		XMVECTOR Normal = XMLoadFloat3(&pWeightArray_[i].normalOrigin);
 		XMStoreFloat3(&pVertexData_[i].position,XMVector3TransformCoord(Pos, matrix));
 		XMStoreFloat3(&pVertexData_[i].normal, XMVector3TransformCoord(Normal, matrix));
-
 	}
 
 	// 頂点バッファをロックして、変形させた後の頂点情報で上書きする
@@ -535,7 +533,6 @@ bool FbxParts::GetBonePosition(std::string boneName, XMFLOAT3 * position)
 
 			return true;
 		}
-
 	}
 
 	return false;
@@ -571,17 +568,15 @@ void FbxParts::RayCast(RayCastData * data)
 				data->end	= end;
 
 				//命中したら法線を求める
-				XMVECTOR vecVer0 = XMLoadFloat3(&ver[0]);
-				XMVECTOR vecVer1 = XMLoadFloat3(&ver[1]);
-				XMVECTOR vecVer2 = XMLoadFloat3(&ver[2]);
-
-				data->normal = XMVector3Cross(vecVer1 - vecVer0, vecVer2 - vecVer1);
-				data->normal = XMVector3Normalize(data->normal);
+				data->normal = XMVector3Normalize(
+							   XMVector3Cross(XMLoadFloat3(&ver[1]) - XMLoadFloat3(&ver[0])
+						     , XMLoadFloat3(&ver[2]) - XMLoadFloat3(&ver[1])));
 
 				//http://marupeke296.com/COL_Basic_No5_WallVector.html
-				//法線と並行なベクトル（壁ずり）
 				XMVECTOR deflection = XMLoadFloat3(&data->dir);
 				float* dot = XMVector3Dot(deflection, data->normal).m128_f32;
+
+				//法線と並行なベクトル（壁ずり）
 				data->parallelism = deflection - (*dot * data->normal);
 
 				//ポリゴンにあたって反射するベクトル

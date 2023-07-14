@@ -277,6 +277,13 @@ public:
     //ベクトルを回転行列で回転 (ZXY順)
     void VectorRotateMatrixZXY(XMVECTOR& vec);
 
+    /// <summary>
+    /// 坂道に応じて車両を回転(X、Z軸)
+    /// </summary>
+    /// <param name="normalVec">坂道の法線（正規化済）</param>
+    /// <param name="limitAngle">回転を許容する坂道の角度(水平線から見る)</param>
+    XMFLOAT3* VehicleRotateSlope(const XMVECTOR& normal,const float limitAngle);
+
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得
         int GetPointCount() { return pointCount_; }

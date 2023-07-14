@@ -7,7 +7,7 @@
 //コンストラクタ
 Bullet::Bullet(GameObject* parent)
     :GameObject(parent, "Bullet"), hModel_(-1),
-    acceleration_(0.0f, 0.0f, 0.0f), life_(20)
+    acceleration_(0.0f, 0.0f, 0.0f), life_(60)
 {
     life_ *= 1;
 }
@@ -207,7 +207,7 @@ void Bullet::Release()
 
 void Bullet::Accelerator()
 {
-    transform_.position_.x += acceleration_.x * 0.25f;
-    transform_.position_.y += acceleration_.y * 0.25f;
-    transform_.position_.z += acceleration_.z * 0.25f;
+    transform_.position_.x += acceleration_.x;
+    transform_.position_.y += acceleration_.y;
+    transform_.position_.z += acceleration_.z;
 }

@@ -10,8 +10,9 @@ Viewer::Viewer(GameObject* parent)
     :GameObject(parent, "Viewer"), pVehicle(nullptr)
     , rotateSPD_(1.0), upLim_(80.0), downLim_(90.0)
     , nearLim_(4.0f), farLim_(120.0f), zoomUp_(0.95f), zoomOut_(1.05f)
-    , camFlo_(XMFLOAT3(0.0f, 10.0f, -20.0f)), camX(0.0f)
-    , toFutureLength_(0.15f)/*0.1f*/, camTarPlusVec({0.0f, 0.0f, 0.0f, 0.0f})// camTarPlusVec({ 0.0f, 4.0f, 0.0f, 0.0f })
+    , camFlo_(XMFLOAT3(0.0f, 10.0f, -20.0f)), camX_(0.0f)
+    , toFutureLength_(0.15f)/*0.1f*/, camTarPlusVec_({0.0f, 0.0f, 0.0f, 0.0f})// camTarPlusVec({ 0.0f, 4.0f, 0.0f, 0.0f })
+    , viewRotate_(0.0f), viewRotateAdd_(0.25f)
 {
 }
 
@@ -31,8 +32,11 @@ void Viewer::Initialize()
 void Viewer::Update()
 {
     //親のトランスフォームを取得
-    XMFLOAT3 parentPos = pVehicle->GetPosition();
-    XMFLOAT3 parentRot = pVehicle->GetRotate();
+    //XMFLOAT3 parentPos = pVehicle->GetPosition();
+    //XMFLOAT3 parentRot = pVehicle->GetRotate();
+    XMFLOAT3 parentPos = viewTransform_.position_;
+    XMFLOAT3 parentRot = viewTransform_.rotate_;
+
     //加速度取得
     XMFLOAT3 vehicleAcc;
     XMStoreFloat3(&vehicleAcc, pVehicle->GetAcceleration());
@@ -45,40 +49,24 @@ void Viewer::Update()
     //現在位置をベクトルにしておく
     XMVECTOR vecPos = XMLoadFloat3(&parentPos);
 
-    //上下回転
-    if (Input::IsKey(DIK_F))
-    {
-        camX += rotateSPD_;
-    }
-    if (Input::IsKey(DIK_R))
-    {
-        camX -= rotateSPD_;
-    }
-
-    //制限
-    if (camX >= upLim_)
-    {
-        camX = upLim_ - 1.0f;
-    }
-    if (camX <= -downLim_)
-    {
-        camX = -downLim_ + 1.0f;
-    }
-
-    matRotateX += XMMatrixRotationX(XMConvertToRadians(camX));//回した分追加で回転
+    matRotateX += XMMatrixRotationX(XMConvertToRadians(camX_));//回した分追加で回転
 
     XMVECTOR vecCam = XMLoadFloat3(&camFlo_);    //後ろ上方に伸びるベクトルを用意
     vecCam = XMVector3TransformCoord(vecCam, matRotateZ);   //それを向きに合わせて回転(1)
     vecCam = XMVector3TransformCoord(vecCam, matRotateX);   //それを向きに合わせて回転(2)
     vecCam = XMVector3TransformCoord(vecCam, matRotateY);   //それを向きに合わせて回転(3)
     
+    //ハンドルの値ぶん回転
+    vecCam = XMVector3TransformCoord(vecCam
+        , XMMatrixRotationY(XMConvertToRadians(viewRotate_ * viewRotateAdd_)));
+
 #if 0
     Camera::SetPosition(vecPos + vecCam);     //現在の位置とベクトルを足してカメラの位置にする
     Camera::SetTarget(vecPos);                //カメラの焦点はプレイヤーの位置
 #else
     //カメラの慣性
     XMVECTOR futurePosition_ = vecPos + vecCam;  //目標の位置
-    XMVECTOR futureTarget_   = vecPos + camTarPlusVec;           //目標の焦点 + 追加
+    XMVECTOR futureTarget_   = vecPos + camTarPlusVec_;           //目標の焦点 + 追加
 
     XMVECTOR presentPosition = Camera::GetPosition();   //現在の位置
     XMVECTOR presentTarget   = Camera::GetTarget();     //現在の焦点
@@ -93,9 +81,28 @@ void Viewer::Update()
     Camera::SetTarget(presentTarget + presentToFutureTarget);       //
 #endif
 
+    //上下回転
+    if (Input::IsKey(DIK_F))
+    {
+        camX_ += rotateSPD_;
+    }
+    if (Input::IsKey(DIK_R))
+    {
+        camX_ -= rotateSPD_;
+    }
+
+    //制限
+    if (camX_ >= upLim_)
+    {
+        camX_ = upLim_ - 1.0f;
+    }
+    if (camX_ <= -downLim_)
+    {
+        camX_ = -downLim_ + 1.0f;
+    }
+
     //ズーム調節
-    float* pLength = XMVector3Length(vecCam).m128_f32;
-    float length = *pLength;
+    float length = *XMVector3Length(vecCam).m128_f32;
 
     if (Input::IsKey(DIK_T))
     {
@@ -128,7 +135,15 @@ void Viewer::Release()
 {
 }
 
+//視点情報をセット
 void Viewer::SetViewValue(const Transform& transform, const XMVECTOR& speed, const float handle)
 {
+    viewTransform_      = transform;
+    viewAcceleration_   = speed;
+    viewRotate_         = handle;
+}
 
+void Viewer::SetViewPosition()
+{
+    ;
 }

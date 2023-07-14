@@ -21,9 +21,6 @@ void Camera::Initialize()
 	const float NEAR_CLIPPING = 0.1f;
 	const float FAR_CLIPPING = 1600.0f;//800
 
-	//const int WINDOW_WIDTH = 1280;				//ウィンドウの幅
-	//const int WINDOW_HEIGHT = 720;				//ウィンドウの高さ
-
 	//プロジェクション行列
 	projMatrix_ = XMMatrixPerspectiveFovLH(
 		XM_PIDIV4,
