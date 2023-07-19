@@ -153,6 +153,8 @@ protected:
 
     Transform startTransform_;  //スタート状態の位置と回転
 
+    float slopeLimitAngle_; //坂道を上るときの上限角度（水平線から見る）この値を超えるとバグりがち
+
     //車両の各サイズ
     struct
     {
@@ -280,9 +282,10 @@ public:
     /// <summary>
     /// 坂道に応じて車両を回転(X、Z軸)
     /// </summary>
-    /// <param name="normalVec">坂道の法線（正規化済）</param>
+    /// <param name="normal">坂道の法線（正規化済）</param>
     /// <param name="limitAngle">回転を許容する坂道の角度(水平線から見る)</param>
-    XMFLOAT3* VehicleRotateSlope(const XMVECTOR& normal,const float limitAngle);
+    /// <returns>限界角度以内なら回転してtrue そうでないなら何もせずfalse</returns>
+    bool VehicleRotateSlope(const XMVECTOR& normal,const float limitAngle);
 
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得
