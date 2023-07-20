@@ -155,6 +155,8 @@ protected:
 
     float slopeLimitAngle_; //坂道を上るときの上限角度（水平線から見る）この値を超えるとバグりがち
 
+    float wallReflectionForce_;//壁にぶつかったときの減速する値
+
     //車両の各サイズ
     struct
     {
@@ -170,7 +172,11 @@ protected:
         float toFrontRight_ = 1.0f; //右斜め前　までの距離
         float toFrontLeft_ = 1.0f;  //左斜め前　までの距離
         float toRearRight_ = 1.0f;  //右斜め後ろ　までの距離
-        float toRearLeft_ = 1.0f;   //左斜め後ろ　までの距離
+        float toRearLeft_ = 1.0f;   //左斜め後ろ　までの距離     
+        float angleFrontRight_ = 0.0f; //前方から　右斜め前　までの角度
+        float angleFrontLeft_ = 0.0f;  //前方から　左斜め前　までの角度
+        float angleRearRight_ = 0.0f;  //前方から　右斜め後ろ　までの角度
+        float angleRearLeft_ = 0.0f;   //前方から　左斜め後ろ　までの角度
         XMFLOAT3 wheelFR_;      //右斜め前　タイヤの位置
         XMFLOAT3 wheelFL_;      //左斜め前　タイヤの位置
         XMFLOAT3 wheelRR_;      //右斜め後ろ　タイヤの位置
@@ -278,6 +284,9 @@ public:
 
     //ベクトルを回転行列で回転 (ZXY順)
     void VectorRotateMatrixZXY(XMVECTOR& vec);
+
+    //ベクトルを回転行列で"逆"回転 (ZXY順)
+    void VectorRotateMatrixZXY_R(XMVECTOR& vec);
 
     /// <summary>
     /// 坂道に応じて車両を回転(X、Z軸)

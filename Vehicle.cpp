@@ -97,7 +97,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_()
-    , slopeLimitAngle_(45.0f)
+    , slopeLimitAngle_(45.0f), wallReflectionForce_(0.95f)
     , handleRight_(1), handleLeft_(-1)
 {
     matRotateX = XMMatrixIdentity();
@@ -521,7 +521,8 @@ void Vehicle::TurnWheel()
 
                       * XMVector3TransformCoord(XMVector3Cross(vehicleVector_.z
                       , XMVector3Normalize(acceleration_))
-                      , XMMatrixRotationNormal(vehicleVector_.z, XM_PIDIV2))
+                      , XMMatrixRotationNormal(vehicleVector_.z
+                          , XMConvertToRadians(transform_.rotate_.z) + XM_PIDIV2))
 
                       * GroundTypeFriction_[landingType_].side;
 
@@ -691,48 +692,24 @@ void Vehicle::CollideWall(int hModel, int type)
     //前後左右と斜めで分割することにする
     std::array<RayCastData, 4>wallCollideVertical;
 
+    //レイの発射位置(ボーン取得方式だとうまくいかなかった)
+    XMFLOAT3 startPos = transform_.position_;
+    XMFLOAT3 upF;
+    XMStoreFloat3(&upF, vehicleVector_.y * Size.toBottom_);
+    startPos = Transform::Float3Add(startPos, upF);
+
     //前後左右編
     for (int i = 0; i < wallCollideVertical.size(); i++)
     {
-        //車両の中心からレイを発射 (ボーン取得方式だとうまくいかなかった)
-        wallCollideVertical[i].start = transform_.position_;
-        XMFLOAT3 upF;
-        XMStoreFloat3(&upF, vehicleVector_.y* Size.toBottom_);
-        wallCollideVertical[i].start = Transform::Float3Add(wallCollideVertical[i].start, upF);
+        wallCollideVertical[i].start = startPos;
 
-        //90度ずつ回転
-        XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(90.0f * i));	//Ｙ軸で回転させる行列   
-
-        XMVECTOR dirVec = worldVector_.z;
-        
-        dirVec = XMVector3TransformCoord(dirVec, matRot);
+        //90度ずつ回転行列
+        XMMATRIX matRot = XMMatrixRotationY(XM_PIDIV2 * i);	//Ｙ軸で回転させる行列   
+        //回転
+        XMVECTOR dirVec = XMVector3TransformCoord(worldVector_.z, matRot);
         VectorRotateMatrixZXY(dirVec);
 
         XMStoreFloat3(&wallCollideVertical[i].dir, dirVec);
-
-
-        if (coolTime_ <= 0 && i == 3)
-        {
-            
-            Bullet* pBullet = Instantiate<Bullet>(GetParent());
-            pBullet->SetPosition(wallCollideVertical[i].start);
-            pBullet->SetSpeed(wallCollideVertical[0].dir);
-
-            pBullet = Instantiate<Bullet>(GetParent());
-            pBullet->SetPosition(wallCollideVertical[i].start);
-            pBullet->SetSpeed(wallCollideVertical[1].dir);
-
-            pBullet = Instantiate<Bullet>(GetParent());
-            pBullet->SetPosition(wallCollideVertical[i].start);
-            pBullet->SetSpeed(wallCollideVertical[2].dir);
-
-            pBullet = Instantiate<Bullet>(GetParent());
-            pBullet->SetPosition(wallCollideVertical[i].start);
-            pBullet->SetSpeed(wallCollideVertical[3].dir);
-
-            coolTime_ = heatAdd_;
-        }
-
 
         Model::RayCast(hModel, &wallCollideVertical[i]);  //レイを発射
         //当たったら
@@ -744,6 +721,7 @@ void Vehicle::CollideWall(int hModel, int type)
             float dirSize;
             //方向ごとのプラスマイナス： 1 と -1
             float dirPlusMinus;
+
             //方向ごとに代入　なんか頭わるいことしてそうな気がする
             switch (i)
             {
@@ -790,19 +768,11 @@ void Vehicle::CollideWall(int hModel, int type)
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
 
-                    static float reflectForce = 0.1f;
+                    //減速させてみる
+                    acceleration_ *= wallReflectionForce_;
 
-                    float accLen = *XMVector3LengthEst(acceleration_).m128_f32;
-                    acceleration_ =
-                        XMVector3NormalizeEst(wallCollideVertical[i].reflection + wallCollideVertical[i].parallelism)
-                        * accLen * reflectForce;
-
-                    if (!landingFlag_)
-                    {
-                        //急な坂道なら落下
-                        acceleration_ += wallCollideVertical[i].reflection * jumpForce_;
-                    }
-
+                    //壁反射ベクトル
+                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * abs(dirAcc);
                 }
             }
         }
@@ -812,8 +782,7 @@ void Vehicle::CollideWall(int hModel, int type)
     std::array<RayCastData, 4>wallCollideOblique;
     for (int i = 0; i < wallCollideOblique.size(); i++)
     {
-        wallCollideVertical[i].start = transform_.position_;
-        wallCollideVertical[i].start.y += Size.toTop_ * 0.5f;
+        wallCollideOblique[i].start = startPos;
 
         enum Oblique
         {
@@ -823,22 +792,69 @@ void Vehicle::CollideWall(int hModel, int type)
             rearRight
         };
 
-        //z軸からの角度
+        //z軸からの角度 とサイズ
         float theta = 0.0f;
+        float vehicleLen = 0.0f;
+
         switch (i){
         default:
-        case frontLeft:     theta = acos(Size.toFront_ / Size.toFrontLeft_);
+        case frontLeft:
+            theta = Size.angleFrontLeft_;
+            vehicleLen = Size.toFrontLeft_;
             break;
-        case frontRight:    theta = acos(Size.toFront_ / Size.toFrontRight_);
+        case frontRight:
+            theta = Size.angleFrontRight_;
+            vehicleLen = Size.toFrontRight_;
             break;
-        case rearLeft:      theta = acos(Size.toRear_ / Size.toFrontLeft_);
+        case rearLeft:
+            theta = Size.angleRearLeft_;
+            vehicleLen = Size.toRearLeft_;
             break;
-        case rearRight:     theta = acos(Size.toRear_ / Size.toFrontRight_);
+        case rearRight:
+            theta = Size.angleRearRight_;
+            vehicleLen = Size.toRearRight_;
             break;
         }
 
-        
+        //90度ずつ回転行列
+        XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(theta));	//Ｙ軸で回転させる行列   
+        //回転
+        XMVECTOR dirVec = XMVector3TransformCoord(worldVector_.z, matRot);
+        VectorRotateMatrixZXY(dirVec);
 
+        XMStoreFloat3(&wallCollideOblique[i].dir, dirVec);
+
+        if (coolTime_ <= 0 && i == 3)
+        {
+            Bullet* pBullet = Instantiate<Bullet>(GetParent());
+            pBullet->SetPosition(wallCollideOblique[i].start);
+            pBullet->SetSpeed(wallCollideOblique[0].dir);
+
+            pBullet = Instantiate<Bullet>(GetParent());
+            pBullet->SetPosition(wallCollideOblique[i].start);
+            pBullet->SetSpeed(wallCollideOblique[1].dir);
+
+            pBullet = Instantiate<Bullet>(GetParent());
+            pBullet->SetPosition(wallCollideOblique[i].start);
+            pBullet->SetSpeed(wallCollideOblique[2].dir);
+
+            pBullet = Instantiate<Bullet>(GetParent());
+            pBullet->SetPosition(wallCollideOblique[i].start);
+            pBullet->SetSpeed(wallCollideOblique[3].dir);
+
+            coolTime_ = heatAdd_;
+        }
+
+        Model::RayCast(hModel, &wallCollideOblique[i]);  //レイを発射
+        //当たったら
+        if (wallCollideOblique[i].hit)
+        {
+            if (wallCollideOblique[i].dist < vehicleLen)
+            {
+                acceleration_ += {0, moveSPD_, 0, 0};
+            }
+
+        }
     }
 
 #if 0
@@ -1096,6 +1112,11 @@ void Vehicle::SetVehicleSize(int hModel)
     Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
     Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
     Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+    //角度
+    Size.angleFrontLeft_    = XMConvertToDegrees(         acos(Size.toFront_ / Size.toFrontLeft_));
+    Size.angleFrontRight_   = XMConvertToDegrees(XM_PI -  acos(Size.toFront_ / Size.toFrontRight_));
+    Size.angleRearLeft_     = XMConvertToDegrees(         acos(Size.toRear_  / Size.toFrontLeft_) + XM_PI);
+    Size.angleRearRight_    = XMConvertToDegrees(XM_2PI - acos(Size.toRear_  / Size.toFrontRight_));
 }
 
 //ハンドルの操作
@@ -1143,24 +1164,23 @@ void Vehicle::VectorRotateMatrixZXY(XMVECTOR& vec)
     vec = XMVector3TransformCoord(vec, matRotateY);
 }
 
+//ベクトルを回転行列で"逆"回転 (ZXY順)
+void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
+{
+    vec = XMVector3TransformCoord(vec, matRotateZ_R);
+    vec = XMVector3TransformCoord(vec, matRotateX_R);
+    vec = XMVector3TransformCoord(vec, matRotateY_R);
+}
+
 // 坂道に応じて車両を回転(X、Z軸)
 bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
 {
     //法線のY軸を反転
     XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
 
-    //float angleY = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.z, normalR).m128_f32);
-
-    //回転
-    //XMMATRIX rotateY = XMMatrixRotationY(XMConvertToRadians(-angleY));
-    //XMVECTOR normalVec = XMVector3TransformCoord(normalR, rotateY);
-
-    float angleZ = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32);
-
-
     //角度が指定角度より急だとやめる
     //角度計算は謎
-    if (angleZ > limitAngle)
+    if (XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32) > limitAngle)
     {
         return false;
     }
