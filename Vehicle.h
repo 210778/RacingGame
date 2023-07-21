@@ -288,6 +288,9 @@ public:
     //ベクトルを回転行列で"逆"回転 (ZXY順)
     void VectorRotateMatrixZXY_R(XMVECTOR& vec);
 
+    //地面、壁の車両の姿勢を統合する
+    void VehicleRotateTotal(std::vector<XMFLOAT3>* rotate);
+
     /// <summary>
     /// 坂道に応じて車両を回転(X、Z軸)
     /// </summary>
