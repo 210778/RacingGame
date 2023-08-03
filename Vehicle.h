@@ -157,8 +157,6 @@ protected:
 
     float wallReflectionForce_;//壁にぶつかったときの減速する値
 
-    std::vector<XMFLOAT3> rotateTotalVector_; //車両の姿勢を統合して平均するためのベクター
-
     //車両の各サイズ
     struct
     {
@@ -293,17 +291,13 @@ public:
     //地面、壁の車両の姿勢を統合する
     void VehicleRotateTotal(std::vector<XMFLOAT3>* rotate);
 
-    //統合した姿勢を適用する
-    void VehicleRotateTotal();
-
     /// <summary>
     /// 坂道に応じて車両を回転(X、Z軸)
     /// </summary>
-    /// <param name="rotate">値を渡す回転の値アドレス</param>
     /// <param name="normal">坂道の法線（正規化済）</param>
     /// <param name="limitAngle">回転を許容する坂道の角度(水平線から見る)</param>
-    /// <returns>限界角度以内なら回転してtureを渡す そうでないならfalse</returns>
-    bool VehicleRotateSlope(XMFLOAT3& rotate, const XMVECTOR& normal, const float limitAngle);
+    /// <returns>限界角度以内なら回転してtrue そうでないなら何もせずfalse</returns>
+    bool VehicleRotateSlope(const XMVECTOR& normal,const float limitAngle);
 
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得

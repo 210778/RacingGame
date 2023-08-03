@@ -133,7 +133,6 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Ground::boost].side = 0.2f;
     //ìﬁóé
     GroundTypeFriction_[Ground::abyss]; //çÏÇÈÇæÇØ
-
 }
 
 //ÉfÉXÉgÉâÉNÉ^
@@ -572,9 +571,6 @@ void Vehicle::VehicleCollide()
                 , pGround_->GetCircuitUnion()->parts_[i].type_);
         Debug::TimerLogEnd("vehicleï«ìñÇΩÇËîªíË");
     }
-
-    //épê®ÇîΩâf
-    VehicleRotateTotal(&rotateTotalVector_);
 }
 
 //ê⁄ín 
@@ -631,18 +627,11 @@ bool Vehicle::Landing(int hModel,int type)
                 worldVector_.x, normalVec).m128_f32) - 90.0f);
 #endif
             //âÒì]
-            XMFLOAT3 vehRot;
-            if (VehicleRotateSlope(vehRot, data.normal, slopeLimitAngle_))
-            {
-                //ãLò^
-                rotateTotalVector_.push_back(vehRot);
-            }
-            else
+            if (VehicleRotateSlope(data.normal, slopeLimitAngle_) == false)
             {
                 //ç‚ìπÇ»ÇÁóéâ∫
                 acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
             }
-
         }
     }
 
@@ -766,14 +755,9 @@ void Vehicle::CollideWall(int hModel, int type)
 
             if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
             {
+                //ãU == ï«Ç…è’ìÀ / ê^ == ç‚ìπ
                 //âÒì]
-                XMFLOAT3 vehRot;
-                if (VehicleRotateSlope(vehRot, wallCollideVertical[i].normal, slopeLimitAngle_))
-                {
-                    //ãLò^
-                    rotateTotalVector_.push_back(vehRot);
-                }
-                else
+                if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_) == false)
                 {
                     //è’ìÀÇ∑ÇÈíºëOÇ≈é~Ç‹Ç¡ÇΩéûÇÃï«Ç‹Ç≈ÇÃãóó£
                     XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
@@ -791,7 +775,6 @@ void Vehicle::CollideWall(int hModel, int type)
                     //ï«îΩéÀÉxÉNÉgÉã
                     acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * abs(dirAcc);
                 }
-
             }
         }
     }
@@ -871,14 +854,7 @@ void Vehicle::CollideWall(int hModel, int type)
         if (wallCollideOblique[i].hit
             && wallCollideOblique[i].dist < vehicleLen)
         {
-            //âÒì]
-            XMFLOAT3 vehRot;
-            if (VehicleRotateSlope(vehRot, wallCollideVertical[i].normal, slopeLimitAngle_))
-            {
-                //ãLò^
-                rotateTotalVector_.push_back(vehRot);
-            }
-            else
+            if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_) == false)
             {
                 //è’ìÀÇ∑ÇÈéûÇÃï«Ç‹Ç≈ÇÃãóó£
                 XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideOblique[i].dist - vehicleLen, 0.0f };
@@ -906,6 +882,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
                 float powZ = XMVectorGetZ(acceleration_);
                 powZ *= powZ;
+                //sqrt(powX + powZ;
                 acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir) * powZ;
             }
         }
@@ -1278,62 +1255,80 @@ void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
 }
 
 // ç‚ìπÇ…âûÇ∂Çƒé‘óºÇâÒì](XÅAZé≤)
-bool Vehicle::VehicleRotateSlope(XMFLOAT3& rotate, const XMVECTOR& normal, const float limitAngle)
+bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
 {
     //ñ@ê¸ÇÃYé≤ÇîΩì]
-    XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
+       XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
 
     //äpìxÇ™éwíËäpìxÇÊÇËã}ÇæÇ∆Ç‚ÇﬂÇÈ
     //äpìxåvéZÇÕì‰
+    float e = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32);
+
     if (XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32) > limitAngle)
     {
         return false;
     }
 
-    XMFLOAT3 rotateFlo;
-
     //âÒì]
     XMVECTOR normalVec = XMVector3TransformCoord(normalR, matRotateY_R);
 
+    XMFLOAT3 rotate;
     rotate.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
-                            worldVector_.z, normalVec).m128_f32) - 90.0f;
-
-    rotate.y = transform_.rotate_.y;
+        worldVector_.z, normalVec).m128_f32) - 90.0f;
 
     rotate.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
-                            worldVector_.x, normalVec).m128_f32) - 90.0f);
+        worldVector_.x, normalVec).m128_f32) - 90.0f);
+
+
+    if (abs(rotate.x) <= limitAngle && abs(rotate.z) <= limitAngle)
+    {
+        transform_.rotate_.x = rotate.x;
+        transform_.rotate_.z = rotate.z;
+    }
+    else
+    {
+        return false;
+    }
 
     return true;
+
+#if 0
+    //ñ@ê¸ÇÃYé≤ÇîΩì]
+    XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
+
+    float angleY = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.z, normalR).m128_f32);
+
+    //âÒì]
+    XMMATRIX rotateY = XMMatrixRotationY(XMConvertToRadians(-angleY));
+    XMVECTOR normalVec = XMVector3TransformCoord(normalR, rotateY);
+
+    float angleZ = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32);
+
+
+    //äpìxÇ™éwíËäpìxÇÊÇËã}ÇæÇ∆Ç‚ÇﬂÇÈ
+    //äpìxåvéZÇÕì‰
+    if (angleZ > limitAngle)
+    {
+        return false;
+    }
+
+    //âÒì]
+    normalVec = XMVector3TransformCoord(normalR, matRotateY_R);
+
+    transform_.rotate_.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
+        worldVector_.z, normalVec).m128_f32) - 90.0f;
+
+    transform_.rotate_.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
+        worldVector_.x, normalVec).m128_f32) - 90.0f);
+
+    return true;
+#endif
 }
 
 //ínñ ÅAï«ÇÃé‘óºÇÃépê®ÇìùçáÇ∑ÇÈ
 void Vehicle::VehicleRotateTotal(std::vector<XMFLOAT3>* rotate)
 {
-    //à¿ëS
-    if (rotate == nullptr || rotate->empty())
-    {
-        return;
-    }
-
-    XMFLOAT3 average = { 0.0f,transform_.rotate_.y, 0.0f };
-
-    if (rotate->size() > 1)
-    {
-        transform_.position_.z *= 1;
-    }
-
-    for (const auto& r : *rotate)
-    {
-        average.x += r.x;
-        //average.y += r.y;
-        average.z += r.z;
-    }
-
-    transform_.rotate_.x = average.x / rotate->size();
-    //transform_.rotate_.y = average.y / rotate->size();
-    transform_.rotate_.z = average.z / rotate->size();
-
-    rotate->clear();
+    ;
 }
 
 //UIÇÃä÷êîåQÅ@ÉvÉåÉCÉÑÅ[å¿íËÇ≈çÏópÇ∑ÇÈ

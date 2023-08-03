@@ -42,8 +42,7 @@ void Viewer::Update()
     XMStoreFloat3(&vehicleAcc, pVehicle->GetAcceleration());
 
     //transform_.rotate_.X‚Ì’l‚É‡‚í‚¹‚ÄX²‰ñ“]‚³‚¹‚és—ñ
-    XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(parentRot.z));
-
+    //XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(parentRot.z));
     //XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(parentRot.x));
     XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(camX_));     //ƒJƒƒ‰‚Ì‚Ô‚ñ‰ñ“]
 
@@ -53,7 +52,7 @@ void Viewer::Update()
     XMVECTOR vecPos = XMLoadFloat3(&parentPos);
 
     XMVECTOR vecCam = XMLoadFloat3(&camFlo_);    //Œã‚ëã•û‚ÉL‚Ñ‚éƒxƒNƒgƒ‹‚ğ—pˆÓ
-    vecCam = XMVector3TransformCoord(vecCam, matRotateZ);   //‚»‚ê‚ğŒü‚«‚É‡‚í‚¹‚Ä‰ñ“](1)
+    //vecCam = XMVector3TransformCoord(vecCam, matRotateZ);   //‚»‚ê‚ğŒü‚«‚É‡‚í‚¹‚Ä‰ñ“](1)
     vecCam = XMVector3TransformCoord(vecCam, matRotateX);   //‚»‚ê‚ğŒü‚«‚É‡‚í‚¹‚Ä‰ñ“](2)
     vecCam = XMVector3TransformCoord(vecCam, matRotateY);   //‚»‚ê‚ğŒü‚«‚É‡‚í‚¹‚Ä‰ñ“](3)
     
