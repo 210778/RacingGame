@@ -133,6 +133,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Ground::boost].side = 0.2f;
     //奈落
     GroundTypeFriction_[Ground::abyss]; //作るだけ
+
 }
 
 //デストラクタ
@@ -571,6 +572,9 @@ void Vehicle::VehicleCollide()
                 , pGround_->GetCircuitUnion()->parts_[i].type_);
         Debug::TimerLogEnd("vehicle壁当たり判定");
     }
+
+    //姿勢を反映
+    VehicleRotateTotal(&rotateTotalVector_);
 }
 
 //接地 
@@ -627,11 +631,18 @@ bool Vehicle::Landing(int hModel,int type)
                 worldVector_.x, normalVec).m128_f32) - 90.0f);
 #endif
             //回転
-            if (VehicleRotateSlope(data.normal, slopeLimitAngle_) == false)
+            XMFLOAT3 vehRot;
+            if (VehicleRotateSlope(vehRot, data.normal, slopeLimitAngle_))
+            {
+                //記録
+                rotateTotalVector_.push_back(vehRot);
+            }
+            else
             {
                 //坂道なら落下
                 acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
             }
+
         }
     }
 
@@ -755,9 +766,14 @@ void Vehicle::CollideWall(int hModel, int type)
 
             if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
             {
-                //偽 == 壁に衝突 / 真 == 坂道
                 //回転
-                if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_) == false)
+                XMFLOAT3 vehRot;
+                if (VehicleRotateSlope(vehRot, wallCollideVertical[i].normal, slopeLimitAngle_))
+                {
+                    //記録
+                    rotateTotalVector_.push_back(vehRot);
+                }
+                else
                 {
                     //衝突する直前で止まった時の壁までの距離
                     XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
@@ -775,6 +791,7 @@ void Vehicle::CollideWall(int hModel, int type)
                     //壁反射ベクトル
                     acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * abs(dirAcc);
                 }
+
             }
         }
     }
@@ -854,34 +871,43 @@ void Vehicle::CollideWall(int hModel, int type)
         if (wallCollideOblique[i].hit
             && wallCollideOblique[i].dist < vehicleLen)
         {
-            //衝突する時の壁までの距離
-            XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideOblique[i].dist - vehicleLen, 0.0f };
-            ajustVec = XMVector3TransformCoord(ajustVec, matRot);
-
             //回転
-            VectorRotateMatrixZXY(ajustVec);
-            transform_.position_.x += XMVectorGetX(ajustVec);
-            transform_.position_.y += XMVectorGetY(ajustVec);
-            transform_.position_.z += XMVectorGetZ(ajustVec);
+            XMFLOAT3 vehRot;
+            if (VehicleRotateSlope(vehRot, wallCollideVertical[i].normal, slopeLimitAngle_))
+            {
+                //記録
+                rotateTotalVector_.push_back(vehRot);
+            }
+            else
+            {
+                //衝突する時の壁までの距離
+                XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideOblique[i].dist - vehicleLen, 0.0f };
+                ajustVec = XMVector3TransformCoord(ajustVec, matRot);
 
-            //減速させる
-            acceleration_ *= wallReflectionForce_;
+                //回転
+                VectorRotateMatrixZXY(ajustVec);
+                transform_.position_.x += XMVectorGetX(ajustVec);
+                transform_.position_.y += XMVectorGetY(ajustVec);
+                transform_.position_.z += XMVectorGetZ(ajustVec);
 
-            //壁反射ベクトル
+                //減速させる
+                acceleration_ *= wallReflectionForce_;
 
-            //反射する時の加速度を求める
-            XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(theta));	//Ｙ軸で逆回転させる行列   
-            //回転
-            XMVECTOR dirVec = XMVector3TransformCoord(acceleration_, matRot);
-            VectorRotateMatrixZXY(dirVec);
+                //壁反射ベクトル
 
-            float powX = XMVectorGetX(acceleration_);
-            powX *= powX;
+                //反射する時の加速度を求める
+                XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(theta));	//Ｙ軸で逆回転させる行列   
+                //回転
+                XMVECTOR dirVec = XMVector3TransformCoord(acceleration_, matRot);
+                VectorRotateMatrixZXY(dirVec);
 
-            float powZ = XMVectorGetZ(acceleration_);
-            powZ *= powZ;
-            //sqrt(powX + powZ;
-            acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir) * powZ;
+                float powX = XMVectorGetX(acceleration_);
+                powX *= powX;
+
+                float powZ = XMVectorGetZ(acceleration_);
+                powZ *= powZ;
+                acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir) * powZ;
+            }
         }
     } 
 
@@ -1190,9 +1216,10 @@ void Vehicle::SetVehicleSize(int hModel)
     Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
     Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
     Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+    
     //角度
-    Size.angleFrontLeft_    = XMConvertToDegrees(         acos(Size.toFront_ / Size.toFrontLeft_));
-    Size.angleFrontRight_   = XMConvertToDegrees(XM_PI -  acos(Size.toFront_ / Size.toFrontRight_));
+    Size.angleFrontLeft_    = XMConvertToDegrees(        acos(Size.toFront_ / Size.toFrontLeft_));
+    Size.angleFrontRight_   = XMConvertToDegrees(XM_PI - acos(Size.toFront_ / Size.toFrontRight_));
     Size.angleRearLeft_     = XMConvertToDegrees(         acos(Size.toRear_  / Size.toFrontLeft_) + XM_PI);
     Size.angleRearRight_    = XMConvertToDegrees(XM_2PI - acos(Size.toRear_  / Size.toFrontRight_));
 }
@@ -1251,7 +1278,7 @@ void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
 }
 
 // 坂道に応じて車両を回転(X、Z軸)
-bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
+bool Vehicle::VehicleRotateSlope(XMFLOAT3& rotate, const XMVECTOR& normal, const float limitAngle)
 {
     //法線のY軸を反転
     XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
@@ -1263,48 +1290,50 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
         return false;
     }
 
+    XMFLOAT3 rotateFlo;
+
     //回転
     XMVECTOR normalVec = XMVector3TransformCoord(normalR, matRotateY_R);
 
-    transform_.rotate_.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
+    rotate.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
                             worldVector_.z, normalVec).m128_f32) - 90.0f;
 
-    transform_.rotate_.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
+    rotate.y = transform_.rotate_.y;
+
+    rotate.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
                             worldVector_.x, normalVec).m128_f32) - 90.0f);
 
     return true;
+}
 
-#if 0
-    //法線のY軸を反転
-    XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
-
-    float angleY = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.z, normalR).m128_f32);
-
-    //回転
-    XMMATRIX rotateY = XMMatrixRotationY(XMConvertToRadians(-angleY));
-    XMVECTOR normalVec = XMVector3TransformCoord(normalR, rotateY);
-
-    float angleZ = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32);
-
-
-    //角度が指定角度より急だとやめる
-    //角度計算は謎
-    if (angleZ > limitAngle)
+//地面、壁の車両の姿勢を統合する
+void Vehicle::VehicleRotateTotal(std::vector<XMFLOAT3>* rotate)
+{
+    //安全
+    if (rotate == nullptr || rotate->empty())
     {
-        return false;
+        return;
     }
 
-    //回転
-    normalVec = XMVector3TransformCoord(normalR, matRotateY_R);
+    XMFLOAT3 average = { 0.0f,transform_.rotate_.y, 0.0f };
 
-    transform_.rotate_.x = XMConvertToDegrees(*XMVector3AngleBetweenNormals(
-        worldVector_.z, normalVec).m128_f32) - 90.0f;
+    if (rotate->size() > 1)
+    {
+        transform_.position_.z *= 1;
+    }
 
-    transform_.rotate_.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
-        worldVector_.x, normalVec).m128_f32) - 90.0f);
+    for (const auto& r : *rotate)
+    {
+        average.x += r.x;
+        //average.y += r.y;
+        average.z += r.z;
+    }
 
-    return true;
-#endif
+    transform_.rotate_.x = average.x / rotate->size();
+    //transform_.rotate_.y = average.y / rotate->size();
+    transform_.rotate_.z = average.z / rotate->size();
+
+    rotate->clear();
 }
 
 //UIの関数群　プレイヤー限定で作用する
