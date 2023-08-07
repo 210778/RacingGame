@@ -157,6 +157,11 @@ protected:
 
     float wallReflectionForce_;//壁にぶつかったときの減速する値
 
+    float boostCapacityMax_;//ブーストできる最大容量
+    float boostCapacity_;//ブーストできる現在残量
+    float boostSpending_;//ブーストする時の消費量
+    float boostIncrease_;//ブーストできる残量の追加値
+
     //車両の各サイズ
     struct
     {
@@ -186,6 +191,16 @@ protected:
         float toWheelBottom_ = 1.0f;    //中心からタイヤの底辺までの高さ
         float topToWheelBottom_ = 1.0f; //上端からタイヤ底辺までの高さ
     }Size;
+
+    struct Operation
+    {
+        float front     = 0.0f;
+        float rear      = 0.0f;
+        float ritgt     = 0.0f;
+        float left      = 0.0f;
+        float boost     = 0.0f;
+    };
+
 
     const short handleRight_;
     const short handleLeft_;

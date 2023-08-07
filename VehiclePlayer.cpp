@@ -35,6 +35,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
     , km_hAdd(120.0f)
     , pSample_(nullptr)
+    , imageBoostMax_(-1), imageBoost_(-1)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -78,6 +79,10 @@ void VehiclePlayer::PlayerUI_Initialize()
 
     //スピードメーター
     pSpeedometer_ = Instantiate<Speedometer>(GetParent());
+
+    //画像
+    imageBoostMax_ = Image::Load("image\\grayBar.png");
+    imageBoost_    = Image::Load("image\\redBar.png");
 }
 
 //UIの表示
@@ -139,6 +144,18 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     pTextLap_->Draw(10, 290, five.c_str());
     pTextLap_->Draw(10, 325, six.c_str());
 #endif
+
+    //ブースト
+    Transform boostMaxTrans, boostTrans;
+    boostMaxTrans.scale_ = { 4.0f,1.0f,1.0f };
+
+    boostTrans = boostMaxTrans;
+    boostTrans.scale_ = { boostMaxTrans.scale_.x * 0.95f * (boostCapacity_ / boostCapacityMax_)
+                        , boostMaxTrans.scale_.y * 0.8f, 1.0f, };
+    Image::SetTransform(imageBoostMax_, boostMaxTrans);
+    Image::Draw(imageBoostMax_);
+    Image::SetTransform(imageBoost_, boostTrans);
+    Image::Draw(imageBoost_);
 
 #ifdef _DEBUG
     //

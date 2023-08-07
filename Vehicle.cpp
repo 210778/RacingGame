@@ -99,6 +99,9 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , startTransform_()
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.95f)
     , handleRight_(1), handleLeft_(-1)
+    //ブースト
+    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
+    , boostSpending_(1.0f), boostIncrease_(boostCapacityMax_ * 0.01f)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -263,20 +266,34 @@ void Vehicle::Update()
         }
     }
 
-    //滑る
+    //ブースト
     if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
     {
-        slideFlag_ = true;
+        //容量があるなら
+        if(boostCapacity_ >= boostSpending_)
+        {
+            //消費
+            boostCapacity_ -= boostSpending_;
 
-        acceleration_ += vecZ * 2.0f;
+            slideFlag_ = true;
 
-        XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
-        ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+            acceleration_ += vecZ * 2.0f;
+
+            XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
+            ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+        }
     }
     else
     {
         slideFlag_ = false;
+
+        //ちょっと位置が悪い
+        boostCapacity_ += boostIncrease_;
+        //あふれる
+        if (boostCapacity_ > boostCapacityMax_)
+            boostCapacity_ = boostCapacityMax_;
     }
+
 
 #ifdef _DEBUG
     //左右
@@ -377,27 +394,6 @@ void Vehicle::Update()
 
     //エフェクト
     PlayerParticle();
-
-#if 0
-    //テスト
-    XMVECTOR bulletVec = XMVector3Normalize(vehicleVector_.z);
-
-    //弾を発射
-    if (Input::IsMouseButton(0) && coolTime_ <= 0)
-    {
-        Bullet* pBullet = Instantiate<Bullet>(GetParent());
-        XMFLOAT3 BulletPos = Model::GetBonePosition(hModel_, "center");
-        pBullet->SetPosition(BulletPos);
-
-        float power = bulletPower_;
-        bulletVec *= power;
-        XMFLOAT3 speed;
-        XMStoreFloat3(&speed, bulletVec);
-        pBullet->SetSpeed(speed);
-
-        coolTime_ = heatAdd_;
-    }
-#endif
 }
 
 //何かに当たった
@@ -742,29 +738,32 @@ void Vehicle::CollideWall(int hModel, int type)
                 //後ろ
             case Direction::rear:
                 dirAcc = XMVectorGetZ(XMVector3TransformCoord(acceleration_, matRotateY));
-                dirSize = -Size.toRear_;
+                dirSize = Size.toRear_;
                 dirPlusMinus = -1.0f;
                 break;
                 //左
             case Direction::left:
                 dirAcc = XMVectorGetX(XMVector3TransformCoord(acceleration_, matRotateY));
-                dirSize = -Size.toLeft_;
+                dirSize = Size.toLeft_;
                 dirPlusMinus = -1.0f;
                 break;
             }
 
-            if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
+            //if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
+            if (wallCollideVertical[i].dist < abs(dirAcc) + dirSize)
             {
                 //偽 == 壁に衝突 / 真 == 坂道
                 //回転
                 if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_) == false)
                 {
                     //衝突する直前で止まった時の壁までの距離
-                    XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - (dirSize * dirPlusMinus), 0.0f };
+                    XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - dirSize, 0.0f };
                     ajustVec = XMVector3TransformCoord(ajustVec, matRot);
 
                     //回転
                     VectorRotateMatrixZXY(ajustVec);
+                    
+                    //移動
                     transform_.position_.x += XMVectorGetX(ajustVec);
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
@@ -772,13 +771,15 @@ void Vehicle::CollideWall(int hModel, int type)
                     //減速させてみる
                     acceleration_ *= wallReflectionForce_;
 
-                    //壁反射ベクトル
-                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * abs(dirAcc);
+                    //壁反射ベクトル 
+                    acceleration_ -= XMVector3Normalize(XMLoadFloat3(&wallCollideVertical[i].dir))
+                        * *XMVector3Length(acceleration_).m128_f32;
                 }
             }
         }
     }
 
+#if 0
     //斜め
     std::array<RayCastData, 4>wallCollideOblique;
     for (int i = 0; i < wallCollideOblique.size(); i++)
@@ -887,6 +888,9 @@ void Vehicle::CollideWall(int hModel, int type)
             }
         }
     } 
+#endif
+
+
 
     //縦横斜め統合
 #if 0
@@ -1279,7 +1283,7 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
     rotate.z = -(XMConvertToDegrees(*XMVector3AngleBetweenNormals(
         worldVector_.x, normalVec).m128_f32) - 90.0f);
 
-
+    //角度制限
     if (abs(rotate.x) <= limitAngle && abs(rotate.z) <= limitAngle)
     {
         transform_.rotate_.x = rotate.x;

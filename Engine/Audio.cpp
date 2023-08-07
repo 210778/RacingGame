@@ -123,6 +123,24 @@ void Audio::Play(int ID)
 	}
 }
 
+//“r’†‚ÅŽ~‚ß‚é
+void Audio::Stop(int ID)
+{
+	for (int i = 0; i < audioDatas[ID].svNum; i++)
+	{
+		XAUDIO2_VOICE_STATE state;
+		audioDatas[ID].pSourceVoice[i]->GetState(&state);
+
+		if (state.BuffersQueued == 0)
+		{
+			audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
+			audioDatas[ID].pSourceVoice[i]->Start();
+			audioDatas[ID].pSourceVoice[i]->Stop();
+			break;
+		}
+	}
+}
+
 //‚·‚×‚ÄŠJ•ú
 void Audio::Release()
 {

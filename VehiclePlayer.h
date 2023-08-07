@@ -24,6 +24,10 @@ class VehiclePlayer : public Vehicle
     float km_hAdd;  //時速表示加算
     Sample* pSample_;
 
+    //ブースト系
+    int imageBoostMax_;
+    int imageBoost_;
+
 public:
     //コンストラクタ
     VehiclePlayer(GameObject* parent);
