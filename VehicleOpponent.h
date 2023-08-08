@@ -13,4 +13,7 @@ public:
 
     //デストラクタ
     ~VehicleOpponent();
+
+    //操作
+    void InputOperate() override;
 };

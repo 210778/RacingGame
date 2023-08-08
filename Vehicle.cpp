@@ -1,3 +1,7 @@
+#include <directxcollision.h>
+#include <directxmath.h>
+#include <directxpackedvector.h>
+
 #include "Engine/Model.h"
 #include "Engine/Input.h"
 #include "Engine/SphereCollider.h"
@@ -181,6 +185,34 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
+    BoundingBox abc;
+    abc.Center = { 1.f,1.f,1.f };
+    abc.Extents = { 1.f,1.f,1.f };
+
+    BoundingBox def;
+    abc.Center = { 1.f,1.f,1.f };
+    abc.Extents = { 1.f,1.f,1.f };
+
+    int ans;
+    ans = abc.Contains(def);
+    ans = def.Contains(abc);
+    //BoundingBox::Contains(constBoundingOrientedBox&)
+
+    BoundingOrientedBox bob1;
+    bob1.Center = transform_.position_;
+    bob1.Extents = { Size.toLeft_ * 2.f, Size.toTop_ * 2.f, Size.toFront_ * 2.f };
+    bob1.Orientation;
+    XMVECTOR qua = XMQuaternionRotationRollPitchYaw(transform_.rotate_.x
+                                                  , transform_.rotate_.y
+                                                  , transform_.rotate_.z);
+    XMStoreFloat4(&bob1.Orientation, qua);
+
+    BoundingOrientedBox bob2 = bob1;
+
+    ans = bob1.Contains(bob2);
+    ans = bob2.Contains(bob1);
+
+
     Debug::TimerLogStart("vehicle最初");
 
     //行列を用意
@@ -867,14 +899,19 @@ void Vehicle::CollideWall(int hModel, int type)
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
 
+                    //減速させてみる
+                    acceleration_ *= wallReflectionForce_;
 
                     //壁反射ベクトル 
                     acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir)
                         * *XMVector3Length(acceleration_).m128_f32;
 
+                    //acceleration_ *= {0.0f, 1.0f, 0.0f, 0.0f};
+                    //壁反射ベクトル 
+                    //acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir)
+                    //    * *XMVector3Length(acceleration_).m128_f32;
                     //減速させてみる
-                    acceleration_ *= wallReflectionForce_;
-
+                    //acceleration_ *= wallReflectionForce_;
                     //acceleration_ *= 0;
                     //acceleration_ -= XMVector3Normalize(XMLoadFloat3(&wallCollideVertical[i].dir))
                     //    * *XMVector3Length(acceleration_).m128_f32;

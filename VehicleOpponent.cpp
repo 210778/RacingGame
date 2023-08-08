@@ -18,3 +18,9 @@ VehicleOpponent::VehicleOpponent(GameObject* parent, std::string vehicleName, st
 VehicleOpponent::~VehicleOpponent()
 {
 }
+
+//ëÄçÏ
+void VehicleOpponent::InputOperate()
+{
+    Operation.inputNow[Operation.inputName::moveFront] = 1.0f;
+}

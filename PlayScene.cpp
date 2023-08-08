@@ -41,7 +41,7 @@ void PlayScene::Initialize()
 	//エフェクト用
 	ParticlePackage::Initialize();
 
-	int population = 1;
+	int population = 2;
 	int playerNumber = 0;
 	//車両をセット
 	for (int i = 0; i < population; i++)
