@@ -54,6 +54,10 @@ public:
     void PlayerParticle() override;
     //ƒJƒƒ‰XV
     void PlayerCamera_Update() override;
+
+    //‘€ì
+    void InputOperate() override;
+
 #if 0
     //‰Šú‰»
     void Initialize() override;

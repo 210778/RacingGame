@@ -192,14 +192,57 @@ protected:
         float topToWheelBottom_ = 1.0f; //上端からタイヤ底辺までの高さ
     }Size;
 
-    struct Operation
+    //操作入力
+    struct
     {
-        float front     = 0.0f;
-        float rear      = 0.0f;
-        float ritgt     = 0.0f;
-        float left      = 0.0f;
-        float boost     = 0.0f;
-    };
+        enum inputName
+        {
+            moveFront = 0,
+            moveRear,
+            handleRight,
+            handleLeft,
+            boost,
+
+            jump,
+            turnRight,
+            turnLeft,
+            moveRight,
+            moveLeft,
+
+            MAX
+        };
+
+        //現在の値、１つ過去の値
+        std::unordered_map<int,float> inputNow,inputAgo;
+
+        //現在の値を過去に渡してゼロにする
+        void Refresh()
+        {
+            inputAgo = inputNow;
+
+            //リセット
+            for (auto& itr : inputNow){
+                itr.second = 0.0f;
+            }
+        }
+
+        float IsDown(inputName in)
+        {
+            if (inputAgo[in] == false)
+                return inputNow[in];
+
+            return 0.0f;
+        }
+
+        float IsUp(inputName in)
+        {
+            if (inputAgo[in] == false)
+                return 0.0f;
+
+            return inputNow[in];
+        }
+
+    }Operation;
 
 
     const short handleRight_;

@@ -100,8 +100,8 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.95f)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
-    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
-    , boostSpending_(1.0f), boostIncrease_(boostCapacityMax_ * 0.01f)
+    , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
+    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -234,6 +234,103 @@ void Vehicle::Update()
     }
 
     Debug::TimerLogStart("vehicle操作受けつけ");
+
+    //リセット
+    Operation.Refresh();
+    //操作入力
+    InputOperate();
+
+    //ハンドルの操作
+    handleFlag_ = false;
+    if (Operation.inputNow[Operation.inputName::handleLeft])
+    {
+        HandleTurnLR(handleLeft_);
+    }
+    if (Operation.inputNow[Operation.inputName::handleRight])
+    {
+        HandleTurnLR(handleRight_);
+    }
+
+    //ハンドル角度制限
+    //曲がりやすい
+    if (slideFlag_)
+        AngleLimit(handleRotate_, handleRotateMax_ * slideHandleAngleLimitAdd_);
+    else
+        AngleLimit(handleRotate_, handleRotateMax_);
+
+    if (landingFlag_)
+    {
+        //全身後退
+        if (Operation.inputNow[Operation.inputName::moveFront])
+        {
+            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
+        }
+
+        if (Operation.inputNow[Operation.inputName::moveRear])
+        {
+            acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
+        }
+    }
+
+    //ブースト
+    if (Operation.inputNow[Operation.inputName::boost])
+    {
+        //容量があるなら
+        if (boostCapacity_ >= boostSpending_)
+        {
+            //消費
+            boostCapacity_ -= boostSpending_;
+
+            slideFlag_ = true;
+
+            acceleration_ += vecZ * 2.0f;
+
+            XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
+            ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+        }
+    }
+    else
+    {
+        slideFlag_ = false;
+
+        //ちょっと位置が悪い
+        boostCapacity_ += boostIncrease_;
+        //あふれる
+        if (boostCapacity_ > boostCapacityMax_)
+            boostCapacity_ = boostCapacityMax_;
+    }
+
+
+#ifdef _DEBUG
+    //左右
+    if (Operation.inputNow[Operation.inputName::turnLeft])
+    {
+        transform_.rotate_.y -= rotateSPD_;
+    }
+    if (Operation.inputNow[Operation.inputName::turnRight])
+    {
+        transform_.rotate_.y += rotateSPD_;
+    }
+
+    //ジャンプ
+    //if (Operation.inputNow[Operation.inputName::jump])
+    if(Operation.IsDown(Operation.inputName::jump))
+    {
+        acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
+        landingFlag_ = false;
+    }
+
+    if (Operation.inputNow[Operation.inputName::moveLeft])
+    {
+        acceleration_ -= vecX;
+    }
+    if (Operation.inputNow[Operation.inputName::moveRight])
+    {
+        acceleration_ += vecX;
+    }
+#endif
+
+#if 0
     //ハンドルの操作
     handleFlag_ = false;
     if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
@@ -328,6 +425,8 @@ void Vehicle::Update()
     {
         acceleration_ += vecX;
     }
+#endif
+
 #endif
     Debug::TimerLogEnd("vehicle操作受けつけ");
 
@@ -768,12 +867,17 @@ void Vehicle::CollideWall(int hModel, int type)
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
 
+
+                    //壁反射ベクトル 
+                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir)
+                        * *XMVector3Length(acceleration_).m128_f32;
+
                     //減速させてみる
                     acceleration_ *= wallReflectionForce_;
 
-                    //壁反射ベクトル 
-                    acceleration_ -= XMVector3Normalize(XMLoadFloat3(&wallCollideVertical[i].dir))
-                        * *XMVector3Length(acceleration_).m128_f32;
+                    //acceleration_ *= 0;
+                    //acceleration_ -= XMVector3Normalize(XMLoadFloat3(&wallCollideVertical[i].dir))
+                    //    * *XMVector3Length(acceleration_).m128_f32;
                 }
             }
         }
