@@ -114,16 +114,34 @@ void Audio::Play(int ID)
 		XAUDIO2_VOICE_STATE state;
 		audioDatas[ID].pSourceVoice[i]->GetState(&state);
 
+		//ないなら追加
 		if (state.BuffersQueued == 0)
 		{
 			audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
-			audioDatas[ID].pSourceVoice[i]->Start();
+		}
+
+		audioDatas[ID].pSourceVoice[i]->Start();
+		break;	//一応つけておく
+	}
+}
+
+//一時停止
+void Audio::Pause(int ID)
+{
+	for (int i = 0; i < audioDatas[ID].svNum; i++)
+	{
+		XAUDIO2_VOICE_STATE state;
+		audioDatas[ID].pSourceVoice[i]->GetState(&state);
+
+		if (state.BuffersQueued != 0)
+		{
+			audioDatas[ID].pSourceVoice[i]->Stop();
 			break;
 		}
 	}
 }
 
-//途中で止める
+//停止
 void Audio::Stop(int ID)
 {
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
@@ -131,11 +149,12 @@ void Audio::Stop(int ID)
 		XAUDIO2_VOICE_STATE state;
 		audioDatas[ID].pSourceVoice[i]->GetState(&state);
 
-		if (state.BuffersQueued == 0)
+		if (state.BuffersQueued != 0)
 		{
-			audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
-			audioDatas[ID].pSourceVoice[i]->Start();
 			audioDatas[ID].pSourceVoice[i]->Stop();
+			//一時停止したソースボイスの中身を洗い流し、もう一度ソースボイスにデータを設定すればいいらしい
+			audioDatas[ID].pSourceVoice[i]->FlushSourceBuffers();
+			audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
 			break;
 		}
 	}
@@ -159,4 +178,20 @@ void Audio::Release()
 		pMasteringVoice->DestroyVoice();
 	}
 	pXAudio->Release();
+}
+
+//状態のゲッター
+int Audio::GetAudioState(int ID)
+{
+	int state = -1;
+
+	for (int i = 0; i < audioDatas[ID].svNum; i++)
+	{
+		XAUDIO2_VOICE_STATE voiceState;
+		audioDatas[ID].pSourceVoice[i]->GetState(&voiceState);
+
+		state = voiceState.BuffersQueued;
+	}
+
+	return state;
 }

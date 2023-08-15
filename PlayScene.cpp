@@ -13,6 +13,7 @@
 #include "ParticlePackage.h"
 #include "VehiclePlayer.h"
 #include "VehicleOpponent.h"
+#include "Music.h"
 
 using std::tuple;
 using std::sort;
@@ -40,8 +41,10 @@ void PlayScene::Initialize()
 
 	//エフェクト用
 	ParticlePackage::Initialize();
+	//音楽
+	Music::Initialize();
 
-	int population = 2;
+	int population = 1;
 	int playerNumber = 0;
 	//車両をセット
 	for (int i = 0; i < population; i++)

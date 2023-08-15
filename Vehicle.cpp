@@ -11,6 +11,7 @@
 #include "Engine/Image.h"
 #include "Engine/Debug.h"
 #include "Engine/Particle.h"
+#include "Engine/Audio.h"
 
 #include "Vehicle.h"
 #include "Ground.h"
@@ -525,6 +526,29 @@ void Vehicle::Update()
 
     //エフェクト
     PlayerParticle();
+
+
+    //サウンドデータのロード
+    hSound_ = Audio::Load("music\\loop100201.wav");
+    assert(hSound_ >= 0);
+    int answ = 65535;
+    if (Input::IsKeyDown(DIK_J))
+    {
+        Audio::Play(hSound_);
+        answ = Audio::GetAudioState(hSound_);
+    }
+    if (Input::IsKeyDown(DIK_K))
+    {
+        Audio::Stop(hSound_);
+        answ = Audio::GetAudioState(hSound_);
+    }
+    if (Input::IsKeyDown(DIK_L))
+    {
+        Audio::Pause(hSound_);
+        answ = Audio::GetAudioState(hSound_);
+    }
+
+    answ = 99999;
 }
 
 //何かに当たった
@@ -806,7 +830,7 @@ bool Vehicle::Landing(int hModel,int type)
     return isHit;
 }
 
-void Vehicle::CollideWall(int hModel, int type)
+bool Vehicle::CollideWall(int hModel, int type)
 {
     //レイキャストの時つかう
     enum Direction
@@ -850,6 +874,42 @@ void Vehicle::CollideWall(int hModel, int type)
             //方向ごとのプラスマイナス： 1 と -1
             float dirPlusMinus;
 
+            //追加
+            XMVECTOR accRotVec = acceleration_;
+            VectorRotateMatrixZXY(accRotVec);
+
+
+            //方向ごとに代入　なんか頭わるいことしてそうな気がする
+            switch (i)
+            {
+                //前方、その他
+            default:
+            case Direction::front:
+                dirAcc = XMVectorGetZ(accRotVec);
+                dirSize = Size.toFront_;
+                dirPlusMinus = 1.0f;
+                break;
+                //右
+            case Direction::right:
+                dirAcc = XMVectorGetX(accRotVec);
+                dirSize = Size.toRight_;
+                dirPlusMinus = 1.0f;
+                break;
+                //後ろ
+            case Direction::rear:
+                dirAcc = XMVectorGetZ(accRotVec);
+                dirSize = Size.toRear_;
+                dirPlusMinus = -1.0f;
+                break;
+                //左
+            case Direction::left:
+                dirAcc = XMVectorGetX(accRotVec);
+                dirSize = Size.toLeft_;
+                dirPlusMinus = -1.0f;
+                break;
+            }
+
+#if 0
             //方向ごとに代入　なんか頭わるいことしてそうな気がする
             switch (i)
             {
@@ -879,6 +939,7 @@ void Vehicle::CollideWall(int hModel, int type)
                 dirPlusMinus = -1.0f;
                 break;
             }
+#endif
 
             //if (wallCollideVertical[i].dist < (dirAcc + dirSize) * dirPlusMinus)
             if (wallCollideVertical[i].dist < abs(dirAcc) + dirSize)
@@ -899,12 +960,48 @@ void Vehicle::CollideWall(int hModel, int type)
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
 
+                    //
+                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * abs(dirAcc);
+
                     //減速させてみる
                     acceleration_ *= wallReflectionForce_;
+                    
+#if 0
+                    //
+                    switch (i)
+                    {
+                        //前方、その他
+                    default:
+                    case Direction::front:
+                    case Direction::rear:
+                        accRotVec *= {1.0f, 1.0f, 0.0f, 1.0f};
+                        break;
+                        //右
+                    case Direction::right:
+                    case Direction::left:
+                        accRotVec *= {0.0f, 1.0f, 1.0f, 1.0f};
+                        break;
+                    }
+
+                    accRotVec += wallCollideVertical[i].normal * dirAcc;
+                    acceleration_ = accRotVec;
+                    VectorRotateMatrixZXY_R(acceleration_);
+#endif
+
+
+
+                    //float angle = Calculator::AngleBetweenNormalVector(
+                    //    XMLoadFloat3(&wallCollideVertical[i].dir), wallCollideVertical[i].normal);
+
+
+                    //float angle = Calculator::AngleBetweenNormalVector(worldVector_.z, wallCollideVertical[i].reflection);
+                    //XMVECTOR rotateVec = XMVector3TransformCoord(acceleration_, XMMatrixRotationY(XMConvertToRadians(angle)));
+                    //acceleration_ = rotateVec;
 
                     //壁反射ベクトル 
-                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir)
-                        * *XMVector3Length(acceleration_).m128_f32;
+                    //acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir)
+                    //    * *XMVector3Length(acceleration_).m128_f32;
+                    //acceleration_ = wallCollideVertical[i].reflection * moveSPD_ * 10.0f;
 
                     //acceleration_ *= {0.0f, 1.0f, 0.0f, 0.0f};
                     //壁反射ベクトル 
@@ -920,8 +1017,8 @@ void Vehicle::CollideWall(int hModel, int type)
         }
     }
 
-#if 0
     //斜め
+#if 0
     std::array<RayCastData, 4>wallCollideOblique;
     for (int i = 0; i < wallCollideOblique.size(); i++)
     {
@@ -1268,6 +1365,8 @@ for (int i = 0; i < wallCollideVertical.size(); i++)
     }
 }
 #endif
+
+    return true;
 }
 
 void Vehicle::MakeWheels(int hModel)

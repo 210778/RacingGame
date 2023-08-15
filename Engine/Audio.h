@@ -17,14 +17,22 @@ namespace Audio
 	int Load(std::string fileName,int svNum = 1);
 
 	//再生
-	//引数：handle	鳴らしたいサウンドの番号
+	//引数：ID	鳴らしたいサウンドの番号
 	void Play(int ID);
 
-	//途中で止める
-	//引数：handle	停止したいサウンドの番号
+	//一時停止
+	//引数：ID	停止したいサウンドの番号
+	void Pause(int ID);
+
+	//停止
+	//引数：ID	停止したいサウンドの番号
 	void Stop(int ID);
 
 	//すべて開放
 	void Release();
+
+	//状態のゲッター
+	//引数：ID	取得したいサウンドの番号
+	int GetAudioState(int ID);
 };
 

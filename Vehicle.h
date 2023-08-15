@@ -307,7 +307,8 @@ public:
     /// 壁との接触
     /// </summary>
     /// <param name="hModel">モデル番号</param>
-    void CollideWall(int hModel, int type);
+    /// <returns>なにかに当たった場合true</returns>
+    bool CollideWall(int hModel, int type);
 
     /// <summary>
     /// タイヤを用意
@@ -327,6 +328,10 @@ public:
         Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
         Size.topToWheelBottom_ = Size.toWheelBottom_ + Size.toTop_;
     }
+
+
+    int hSound_ = -1;
+
 
     //モデルの大きさセッター
     void SetVehicleSize(int hModel);
