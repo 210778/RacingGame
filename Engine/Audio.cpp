@@ -107,7 +107,7 @@ int Audio::Load(std::string fileName, int svNum)
 }
 
 //Ä¶
-void Audio::Play(int ID, int count = 1)
+void Audio::Play(int ID, int count)
 {
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{

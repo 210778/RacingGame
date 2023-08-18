@@ -39,10 +39,12 @@ void PlayScene::Initialize()
 	pGround_ = Instantiate<Ground>(this);
 	pGround_->SetChosenCircuit(2);
 
+
 	//エフェクト用
 	ParticlePackage::Initialize();
 	//音楽
 	Music::Initialize();
+
 
 	int population = 1;
 	int playerNumber = 0;

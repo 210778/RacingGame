@@ -12,7 +12,7 @@ namespace Music
 	/// <summary>
 	/// 再生
 	/// </summary>
-	/// <param name="musicName">鳴らしたいサウンドの曲名/param>
+	/// <param name="musicName">鳴らしたいサウンドの曲名</param>
 	/// <returns>true→曲があったので再生、false→曲がなかった</returns>
 	bool Play(std::string musicName);
 

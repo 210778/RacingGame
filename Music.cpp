@@ -75,11 +75,21 @@ bool Music::Play(string musicName)
 //ˆêŽž’âŽ~
 void Music::Pause(string musicName)
 {
+	if (musicPackage_.count(musicName) == 0)
+	{
+		return;
+	}
+
 	Audio::Pause(musicPackage_[musicName].hSound);
 }
 
 //’âŽ~
 void Music::Stop(string musicName)
 {
+	if (musicPackage_.count(musicName) == 0)
+	{
+		return;
+	}
+
 	Audio::Stop(musicPackage_[musicName].hSound);
 }

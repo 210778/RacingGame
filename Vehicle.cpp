@@ -102,7 +102,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_()
-    , slopeLimitAngle_(45.0f), wallReflectionForce_(0.95f)
+    , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
     //ÉuÅ[ÉXÉg
     , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
@@ -186,19 +186,17 @@ void Vehicle::Initialize()
 //çXêV
 void Vehicle::Update()
 {
+#if 0
     BoundingBox abc;
     abc.Center = { 1.f,1.f,1.f };
     abc.Extents = { 1.f,1.f,1.f };
-
     BoundingBox def;
     abc.Center = { 1.f,1.f,1.f };
     abc.Extents = { 1.f,1.f,1.f };
-
     int ans;
     ans = abc.Contains(def);
     ans = def.Contains(abc);
     //BoundingBox::Contains(constBoundingOrientedBox&)
-
     BoundingOrientedBox bob1;
     bob1.Center = transform_.position_;
     bob1.Extents = { Size.toLeft_ * 2.f, Size.toTop_ * 2.f, Size.toFront_ * 2.f };
@@ -207,12 +205,10 @@ void Vehicle::Update()
                                                   , transform_.rotate_.y
                                                   , transform_.rotate_.z);
     XMStoreFloat4(&bob1.Orientation, qua);
-
     BoundingOrientedBox bob2 = bob1;
-
     ans = bob1.Contains(bob2);
     ans = bob2.Contains(bob1);
-
+#endif
 
     Debug::TimerLogStart("vehicleç≈èâ");
 
@@ -856,7 +852,9 @@ bool Vehicle::CollideWall(int hModel, int type)
     XMStoreFloat3(&upF, vehicleVector_.y * Size.toBottom_);
     startPos = Transform::Float3Add(startPos, upF);
 
+
     //ëOå„ç∂âEï“
+#if 1
     for (int i = 0; i < wallCollideVertical.size(); i++)
     {
         wallCollideVertical[i].start = startPos;
@@ -989,11 +987,13 @@ bool Vehicle::CollideWall(int hModel, int type)
                     acceleration_ = accRotVec;
                     VectorRotateMatrixZXY_R(acceleration_);
 
-                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * moveSPD_;
-                    //acceleration_ += wallCollideVertical[i].reflection * moveSPD_;
-
                     //å∏ë¨Ç≥ÇπÇƒÇ›ÇÈ
                     acceleration_ *= wallReflectionForce_;
+
+                    acceleration_ -= XMLoadFloat3(&wallCollideVertical[i].dir) * moveSPD_;
+                    //acceleration_ += wallCollideVertical[i].reflection * moveSPD_ * 2.0f;
+
+
 
 #if 0
                     //
@@ -1074,6 +1074,7 @@ bool Vehicle::CollideWall(int hModel, int type)
             }
         }
     }
+#endif
 
     //éŒÇﬂ
 #if 1
@@ -1095,8 +1096,13 @@ bool Vehicle::CollideWall(int hModel, int type)
         float vehicleLen = 0.0f;
         float dirAccZ = 0.0f;
         float dirAccX = 0.0f;
-        float vehicleLenZ = 0.0f;
-        float vehicleLenX = 0.0f;
+
+        //â¡ë¨ìxâÒì]
+        XMVECTOR accRotVec = acceleration_;
+        VectorRotateMatrixZXY(accRotVec);
+
+        dirAccX = XMVectorGetX(accRotVec);
+        dirAccZ = XMVectorGetZ(accRotVec);
 
         switch (i){
         default:
@@ -1132,12 +1138,18 @@ bool Vehicle::CollideWall(int hModel, int type)
         //float powX = XMVectorGetX(acceleration_);
         //float powZ = XMVectorGetZ(acceleration_);
         //if(wallCollideOblique[i].dist * wallCollideOblique[i].dist < powX * powX + powZ * powZ)
+        //if (wallCollideVertical[i].dist < abs(dirAcc) + dirSize)
+        //if(wallCollideOblique[i].dist * wallCollideOblique[i].dist < 
+        //    (dirAccX * dirAccX + dirAccZ * dirAccZ) + (vehicleLen * vehicleLen))
 
         //èdÇªÇ§Ç»ÇÃÇ≈â¡ë¨ìxÇÃîªíËÇÕÇ±Ç±Ç≈ÇÕÇ‚ÇÁÇ»Ç¢
-        if (wallCollideOblique[i].hit
-            && wallCollideOblique[i].dist < vehicleLen)
+        //if (wallCollideOblique[i].hit && wallCollideOblique[i].dist < vehicleLen)
+        
+        //í∑Ç≥Ç∆â¡ë¨ìxÇÃîªíË
+        if (wallCollideOblique[i].dist * wallCollideOblique[i].dist <
+           (dirAccX * dirAccX + dirAccZ * dirAccZ) + (vehicleLen * vehicleLen))
         {
-            if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_) == false)
+            if (VehicleRotateSlope(wallCollideOblique[i].normal, slopeLimitAngle_) == false)
             {
                 //è’ìÀÇ∑ÇÈéûÇÃï«Ç‹Ç≈ÇÃãóó£
                 XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideOblique[i].dist - vehicleLen, 0.0f };
@@ -1145,27 +1157,33 @@ bool Vehicle::CollideWall(int hModel, int type)
 
                 //âÒì]
                 VectorRotateMatrixZXY(ajustVec);
+                //ï«Ç…Ç≠Ç¡Ç¬Ç≠
                 transform_.position_.x += XMVectorGetX(ajustVec);
                 transform_.position_.y += XMVectorGetY(ajustVec);
                 transform_.position_.z += XMVectorGetZ(ajustVec);
 
+                //â¡ë¨ìxÇÇOÇ…ÇµÇΩÇËÇÕÇµÇ»Ç¢
                 //å∏ë¨Ç≥ÇπÇÈ
                 acceleration_ *= wallReflectionForce_;
 
+                //ï«îΩéÀ
+                acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir) * moveSPD_;
+
                 //ï«îΩéÀÉxÉNÉgÉã
-
-                //îΩéÀÇ∑ÇÈéûÇÃâ¡ë¨ìxÇãÅÇﬂÇÈ
-                XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(theta));	//Çxé≤Ç≈ãtâÒì]Ç≥ÇπÇÈçsóÒ   
-                //âÒì]
-                XMVECTOR dirVec = XMVector3TransformCoord(acceleration_, matRot);
-                VectorRotateMatrixZXY(dirVec);
-
-                float powX = XMVectorGetX(acceleration_);
-
-                float powZ = XMVectorGetZ(acceleration_);
-
-                //sqrt(powX + powZ;
-                //acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir) * sqrt((powX* powX)+(powZ* powX));
+                //float pX = dirAccX * dirAccX;
+                //float pZ = dirAccZ * dirAccZ;
+                //float sXZ = sqrt(pX + pZ);
+                //acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir) * abs(sXZ);
+                ////îΩéÀÇ∑ÇÈéûÇÃâ¡ë¨ìxÇãÅÇﬂÇÈ
+                //XMMATRIX matRot = XMMatrixRotationY(XMConvertToRadians(theta));	//Çxé≤Ç≈ãtâÒì]Ç≥ÇπÇÈçsóÒ   
+                ////âÒì]
+                //XMVECTOR dirVec = XMVector3TransformCoord(acceleration_, matRot);
+                //VectorRotateMatrixZXY(dirVec);
+                //float powX = XMVectorGetX(acceleration_);
+                //float powZ = XMVectorGetZ(acceleration_);
+                ////sqrt(powX + powZ;
+                ////acceleration_ -= XMLoadFloat3(&wallCollideOblique[i].dir)
+                //* sqrt((powX* powX)+(powZ* powX));
             }
         }
     } 
@@ -1536,9 +1554,9 @@ void Vehicle::VectorRotateMatrixZXY(XMVECTOR& vec)
 //ÉxÉNÉgÉãÇâÒì]çsóÒÇ≈"ãt"âÒì] (ZXYèá)
 void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
 {
-    vec = XMVector3TransformCoord(vec, matRotateZ_R);
-    vec = XMVector3TransformCoord(vec, matRotateX_R);
     vec = XMVector3TransformCoord(vec, matRotateY_R);
+    vec = XMVector3TransformCoord(vec, matRotateX_R);
+    vec = XMVector3TransformCoord(vec, matRotateZ_R);
 }
 
 // ç‚ìπÇ…âûÇ∂Çƒé‘óºÇâÒì](XÅAZé≤)
