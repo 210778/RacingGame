@@ -37,7 +37,7 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(2);
+	pGround_->SetChosenCircuit(0);
 
 
 	//エフェクト用
@@ -46,7 +46,7 @@ void PlayScene::Initialize()
 	Music::Initialize();
 
 
-	int population = 1;
+	int population = 2;
 	int playerNumber = 0;
 	//車両をセット
 	for (int i = 0; i < population; i++)

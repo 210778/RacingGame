@@ -39,6 +39,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
+    isPlayer_ = true;
 }
 
 //デストラクタ

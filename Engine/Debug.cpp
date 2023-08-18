@@ -70,7 +70,7 @@ namespace Debug
 		{
 			count_++;
 
-			//なんとなく最初の値を無視してみる
+			//最初の値は外れ値になりがちなので無視
 			if (count_ < 10){
 				return;
 			};

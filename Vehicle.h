@@ -157,10 +157,15 @@ protected:
 
     float wallReflectionForce_;//壁にぶつかったときの減速する値
 
+    const short handleRight_;
+    const short handleLeft_;
+
     float boostCapacityMax_;//ブーストできる最大容量
     float boostCapacity_;//ブーストできる現在残量
     float boostSpending_;//ブーストする時の消費量
     float boostIncrease_;//ブーストできる残量の追加値
+
+    bool isPlayer_; //プレイヤーキャラかどうか
 
     //車両の各サイズ
     struct
@@ -225,7 +230,7 @@ protected:
                 itr.second = 0.0f;
             }
         }
-
+        //今は押していて、前では押してないか
         float IsDown(inputName in)
         {
             if (inputAgo[in] == false)
@@ -233,7 +238,7 @@ protected:
 
             return 0.0f;
         }
-
+        //今は押してなくて、前は押していたか
         float IsUp(inputName in)
         {
             if (inputAgo[in] == false)
@@ -244,9 +249,30 @@ protected:
 
     }Operation;
 
+    //NPCのためのレイが当たったかどうかの情報まとめ
+    struct RayCastHit
+    {
+        XMFLOAT3	dir;	//レイの向きfloat3
+        float       dist;	//衝突点までの距離
+        BOOL        hit;	//レイが当たったか
+        XMFLOAT3    end;	//命中位置
 
-    const short handleRight_;
-    const short handleLeft_;
+        enum Number
+        {
+            up,
+            down,
+            front,
+            frontLeft,
+            left,
+            rearLeft,
+            rear,
+            rearRight,
+            right,
+            frontRight,
+        };
+    };
+    std::unordered_map<int, RayCastHit> rayCastHit_;
+
 
 public:
     //コンストラクタ
