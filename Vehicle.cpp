@@ -187,7 +187,7 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
-#if 0
+#if 1
     BoundingBox abc;
     abc.Center = { 1.f,1.f,1.f };
     abc.Extents = { 1.f,1.f,1.f };
@@ -209,6 +209,14 @@ void Vehicle::Update()
     BoundingOrientedBox bob2 = bob1;
     ans = bob1.Contains(bob2);
     ans = bob2.Contains(bob1);
+
+
+    BoundingOrientedBox vehicleBoundingBox_;
+    vehicleBoundingBox_.Center = transform_.position_;
+    vehicleBoundingBox_.Extents = { Size.centerRightToLeft_, Size.centerTopToBottom_, Size.centerFrontToRear_ };
+    XMStoreFloat4(&vehicleBoundingBox_.Orientation, XMQuaternionRotationRollPitchYaw(transform_.rotate_.x
+                                                                                    ,transform_.rotate_.y
+                                                                                    ,transform_.rotate_.z ));
 #endif
 
     Debug::TimerLogStart("vehicle最初");
@@ -650,12 +658,7 @@ bool Vehicle::Landing(int hModel,int type)
     if (data.hit)
     {
         //NPC用
-        if (!isPlayer_){
-            rayCastHit_[RayCastHit::Number::down].dir = data.dir;
-            rayCastHit_[RayCastHit::Number::down].dist = data.dist;
-            rayCastHit_[RayCastHit::Number::down].end = data.end;
-            rayCastHit_[RayCastHit::Number::down].hit = data.hit;
-        }
+        SetRayCastHit(RayCastHit::Number::down, data);
 
         landingType_ = type;    //地面のタイプ
         isHit = true;           //何かに当たった
@@ -718,12 +721,8 @@ bool Vehicle::Landing(int hModel,int type)
     if (data.hit)
     {   
         //NPC用
-        if (!isPlayer_){
-            rayCastHit_[RayCastHit::Number::up].dir = data.dir;
-            rayCastHit_[RayCastHit::Number::up].dist = data.dist;
-            rayCastHit_[RayCastHit::Number::up].end = data.end;
-            rayCastHit_[RayCastHit::Number::up].hit = data.hit;
-        }
+        SetRayCastHit(RayCastHit::Number::up, data);
+
 
         //ちょっと地面に埋まったとき
         if (data.dist < Size.toTop_)
@@ -788,18 +787,13 @@ bool Vehicle::CollideWall(int hModel, int type)
 
             //NPC用
             if (!isPlayer_) {
-                int number = 0;
                 switch (i) {
                 default:
-                case Direction::front: number = RayCastHit::Number::front; break;    //前方、その他
-                case Direction::right: number = RayCastHit::Number::right; break;    //右
-                case Direction::rear:  number = RayCastHit::Number::rear;  break;    //後ろ
-                case Direction::left:  number = RayCastHit::Number::left;  break;    //左
+                case Direction::front: SetRayCastHit(RayCastHit::Number::front, wallCollideVertical[i]); break;    //前方、その他
+                case Direction::right: SetRayCastHit(RayCastHit::Number::right, wallCollideVertical[i]); break;    //右
+                case Direction::rear:  SetRayCastHit(RayCastHit::Number::rear,  wallCollideVertical[i]); break;    //後ろ
+                case Direction::left:  SetRayCastHit(RayCastHit::Number::left,  wallCollideVertical[i]); break;    //左
                 }
-                rayCastHit_[number].dir = wallCollideVertical[i].dir;
-                rayCastHit_[number].dist = wallCollideVertical[i].dist;
-                rayCastHit_[number].end = wallCollideVertical[i].end;
-                rayCastHit_[number].hit = wallCollideVertical[i].hit;
             }
 
             //方向ごとの加速度
@@ -934,12 +928,8 @@ bool Vehicle::CollideWall(int hModel, int type)
         if (wallCollideOblique[i].hit)
         {
             //NPC用
-            if (!(isPlayer_)) {
-                rayCastHit_[NPC_Number].dir = wallCollideOblique[i].dir;
-                rayCastHit_[NPC_Number].dist = wallCollideOblique[i].dist;
-                rayCastHit_[NPC_Number].end = wallCollideOblique[i].end;
-                rayCastHit_[NPC_Number].hit = wallCollideOblique[i].hit;
-            }
+            SetRayCastHit(NPC_Number, wallCollideOblique[i]);
+
 
             //長さと加速度の判定
             if (wallCollideOblique[i].dist * wallCollideOblique[i].dist <
@@ -1039,7 +1029,10 @@ void Vehicle::SetVehicleSize(int hModel)
     Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
     Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
     Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
-    
+    Size.centerRightToLeft_ = Size.rightToLeft_ * 0.5f;
+    Size.centerTopToBottom_ = Size.topToBottom_ * 0.5f;
+    Size.centerFrontToRear_ = Size.frontToRear_ * 0.5f;
+
     //角度
     Size.angleFrontLeft_    = XMConvertToDegrees(        acos(Size.toFront_ / Size.toFrontLeft_));
     Size.angleFrontRight_   = XMConvertToDegrees(XM_PI - acos(Size.toFront_ / Size.toFrontRight_));
@@ -1069,17 +1062,14 @@ XMFLOAT3* Vehicle::GetNextCheckPosition()
         XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[pointCount_]->GetPosition();
         return &pos;
     }
-    else
-    {
-        XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[0]->GetPosition();
-        return &pos;
-    }
+
+    XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[0]->GetPosition();
+    return &pos;
 }
 //次のチェックポイントまでの距離を取得
 float Vehicle::GetNextCheckDistance()
 {
-    return *XMVector3LengthEst(XMLoadFloat3(GetNextCheckPosition())).m128_f32
-        - *XMVector3LengthEst(XMLoadFloat3(&transform_.position_)).m128_f32;
+    return *XMVector3LengthEst(XMLoadFloat3(GetNextCheckPosition()) - XMLoadFloat3(&transform_.position_)).m128_f32;
 }
 
 //ベクトルを回転行列で回転 (ZXY順)
@@ -1090,7 +1080,7 @@ void Vehicle::VectorRotateMatrixZXY(XMVECTOR& vec)
     vec = XMVector3TransformCoord(vec, matRotateY);
 }
 
-//ベクトルを回転行列で"逆"回転 (ZXY順)
+//ベクトルを回転行列で"逆"回転 (YXZ順)
 void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
 {
     vec = XMVector3TransformCoord(vec, matRotateY_R);
@@ -1141,6 +1131,19 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
 void Vehicle::VehicleRotateTotal(std::vector<XMFLOAT3>* rotate)
 {
     ;
+}
+
+void Vehicle::SetRayCastHit(int number, const RayCastData& rcd)
+{
+    if (isPlayer_)
+    {
+        return;
+    }
+
+    rayCastHit_[number].dir = rcd.dir;
+    rayCastHit_[number].dist = rcd.dist;
+    rayCastHit_[number].end = rcd.end;
+    rayCastHit_[number].hit = rcd.hit;
 }
 
 //UIの関数群　プレイヤー限定で作用する

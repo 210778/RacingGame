@@ -106,6 +106,19 @@ float Calculator::AngleBetweenNormalVector(const XMVECTOR& alfa, const XMVECTOR&
 	return AngleBetweenNormalVector(alfa, bravo, { 0.0f,1.0f,0.0f,0.0f });
 }
 
+// äpìxÇÃê≥ãKâª
+float Calculator::AngleNormalize(float angle)
+{
+	float normal = fmodf(angle, 360);//angle %= 360
+
+	if (normal < 0)
+	{
+		normal += 360;
+	}
+
+	return normal;
+}
+
 
 //écä[
 #if 0

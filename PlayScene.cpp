@@ -37,7 +37,7 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(0);
+	pGround_->SetChosenCircuit(1);
 
 
 	//エフェクト用
@@ -87,18 +87,19 @@ void PlayScene::Update()
 		int point = vehicles_[i]->GetPointCount();
 		float dist = vehicles_[i]->GetNextCheckDistance();
 
-
-		std::get<lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
-		std::get<check>(ranking[i]) = -vehicles_[i]->GetPointCount();
-		std::get<distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
-		std::get<pointer>(ranking[i]) = vehicles_[i];
+		std::get<RankName::lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
+		std::get<RankName::check>(ranking[i]) = -vehicles_[i]->GetPointCount();
+		std::get<RankName::distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
+		std::get<RankName::pointer>(ranking[i]) = vehicles_[i];
 	}
+
 	//ソート
 	sort(ranking.begin(), ranking.end());
+
 	//順位を教える
 	for (int i = 0; i < ranking.size(); i++)
 	{
-		std::get<pointer>(ranking[i])->SetRanking(i + 1);
+		std::get<RankName::pointer>(ranking[i])->SetRanking(i + 1);
 	}
 }
 
@@ -130,11 +131,13 @@ template <class V>
 V* PlayScene::VehicleInstantiate(GameObject* pParent, std::string vehicleName, std::string wheelName)
 {
 	V* pNewObject = new V(pParent, vehicleName, wheelName);
+
 	if (pParent != nullptr)
 	{
 		pParent->PushBackChild(pNewObject);
 	}
 	pNewObject->Initialize();
+
 	return pNewObject;
 }
 

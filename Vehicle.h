@@ -7,6 +7,7 @@
 class Particle;
 class Ground;
 class VehicleWheel;
+class RayCastData;
 
 //車両を管理するクラス
 class Vehicle : public GameObject
@@ -195,6 +196,9 @@ protected:
         float wheelRemainder_ = 1.0f;   //車体とタイヤの位置の差分の高さ
         float toWheelBottom_ = 1.0f;    //中心からタイヤの底辺までの高さ
         float topToWheelBottom_ = 1.0f; //上端からタイヤ底辺までの高さ
+        float centerRightToLeft_ = 1.0f;    //左右の長さの中心
+        float centerTopToBottom_ = 1.0f;    //上下の長さの中心
+        float centerFrontToRear_ = 1.0f;    //前後の長さの中心
     }Size;
 
     //操作入力
@@ -387,6 +391,13 @@ public:
     /// <param name="limitAngle">回転を許容する坂道の角度(水平線から見る)</param>
     /// <returns>限界角度以内なら回転してtrue そうでないなら何もせずfalse</returns>
     bool VehicleRotateSlope(const XMVECTOR& normal,const float limitAngle);
+
+    /// <summary>
+    /// NPC用レイキャストにデータセット
+    /// </summary>
+    /// <param name="number">mapのキー</param>
+    /// <param name="rcd">レイキャストデータ</param>
+    void SetRayCastHit(int number, const RayCastData& rcd);
 
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得

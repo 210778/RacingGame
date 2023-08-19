@@ -15,13 +15,13 @@ class PlayScene : public GameObject
 
 	std::vector<Vehicle*> vehicles_;
 
-	enum
+	enum RankName
 	{
 		lap = 0,
 		check = 1,
 		distance = 2,
 		pointer = 3
-	}rank_;
+	};
 
 public:
 	//コンストラクタ

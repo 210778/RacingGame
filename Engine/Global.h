@@ -78,4 +78,12 @@ namespace Calculator
 	/// <param name="bravo">ベクトル2(正規化)</param>
 	/// <returns>0 ~ 360の角度</returns>
 	float AngleBetweenNormalVector(const XMVECTOR& alfa, const XMVECTOR& bravo);
+
+	/// <summary>
+	/// 角度の正規化
+	/// </summary>
+	/// <param name="angle">角度</param>
+	/// <returns>0 ~ 360に正規化した角度</returns>
+	float AngleNormalize(float angle);
+
 };
