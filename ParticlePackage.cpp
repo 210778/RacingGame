@@ -13,6 +13,9 @@ namespace ParticlePackage
 
     EmitterData landingGrass_;
 
+    EmitterData landingDirt_;
+
+
 	unsigned long long timeCount_;	//時間のカウント
     int colorSpeed_ = 2;  //カウントのスピード
 
@@ -21,6 +24,7 @@ namespace ParticlePackage
     void SetRainbow();
     void SetSmoke();
     void SetGrass();
+    void SetDirt();
 };
 
 void ParticlePackage::Initialize()
@@ -31,6 +35,7 @@ void ParticlePackage::Initialize()
     SetRainbow();
     SetSmoke();
     SetGrass();
+    SetDirt();
 }
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
@@ -71,6 +76,12 @@ void ParticlePackage::ActLandingGrass(Particle* pParticle, XMFLOAT3 position)
 {
     landingGrass_.position = position;
     pParticle->Start(landingGrass_);
+}
+
+void ParticlePackage::ActLandingDirt(Particle* pParticle, XMFLOAT3 position)
+{
+    landingDirt_.position = position;
+    pParticle->Start(landingDirt_);
 }
 
 //セッター
@@ -185,6 +196,28 @@ void ParticlePackage::SetGrass()
     landingGrass_.color = { 0.1f,1.0f,0.0f,0.5f };
     landingGrass_.deltaColor = { 0.0f,0.0f,0.0f,0.0f };
 }
+
+void ParticlePackage::SetDirt()
+{
+    //土
+    landingDirt_.textureFileName = "image\\PaticleAssets\\cloudA.png";
+    landingDirt_.position = { 0.0f,0.0f,0.0f };
+    landingDirt_.positionErr = { 0.5f,0.5f,0.5f };
+    landingDirt_.delay = 0;
+    landingDirt_.number = 1;
+    landingDirt_.lifeTime = 30;
+    landingDirt_.gravity = 0.01f;
+    landingDirt_.dir = { 0.0f,1.0f,0.0f };
+    landingDirt_.dirErr = { 50.0f,50.0f,50.0f };
+    landingDirt_.speed = 0.1f;
+    landingDirt_.speedErr = 0.5f;
+    landingDirt_.size = { 0.75f,0.75f };
+    landingDirt_.sizeErr = { 0.5f,0.5f };
+    landingDirt_.scale = { 1.05f,1.05f };
+    landingDirt_.color = { 0.5f,0.3f,0.0f,0.5f };
+    landingDirt_.deltaColor = { 0.01f,0.01f,0.0f,-0.02f };
+}
+
 #if 0
 //初期化
 void TestScene::Initialize()

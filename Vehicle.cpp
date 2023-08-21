@@ -98,7 +98,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
-    , wheelParticleLength_(0.1f)
+    , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
     , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_()
@@ -187,7 +187,7 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
-#if 1
+#if 0
     BoundingBox abc;
     abc.Center = { 1.f,1.f,1.f };
     abc.Extents = { 1.f,1.f,1.f };
@@ -325,6 +325,7 @@ void Vehicle::Update()
 
             acceleration_ += vecZ * 2.0f;
 
+            //エフェクト
             XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
             ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
         }
@@ -362,7 +363,6 @@ void Vehicle::Update()
     }
 
     //ジャンプ
-    //if (Operation.inputNow[Operation.inputName::jump])
     if(Operation.IsDown(Operation.inputName::jump))
     {
         acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
@@ -427,10 +427,10 @@ void Vehicle::Update()
     //位置　＋　ベクトル
     XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
 
-    Debug::TimerLogStart("vehicle壁衝突");
+    Debug::TimerLogStart("vehicle壁床衝突");
         //接地、壁衝突
         VehicleCollide();
-    Debug::TimerLogEnd("vehicle壁衝突");
+    Debug::TimerLogEnd("vehicle壁床衝突");
 
     //タイヤの値セット
     pWheels_->SetWheelSpeedRotate(*XMVector3LengthEst(acceleration_).m128_f32
@@ -1029,8 +1029,9 @@ void Vehicle::SetVehicleSize(int hModel)
     Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
     Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
     Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+
     Size.centerRightToLeft_ = Size.rightToLeft_ * 0.5f;
-    Size.centerTopToBottom_ = Size.topToBottom_ * 0.5f;
+    //Size.centerTopToBottom_ = (Size.topToBottom_ + Size.wheelRemainder_) * 0.5f;
     Size.centerFrontToRear_ = Size.frontToRear_ * 0.5f;
 
     //角度
@@ -1133,6 +1134,7 @@ void Vehicle::VehicleRotateTotal(std::vector<XMFLOAT3>* rotate)
     ;
 }
 
+// NPC用レイキャストにデータセット
 void Vehicle::SetRayCastHit(int number, const RayCastData& rcd)
 {
     if (isPlayer_)
@@ -1144,6 +1146,19 @@ void Vehicle::SetRayCastHit(int number, const RayCastData& rcd)
     rayCastHit_[number].dist = rcd.dist;
     rayCastHit_[number].end = rcd.end;
     rayCastHit_[number].hit = rcd.hit;
+}
+
+//バウンディングボックスの衝突
+void Vehicle::CollideBoundingBox(Vehicle* pVehicle)
+{
+    XMFLOAT3 posCenter = GetBoundingBoxCenter();
+    XMVECTOR posVec = XMLoadFloat3(&posCenter);
+
+    XMFLOAT3 OppCenter = pVehicle->GetBoundingBoxCenter();
+    XMVECTOR oppVec = XMLoadFloat3(&OppCenter);
+
+    XMVECTOR oppToPos = XMVector3Normalize(posVec - oppVec);
+    acceleration_ += oppToPos * *XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32;
 }
 
 //UIの関数群　プレイヤー限定で作用する

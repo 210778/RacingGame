@@ -206,6 +206,8 @@ void VehiclePlayer::PlayerCamera_Update()
 
 void VehiclePlayer::PlayerParticle()
 {
+    float accLength = *XMVector3Length(acceleration_).m128_f32;
+
     //ゴールしたら
     if (goalFlag_)
     {
@@ -213,19 +215,30 @@ void VehiclePlayer::PlayerParticle()
     }
 
     //走行中のタイヤの軌跡
-    if (landingType_ != Ground::turf
-        && wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
+    if (landingType_ == Ground::road
+        && wheelParticleLength_ < accLength
+        && wheelParticleLengthMax_ > accLength)
     {
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
     //草地乗り上げ
-    if (landingType_ == Ground::turf && landingFlag_
-        && wheelParticleLength_ < *XMVector3Length(acceleration_).m128_f32)
+    if (landingType_ == Ground::turf
+        && landingFlag_
+        && wheelParticleLength_ < accLength)
     {
         ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
     }
+
+    //砂地
+    if (landingType_ == Ground::dirt
+        && landingFlag_
+        && wheelParticleLength_ < accLength)
+    {
+        ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
+    }
+
 }
 
 //操作

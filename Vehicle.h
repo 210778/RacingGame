@@ -146,6 +146,7 @@ protected:
     short accZDirection_; //前向きに進んでるか後ろ向きか。前：+1, 後：-1
 
     float wheelParticleLength_;//タイヤのエフェクトが発生するベクトルの長さ
+    float wheelParticleLengthMax_;//タイヤのエフェクトが発生するベクトルの長さの上限
 
     XMFLOAT3 startPosition_;    //開始時の位置
     XMFLOAT3 startRotate_;      //開始時の回転
@@ -197,8 +198,9 @@ protected:
         float toWheelBottom_ = 1.0f;    //中心からタイヤの底辺までの高さ
         float topToWheelBottom_ = 1.0f; //上端からタイヤ底辺までの高さ
         float centerRightToLeft_ = 1.0f;    //左右の長さの中心
-        float centerTopToBottom_ = 1.0f;    //上下の長さの中心
+        float centerTopToBottom_ = 1.0f;    //上下の長さの中心(タイヤの高さ込み)
         float centerFrontToRear_ = 1.0f;    //前後の長さの中心
+        float centerPositionRemainder_ = 1.0f; //衝突ボックスのY軸の中心までの距離
     }Size;
 
     //操作入力
@@ -301,7 +303,7 @@ public:
     void Release() override;
 
     //何かに当たった
-   //引数：pTarget 当たった相手
+    //引数：pTarget 当たった相手
     void OnCollision(GameObject* pTarget) override;
 
     //加速度を位置に加算する。アップデートの最初においとく つもりだった
@@ -357,6 +359,8 @@ public:
 
         Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
         Size.topToWheelBottom_ = Size.toWheelBottom_ + Size.toTop_;
+        Size.centerPositionRemainder_ = Size.centerTopToBottom_ - Size.wheelRemainder_;
+        Size.centerTopToBottom_ = (Size.topToBottom_ + Size.wheelRemainder_) * 0.5f;
     }
 
 
@@ -399,6 +403,12 @@ public:
     /// <param name="rcd">レイキャストデータ</param>
     void SetRayCastHit(int number, const RayCastData& rcd);
 
+    /// <summary>
+    /// BoundingOrientedBoxの衝突判定
+    /// </summary>
+    /// <param name="pVehicle">当たった車両クラスのポインタ</param>
+    void CollideBoundingBox(Vehicle* pVehicle);
+
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得
         int GetPointCount() { return pointCount_; }
@@ -416,6 +426,16 @@ public:
         void SetRanking(int value) { ranking_ = value; }
         //レース参加人数をセット
         void SetPopulation(int value) { population_ = value; }
+        //バウンディングボックスの大きさのゲッター
+        XMFLOAT3 GetBoundingBoxExtents() { return XMFLOAT3{ Size.centerRightToLeft_
+                                                          , Size.centerTopToBottom_
+                                                          , Size.centerFrontToRear_ }; }
+        //バウンディングボックスの中心の位置のゲッター
+        XMFLOAT3 GetBoundingBoxCenter() {
+            return XMFLOAT3{ transform_.position_.x
+                            ,transform_.position_.y + Size.centerPositionRemainder_
+                            ,transform_.position_.z };
+        }
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

@@ -60,10 +60,7 @@ void VehicleOpponent::InputOperate()
     else
     {
         //‘Oi
-        if (rand() % 10 != 0)
-        {
-            Operation.inputNow[Operation.inputName::moveFront] = 1.0f;
-        }
+        Operation.inputNow[Operation.inputName::moveFront] = 1.0f;
 
         if (anleToCheck > 180)
         {
@@ -88,7 +85,7 @@ void VehicleOpponent::InputOperate()
         //ƒ‰ƒ“ƒ_ƒ€«
         if (rand() % 20 == 0)
         {
-            Operation.inputNow[Operation.inputName::boost] = 1.0f;
+            //Operation.inputNow[Operation.inputName::boost] = 1.0f;
         }
 
     }

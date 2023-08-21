@@ -47,4 +47,7 @@ public:
 	//車両を初期化して必要な値をセット
 	template <class V>
 	void SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::string wheelName,int number);
+
+	//車両が衝突してるか調べる
+	void CollideVehicle();
 };

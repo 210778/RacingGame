@@ -1,10 +1,14 @@
 #include <tuple>
 #include <algorithm>
+#include <directxcollision.h>
+#include <directxmath.h>
+#include <directxpackedvector.h>
 
 #include "Engine/SceneManager.h"
 #include "Engine/Image.h"
 #include "Engine/Model.h"
 #include "Engine/Input.h"
+#include "Engine/Debug.h"
 
 #include "PlayScene.h"
 #include "Sample.h"
@@ -37,7 +41,7 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(1);
+	pGround_->SetChosenCircuit(0);
 
 
 	//エフェクト用
@@ -101,6 +105,10 @@ void PlayScene::Update()
 	{
 		std::get<RankName::pointer>(ranking[i])->SetRanking(i + 1);
 	}
+
+
+	//衝突
+	CollideVehicle();
 }
 
 //描画
@@ -154,4 +162,87 @@ void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::stri
 	pVehicle->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[number]);
 	pVehicle->SetPointCountMax(pGround_->GetCircuitUnion()->checkPoint_.size());
 	pVehicle->SetLapMax(pGround_->GetCircuitUnion()->maxLap_);
+}
+
+//車両が衝突してるか調べる
+void PlayScene::CollideVehicle()
+{
+#if 0
+	Debug::TimerLogStart("衝突（１）");
+
+	for (auto& first : vehicles_)
+	{
+		for (auto& second : vehicles_)
+		{
+			//同一ならやめる
+			if (first == second)
+			{
+				continue;
+			}
+
+			BoundingOrientedBox BOB1;
+			BOB1.Center = first->GetBoundingBoxCenter();
+			BOB1.Extents = first->GetBoundingBoxExtents();
+			XMFLOAT3 rotate1 = first->GetRotate();
+			XMStoreFloat4(&BOB1.Orientation, XMQuaternionRotationRollPitchYaw(
+			XMConvertToRadians(rotate1.x), XMConvertToRadians(rotate1.y), XMConvertToRadians(rotate1.z)));
+			
+			BoundingOrientedBox BOB2;
+			BOB2.Center = second->GetBoundingBoxCenter();
+			BOB2.Extents = second->GetBoundingBoxExtents();
+			XMFLOAT3 rotate2 = second->GetRotate();
+			XMStoreFloat4(&BOB2.Orientation, XMQuaternionRotationRollPitchYaw(
+			XMConvertToRadians(rotate2.x), XMConvertToRadians(rotate2.y), XMConvertToRadians(rotate2.z)));
+
+			int answer = BOB1.Contains(BOB2);
+			//交差する、あるいは含まれる
+			if (answer != 0)
+			{
+				first->CollideBoundingBox(second);
+				second->CollideBoundingBox(first);
+			}
+			////前後逆
+			//answer = BOB2.Contains(BOB1);			
+			//if (answer != 0)
+			//{
+			//	first->CollideBoundingBox(second);
+			//}
+
+		}
+	}
+	Debug::TimerLogEnd("衝突（１）");
+#endif
+
+	Debug::TimerLogStart("衝突");
+	//重複なし
+	for (int one = 0; one < vehicles_.size(); one++)
+	{
+		for (int two = one + 1; two < vehicles_.size(); two++)
+		{
+			BoundingOrientedBox BOB1;
+			BOB1.Center = vehicles_[one]->GetBoundingBoxCenter();
+			BOB1.Extents = vehicles_[one]->GetBoundingBoxExtents();
+			XMFLOAT3 rotate1 = vehicles_[one]->GetRotate();
+			XMStoreFloat4(&BOB1.Orientation, XMQuaternionRotationRollPitchYaw(
+			XMConvertToRadians(rotate1.x), XMConvertToRadians(rotate1.y), XMConvertToRadians(rotate1.z)));
+
+			BoundingOrientedBox BOB2;
+			BOB2.Center = vehicles_[two]->GetBoundingBoxCenter();
+			BOB2.Extents = vehicles_[two]->GetBoundingBoxExtents();
+			XMFLOAT3 rotate2 = vehicles_[two]->GetRotate();
+			XMStoreFloat4(&BOB2.Orientation, XMQuaternionRotationRollPitchYaw(
+			XMConvertToRadians(rotate2.x), XMConvertToRadians(rotate2.y), XMConvertToRadians(rotate2.z)));
+
+			//交差する、あるいは含まれる
+			if (BOB1.Contains(BOB2) != 0)
+			{
+				//両方を起動
+				vehicles_[one]->CollideBoundingBox(vehicles_[two]);
+				vehicles_[two]->CollideBoundingBox(vehicles_[one]);
+			}
+
+		}
+	}
+	Debug::TimerLogEnd("衝突");
+
 }
