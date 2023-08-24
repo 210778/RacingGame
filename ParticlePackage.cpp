@@ -172,7 +172,7 @@ void ParticlePackage::SetSmoke()
     smokeCloud_.size = { 0.5f,0.5f };
     smokeCloud_.sizeErr = { 0.0f,0.0f };
     smokeCloud_.scale = { 1.0f,1.0f };
-    smokeCloud_.color = { 1.0f,1.0f,1.0f,0.2f };
+    smokeCloud_.color = { 1.0f,1.0f,1.0f,0.1f };
     smokeCloud_.deltaColor = { 0.0f,0.0f,0.0f,-0.005f };
 }
 

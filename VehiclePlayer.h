@@ -22,6 +22,8 @@ class VehiclePlayer : public Vehicle
     Text* pTextRanking_;    //順位
     Text* pTextAcceleration_; //加速度表示 デバッグ用
     float km_hAdd;  //時速表示加算
+    int   flashIntervalUI_;   //表示が点滅する間隔
+    bool  IsFlashUI_;         //UIを表示するかどうか
     Sample* pSample_;
 
     //ブースト系

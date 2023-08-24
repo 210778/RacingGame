@@ -126,9 +126,11 @@ protected:
         int lapMax_;        //必要な周回数
         bool goalFlag_;     //trueならゴール状態
         int ranking_;       //自分の順位
+        int goalRanking_;   //ゴールした時の順位 ゴール前は0
         int population_;    //レースに参加している人数
+        unsigned long long goalTime_;//ゴールした時の経過タイム
 
-    float mass_;     //車の重量
+    float mass_;            //車の重量
     float engineRotate_;    //エンジン回転数
 
     XMVECTOR frontVec_;//正面のベクトル
@@ -168,6 +170,8 @@ protected:
     float boostIncrease_;//ブーストできる残量の追加値
 
     bool isPlayer_; //プレイヤーキャラかどうか
+
+    float collideBoxValue_;//相手とぶつかったときの掛ける値
 
     //車両の各サイズ
     struct
@@ -409,6 +413,9 @@ public:
     /// <param name="pVehicle">当たった車両クラスのポインタ</param>
     void CollideBoundingBox(Vehicle* pVehicle);
 
+    //操作入力の反映
+    void InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ);
+
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得
         int GetPointCount() { return pointCount_; }
@@ -436,6 +443,23 @@ public:
                             ,transform_.position_.y + Size.centerPositionRemainder_
                             ,transform_.position_.z };
         }
+        //車両の質量のゲッター
+        float GetMass() { return mass_; };
+        //車両の質量のセッター
+        void SetMass(float value) { mass_ = value; };
+        //ゴールしてるならtrueとポインタに順位を、してないならfalseを返してなにもしない
+        bool GetIsGoalRanking(int* pRank)
+        {
+            if (goalFlag_)
+            {
+                *pRank = goalRanking_;
+                return true;
+            }
+            return false;
+        }
+        //経過時間のセッター
+        void setTime(unsigned long long time) { time_ = time; }
+
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

@@ -46,7 +46,7 @@ Vehicle::Vehicle(GameObject* parent)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), population_(1)
+    , ranking_(0), population_(1), goalTime_(0)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -90,7 +90,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
 
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), population_(1)
+    , ranking_(0), goalRanking_(0), population_(1)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -108,6 +108,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f)
     , isPlayer_(false)
+    , collideBoxValue_(0.5f)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -187,38 +188,6 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
-#if 0
-    BoundingBox abc;
-    abc.Center = { 1.f,1.f,1.f };
-    abc.Extents = { 1.f,1.f,1.f };
-    BoundingBox def;
-    abc.Center = { 1.f,1.f,1.f };
-    abc.Extents = { 1.f,1.f,1.f };
-    int ans;
-    ans = abc.Contains(def);
-    ans = def.Contains(abc);
-    //BoundingBox::Contains(constBoundingOrientedBox&)
-    BoundingOrientedBox bob1;
-    bob1.Center = transform_.position_;
-    bob1.Extents = { Size.toLeft_ * 2.f, Size.toTop_ * 2.f, Size.toFront_ * 2.f };
-    bob1.Orientation;
-    XMVECTOR qua = XMQuaternionRotationRollPitchYaw(transform_.rotate_.x
-                                                  , transform_.rotate_.y
-                                                  , transform_.rotate_.z);
-    XMStoreFloat4(&bob1.Orientation, qua);
-    BoundingOrientedBox bob2 = bob1;
-    ans = bob1.Contains(bob2);
-    ans = bob2.Contains(bob1);
-
-
-    BoundingOrientedBox vehicleBoundingBox_;
-    vehicleBoundingBox_.Center = transform_.position_;
-    vehicleBoundingBox_.Extents = { Size.centerRightToLeft_, Size.centerTopToBottom_, Size.centerFrontToRear_ };
-    XMStoreFloat4(&vehicleBoundingBox_.Orientation, XMQuaternionRotationRollPitchYaw(transform_.rotate_.x
-                                                                                    ,transform_.rotate_.y
-                                                                                    ,transform_.rotate_.z ));
-#endif
-
     Debug::TimerLogStart("vehicle最初");
 
     //行列を用意
@@ -255,13 +224,18 @@ void Vehicle::Update()
     if (coolTime_ > 0)
         coolTime_--;
 
-    //時間
-    if (!(goalFlag_))
-        time_++;
-
     //Ｇゴール  
     if (lapCount_ >= lapMax_)
+    {
+        //ゴール順位が更新されてないならセットする
+        if (!goalFlag_)//if (goalRanking_ <= 0)
+        {
+            goalRanking_ = ranking_;
+            goalTime_ = time_;
+        }
+
         goalFlag_ = true;
+    }
 
     //前向きに進んでるか後ろ向きか判定
     accZDirection_ = 1;
@@ -273,111 +247,7 @@ void Vehicle::Update()
 
     Debug::TimerLogStart("vehicle操作受けつけ");
 
-    //リセット
-    Operation.Refresh();
-    //操作入力
-    InputOperate();
-
-    //ハンドルの操作
-    handleFlag_ = false;
-    if (Operation.inputNow[Operation.inputName::handleLeft])
-    {
-        HandleTurnLR(handleLeft_);
-    }
-    if (Operation.inputNow[Operation.inputName::handleRight])
-    {
-        HandleTurnLR(handleRight_);
-    }
-
-    //ハンドル角度制限
-    //曲がりやすい
-    if (slideFlag_)
-        AngleLimit(handleRotate_, handleRotateMax_ * slideHandleAngleLimitAdd_);
-    else
-        AngleLimit(handleRotate_, handleRotateMax_);
-
-    if (landingFlag_)
-    {
-        //全身後退
-        if (Operation.inputNow[Operation.inputName::moveFront])
-        {
-            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
-        }
-
-        if (Operation.inputNow[Operation.inputName::moveRear])
-        {
-            acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
-        }
-    }
-
-    //ブースト
-    bool increaseFlag = false;  //容量が増えるか
-
-    if (Operation.inputNow[Operation.inputName::boost])
-    {
-        //容量があるなら
-        if (boostCapacity_ >= boostSpending_)
-        {
-            //消費
-            boostCapacity_ -= boostSpending_;
-
-            slideFlag_ = true;
-
-            acceleration_ += vecZ * 2.0f;
-
-            //エフェクト
-            XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
-            ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
-        }
-        else
-        {
-            increaseFlag = true;
-        }
-    }
-    else
-    {
-        slideFlag_ = false;
-
-        increaseFlag = true;
-
-        //あふれる
-        if (boostCapacity_ > boostCapacityMax_)
-            boostCapacity_ = boostCapacityMax_;
-    }
-    //増える
-    if (landingFlag_ && increaseFlag)
-    {
-        boostCapacity_ += boostIncrease_;
-    }
-
-
-#ifdef _DEBUG
-    //左右
-    if (Operation.inputNow[Operation.inputName::turnLeft])
-    {
-        transform_.rotate_.y -= rotateSPD_;
-    }
-    if (Operation.inputNow[Operation.inputName::turnRight])
-    {
-        transform_.rotate_.y += rotateSPD_;
-    }
-
-    //ジャンプ
-    if(Operation.IsDown(Operation.inputName::jump))
-    {
-        acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
-        landingFlag_ = false;
-    }
-
-    if (Operation.inputNow[Operation.inputName::moveLeft])
-    {
-        acceleration_ -= vecX;
-    }
-    if (Operation.inputNow[Operation.inputName::moveRight])
-    {
-        acceleration_ += vecX;
-    }
-#endif
+    InputReceive(vecX, vecZ);
 
     Debug::TimerLogEnd("vehicle操作受けつけ");
 
@@ -421,7 +291,7 @@ void Vehicle::Update()
 
 
     //長さの調整
-    //いらなくね
+    //いらない
     //SpeedLimit(acceleration_, speedLimit_);
 
     //位置　＋　ベクトル
@@ -581,12 +451,10 @@ void Vehicle::TurnWheel()
     //回転して加速度に足す
 
     acceleration_ +=  *XMVector3LengthEst(acceleration_).m128_f32
-
                       * XMVector3TransformCoord(XMVector3Cross(vehicleVector_.z
                       , XMVector3Normalize(acceleration_))
                       , XMMatrixRotationNormal(vehicleVector_.z
                       , XMConvertToRadians(transform_.rotate_.z) + XM_PIDIV2))
-
                       * GroundTypeFriction_[landingType_].side;
 
     //読みやすいコード
@@ -747,7 +615,6 @@ bool Vehicle::Landing(int hModel,int type)
 
 bool Vehicle::CollideWall(int hModel, int type)
 {
-
     //前後左右と斜めで分割することにする
     std::array<RayCastData, 4>wallCollideVertical;
 
@@ -929,7 +796,6 @@ bool Vehicle::CollideWall(int hModel, int type)
         {
             //NPC用
             SetRayCastHit(NPC_Number, wallCollideOblique[i]);
-
 
             //長さと加速度の判定
             if (wallCollideOblique[i].dist * wallCollideOblique[i].dist <
@@ -1157,8 +1023,130 @@ void Vehicle::CollideBoundingBox(Vehicle* pVehicle)
     XMFLOAT3 OppCenter = pVehicle->GetBoundingBoxCenter();
     XMVECTOR oppVec = XMLoadFloat3(&OppCenter);
 
-    XMVECTOR oppToPos = XMVector3Normalize(posVec - oppVec);
-    acceleration_ += oppToPos * *XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32;
+    XMVECTOR posToOpp = XMVector3Normalize(posVec - oppVec);
+
+    //減速させる
+    acceleration_ *= wallReflectionForce_;
+
+    //これでもそれっぽい
+    acceleration_ += posToOpp * *XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32
+                    * pVehicle->GetMass() * collideBoxValue_;
+
+    //acceleration_ += posToOpp * *XMVector3LengthEst(acceleration_).m128_f32;
+    //acceleration_ += pVehicle->GetAcceleration();
+    //acceleration_ += posToOpp * ((*XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32
+    //    + *XMVector3LengthEst(acceleration_).m128_f32) * 0.5f);
+}
+
+//操作入力の反映
+void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
+{
+    //リセット
+    Operation.Refresh();
+
+    //操作入力
+    InputOperate();
+
+    //ハンドルの操作
+    handleFlag_ = false;
+    if (Operation.inputNow[Operation.inputName::handleLeft])
+    {
+        HandleTurnLR(handleLeft_);
+    }
+    if (Operation.inputNow[Operation.inputName::handleRight])
+    {
+        HandleTurnLR(handleRight_);
+    }
+
+    //ハンドル角度制限
+    //曲がりやすい
+    if (slideFlag_)
+        AngleLimit(handleRotate_, handleRotateMax_ * slideHandleAngleLimitAdd_);
+    else
+        AngleLimit(handleRotate_, handleRotateMax_);
+
+    if (landingFlag_)
+    {
+        //全身後退
+        if (Operation.inputNow[Operation.inputName::moveFront])
+        {
+            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
+        }
+
+        if (Operation.inputNow[Operation.inputName::moveRear])
+        {
+            acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
+        }
+    }
+
+    //ブースト
+    bool increaseFlag = false;  //容量が増えるか
+
+    if (Operation.inputNow[Operation.inputName::boost])
+    {
+        //容量があるなら
+        if (boostCapacity_ >= boostSpending_)
+        {
+            //消費
+            boostCapacity_ -= boostSpending_;
+
+            slideFlag_ = true;
+
+            acceleration_ += vecZ * 2.0f;
+
+            //エフェクト
+            XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
+            ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+        }
+        else
+        {
+            increaseFlag = true;
+        }
+    }
+    else
+    {
+        slideFlag_ = false;
+
+        increaseFlag = true;
+
+        //あふれる
+        if (boostCapacity_ > boostCapacityMax_)
+            boostCapacity_ = boostCapacityMax_;
+    }
+    //増える
+    if (landingFlag_ && increaseFlag)
+    {
+        boostCapacity_ += boostIncrease_;
+    }
+
+
+#ifdef _DEBUG
+    //左右
+    if (Operation.inputNow[Operation.inputName::turnLeft])
+    {
+        transform_.rotate_.y -= rotateSPD_;
+    }
+    if (Operation.inputNow[Operation.inputName::turnRight])
+    {
+        transform_.rotate_.y += rotateSPD_;
+    }
+
+    //ジャンプ
+    if (Operation.IsDown(Operation.inputName::jump))
+    {
+        acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
+        landingFlag_ = false;
+    }
+
+    if (Operation.inputNow[Operation.inputName::moveLeft])
+    {
+        acceleration_ -= vecX;
+    }
+    if (Operation.inputNow[Operation.inputName::moveRight])
+    {
+        acceleration_ += vecX;
+    }
+#endif
 }
 
 //UIの関数群　プレイヤー限定で作用する

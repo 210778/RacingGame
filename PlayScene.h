@@ -15,12 +15,15 @@ class PlayScene : public GameObject
 
 	std::vector<Vehicle*> vehicles_;
 
+	unsigned long long universalTime_; //車両の共通時間(単位：フレーム)
+
 	enum RankName
 	{
-		lap = 0,
-		check = 1,
-		distance = 2,
-		pointer = 3
+		goalRank = 0,
+		lap,
+		check,
+		distance,
+		pointer
 	};
 
 public:
@@ -50,4 +53,10 @@ public:
 
 	//車両が衝突してるか調べる
 	void CollideVehicle();
+
+	//順位を調べて車両に教える
+	void CalculateRanking();
+
+	//時間を加算して車両に教える
+	void CountUniversalTime();
 };

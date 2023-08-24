@@ -33,7 +33,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     , pViewer(nullptr)
     , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
     , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
-    , km_hAdd(120.0f)
+    , km_hAdd(120.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
     , imageBoostMax_(-1), imageBoost_(-1)
 {
@@ -91,18 +91,34 @@ void VehiclePlayer::PlayerUI_Draw()
 {
     //時速表示
     //平面のベクトルの長さ
-    XMVECTOR speedVec = acceleration_ * XMVECTOR{ 1,0,1,1 };
+    XMVECTOR speedVec = acceleration_;
     string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
     speedStr += "km/h";
     pTextSpeed_->Draw(30, 30, speedStr.c_str());
+
+    unsigned long long time = time_;
+    if (goalFlag_)
+    {
+        //ゴールしてるなら
+        time = goalTime_;
+
+        //点滅させる
+        if (time_ % flashIntervalUI_ == 0)
+        {
+            if (IsFlashUI_)
+                IsFlashUI_ = false;
+            else
+                IsFlashUI_ = true;
+        }
+    }
 
     //経過時間表示
     int min = 0;
     int sec = 0;
     int mSec = 0;
     int rest = 0;
-    min = time_ / 3600;
-    rest = time_ % 3600;
+    min = time / 3600;
+    rest = time % 3600;
     sec = rest / 60;
     rest = rest % 60;
     mSec = rest;
@@ -116,17 +132,49 @@ void VehiclePlayer::PlayerUI_Draw()
     if (mSec < 10)
         timeStr += "0";
     timeStr += to_string(mSec);
-    pTextTime_->Draw(30, 70, timeStr.c_str());
+    //点滅
+    if(IsFlashUI_)
+    {
+        pTextTime_->Draw(30, 70, timeStr.c_str());
+    }
 
     //周回数表示
     string lapStr = "Lap:";
     lapStr += to_string(lapCount_) + "/" + to_string(lapMax_);
-    pTextLap_->Draw(30, 110, lapStr.c_str());
+    //点滅
+    if (IsFlashUI_)
+    {
+        pTextLap_->Draw(30, 110, lapStr.c_str());
+    }
 
     //順位表示
-    string rank = to_string(ranking_) + "/" + to_string(population_);
-    pTextRanking_->Draw(30, 150, rank.c_str());
+    string rank = to_string(ranking_);
+
+    //人数は多くても２０人ぐらいだとする
+    switch (ranking_)
+    {
+    default:rank += "th"; break;
+    case 1: rank += "st"; break;
+    case 2: rank += "nd"; break;
+    case 3: rank += "rd"; break;
+    }
+
+    rank += "/" + to_string(population_);
+    //点滅
+    if (IsFlashUI_)
+    {
+        pTextRanking_->Draw(30, 150, rank.c_str());
+    }
 #if 0
+    //順位表示
+    string rank;
+    //ゴールしてるか否か
+    if (goalFlag_)
+        rank = to_string(goalRanking_);
+    else
+        rank = to_string(ranking_);
+
+
     //pTextLap_->Draw(30, 150, rank.c_str());
     string all = "!\"#$%&\'()*+,-./0123456789:;<=>?@\
 ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
@@ -154,6 +202,7 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
         boostMaxTrans.position_ = { 0.0f,0.8f,1.0f };
         boostMaxTrans.scale_ = { 2.55,1.5,1.0f };
 
+        //
         boostTrans = boostMaxTrans;
         boostTrans.scale_ = { boostMaxTrans.scale_.x * 0.95f * (boostCapacity_ / boostCapacityMax_)
                             , boostMaxTrans.scale_.y * 0.8f, 1.0f, };
@@ -215,8 +264,7 @@ void VehiclePlayer::PlayerParticle()
     }
 
     //走行中のタイヤの軌跡
-    if (landingType_ == Ground::road
-        && wheelParticleLength_ < accLength
+    if (wheelParticleLength_ < accLength
         && wheelParticleLengthMax_ > accLength)
     {
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));

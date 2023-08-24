@@ -26,7 +26,7 @@ using std::vector;
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
-	,pGround_(nullptr)
+	, pGround_(nullptr), universalTime_(0)
 {
 }
 
@@ -41,7 +41,7 @@ void PlayScene::Initialize()
 	assert(hModel_ >= 0);
 
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(0);
+	pGround_->SetChosenCircuit(1);
 
 
 	//エフェクト用
@@ -82,30 +82,11 @@ void PlayScene::Initialize()
 //更新
 void PlayScene::Update()
 {
-	//車両の順位を計算
-	//型を用意
-	vector<tuple<int, int, float, Vehicle*>> ranking(vehicles_.size());
-	for (int i = 0; i < ranking.size(); i++)
-	{
-		int la = vehicles_[i]->GetLapCount();
-		int point = vehicles_[i]->GetPointCount();
-		float dist = vehicles_[i]->GetNextCheckDistance();
+	//時間
+	CountUniversalTime();
 
-		std::get<RankName::lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
-		std::get<RankName::check>(ranking[i]) = -vehicles_[i]->GetPointCount();
-		std::get<RankName::distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
-		std::get<RankName::pointer>(ranking[i]) = vehicles_[i];
-	}
-
-	//ソート
-	sort(ranking.begin(), ranking.end());
-
-	//順位を教える
-	for (int i = 0; i < ranking.size(); i++)
-	{
-		std::get<RankName::pointer>(ranking[i])->SetRanking(i + 1);
-	}
-
+	//順位
+	CalculateRanking();
 
 	//衝突
 	CollideVehicle();
@@ -201,13 +182,6 @@ void PlayScene::CollideVehicle()
 				first->CollideBoundingBox(second);
 				second->CollideBoundingBox(first);
 			}
-			////前後逆
-			//answer = BOB2.Contains(BOB1);			
-			//if (answer != 0)
-			//{
-			//	first->CollideBoundingBox(second);
-			//}
-
 		}
 	}
 	Debug::TimerLogEnd("衝突（１）");
@@ -245,4 +219,45 @@ void PlayScene::CollideVehicle()
 	}
 	Debug::TimerLogEnd("衝突");
 
+}
+
+//順位を調べて車両に教える
+void PlayScene::CalculateRanking()
+{
+	//車両の順位を計算
+	//型を用意
+	vector<tuple<int, int, int, float, Vehicle*>> ranking(vehicles_.size());
+	for (int i = 0; i < ranking.size(); i++)
+	{
+		//ゴールしてるか？
+		int goalRanking = vehicles_.size();
+		vehicles_[i]->GetIsGoalRanking(&goalRanking);
+
+		std::get<RankName::goalRank>(ranking[i]) = goalRanking;
+		std::get<RankName::lap>(ranking[i]) = -vehicles_[i]->GetLapCount();
+		std::get<RankName::check>(ranking[i]) = -vehicles_[i]->GetPointCount();
+		std::get<RankName::distance>(ranking[i]) = vehicles_[i]->GetNextCheckDistance();
+		std::get<RankName::pointer>(ranking[i]) = vehicles_[i];
+	}
+
+	//ソート
+	sort(ranking.begin(), ranking.end());
+
+	//順位を教える
+	for (int i = 0; i < ranking.size(); i++)
+	{
+		std::get<RankName::pointer>(ranking[i])->SetRanking(i + 1);
+	}
+}
+
+//時間を加算して車両に教える
+void PlayScene::CountUniversalTime()
+{
+	//加算 オーバーフローは考えない
+	universalTime_++;
+
+	for (const auto& itr : vehicles_)
+	{
+		itr->setTime(universalTime_);
+	}
 }
