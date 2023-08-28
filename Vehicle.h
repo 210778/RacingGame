@@ -1,5 +1,4 @@
 #pragma once
-#include <map>
 #include <unordered_map>
 #include "Engine/GameObject.h"
 
@@ -150,12 +149,11 @@ protected:
     float wheelParticleLength_;//タイヤのエフェクトが発生するベクトルの長さ
     float wheelParticleLengthMax_;//タイヤのエフェクトが発生するベクトルの長さの上限
 
-    XMFLOAT3 startPosition_;    //開始時の位置
-    XMFLOAT3 startRotate_;      //開始時の回転
     std::string vehicleModelName_;  //車両モデルの名前
     std::string wheelModelName_;    //タイヤモデルの名前
 
-    Transform startTransform_;  //スタート状態の位置と回転
+    Transform startTransform_;      //スタート状態の位置と回転
+    Transform restartTransform_;    //復活した時の位置と回転
 
     float slopeLimitAngle_; //坂道を上るときの上限角度（水平線から見る）この値を超えるとバグりがち
 
@@ -172,6 +170,8 @@ protected:
     bool isPlayer_; //プレイヤーキャラかどうか
 
     float collideBoxValue_;//相手とぶつかったときの掛ける値
+
+    bool isOperationInvalid_;   //操作を無効化する
 
     //車両の各サイズ
     struct
@@ -353,20 +353,7 @@ public:
     void MakeWheels(int hModel);
 
     //タイヤの高さセッター //車体との差分も計算
-    void SetWheelHeight(float height)
-    {
-        Size.wheelHeight_ = height;
-        
-        Size.wheelRemainder_ = height - Size.wheelFL_.y;
-        if (Size.wheelRemainder_ < 0.0f)
-            Size.wheelRemainder_ = 0.0f;
-
-        Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
-        Size.topToWheelBottom_ = Size.toWheelBottom_ + Size.toTop_;
-        Size.centerPositionRemainder_ = Size.centerTopToBottom_ - Size.wheelRemainder_;
-        Size.centerTopToBottom_ = (Size.topToBottom_ + Size.wheelRemainder_) * 0.5f;
-    }
-
+    void SetWheelHeight(float height);
 
     int hSound_ = -1;
 
@@ -381,7 +368,7 @@ public:
     void HandleTurnLR(int LR);
 
     //スタートの位置
-    void SetStartTransform(Transform value) { startTransform_ = value; }
+    void SetStartTransform(const Transform& value) { startTransform_ = value; }
 
     //ベクトルを回転行列で回転 (ZXY順)
     void VectorRotateMatrixZXY(XMVECTOR& vec);
@@ -458,8 +445,10 @@ public:
             return false;
         }
         //経過時間のセッター
-        void setTime(unsigned long long time) { time_ = time; }
-
+        void SetTime(unsigned long long time) { time_ = time; }
+        //操作を無効化するかどうかのセッター
+        void SetOperationInvalid(bool value) { isOperationInvalid_ = value; }
+        
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

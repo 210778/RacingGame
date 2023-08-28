@@ -269,6 +269,9 @@ void VehiclePlayer::PlayerParticle()
     {
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
+
+        //ParticlePackage::ActLandingSpark(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
+        //ParticlePackage::ActLandingSpark(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
     //ëêínèÊÇËè„Ç∞
@@ -286,7 +289,6 @@ void VehiclePlayer::PlayerParticle()
     {
         ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
     }
-
 }
 
 //ëÄçÏ

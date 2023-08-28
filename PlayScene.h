@@ -15,7 +15,9 @@ class PlayScene : public GameObject
 
 	std::vector<Vehicle*> vehicles_;
 
-	unsigned long long universalTime_; //車両の共通時間(単位：フレーム)
+	unsigned long long universalTime_;	//車両の共通時間(単位：フレーム)
+
+	unsigned long long standbyTime_;	//発車前の待機時間
 
 	enum RankName
 	{

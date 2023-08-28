@@ -45,6 +45,13 @@ namespace ParticlePackage
     /// <param name="pParticle">パーティクル型ポインタ</param>
     /// <param name="position">位置</param>
     void ActLandingDirt(Particle* pParticle, XMFLOAT3 position);
+
+    /// <summary>
+    /// 火花エフェクト起動
+    /// </summary>
+    /// <param name="pParticle">パーティクル型ポインタ</param>
+    /// <param name="position">位置</param>
+    void ActLandingSpark(Particle* pParticle, XMFLOAT3 position);
 };
 #if 0
 //パーティクルをまとめるためのクラス

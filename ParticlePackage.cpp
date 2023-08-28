@@ -1,20 +1,25 @@
+#include <unordered_map>
 #include "ParticlePackage.h"
 
 namespace ParticlePackage
 {
 	//パーティクルまとめ
-	EmitterData boosterFire_;
-	EmitterData boosterSpark_;
+	EmitterData boosterFire_;   //火１
+	EmitterData boosterSpark_;  //火２
 
-	EmitterData rainbowFire_;
-	EmitterData rainbowSpark_;
+	EmitterData rainbowFire_;   //虹１
+	EmitterData rainbowSpark_;  //虹２
 
-	EmitterData smokeCloud_;
+	EmitterData smokeCloud_;    //走行跡
 
-    EmitterData landingGrass_;
+    EmitterData landingGrass_;  //草
 
-    EmitterData landingDirt_;
+    EmitterData landingDirt_;   //砂
 
+    EmitterData wheelSpark_;    //火花
+
+
+    std::unordered_map<int, std::vector<EmitterData>> emitter_;
 
 	unsigned long long timeCount_;	//時間のカウント
     int colorSpeed_ = 2;  //カウントのスピード
@@ -25,6 +30,7 @@ namespace ParticlePackage
     void SetSmoke();
     void SetGrass();
     void SetDirt();
+    void SetSpark();
 };
 
 void ParticlePackage::Initialize()
@@ -36,6 +42,7 @@ void ParticlePackage::Initialize()
     SetSmoke();
     SetGrass();
     SetDirt();
+    SetSpark();
 }
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
@@ -82,6 +89,12 @@ void ParticlePackage::ActLandingDirt(Particle* pParticle, XMFLOAT3 position)
 {
     landingDirt_.position = position;
     pParticle->Start(landingDirt_);
+}
+
+void ParticlePackage::ActLandingSpark(Particle* pParticle, XMFLOAT3 position)
+{
+    wheelSpark_.position = position;
+    pParticle->Start(wheelSpark_);
 }
 
 //セッター
@@ -216,6 +229,46 @@ void ParticlePackage::SetDirt()
     landingDirt_.scale = { 1.05f,1.05f };
     landingDirt_.color = { 0.5f,0.3f,0.0f,0.5f };
     landingDirt_.deltaColor = { 0.01f,0.01f,0.0f,-0.02f };
+}
+
+void ParticlePackage::SetSpark()
+{
+    wheelSpark_.textureFileName = "image\\PaticleAssets\\flashB_R.png";
+    wheelSpark_.position = XMFLOAT3(0, 1, 0);
+    wheelSpark_.positionErr = XMFLOAT3(0.15, 0.15, 0);
+    wheelSpark_.delay = 0;
+    wheelSpark_.number = 1;
+    wheelSpark_.lifeTime = 2;
+    wheelSpark_.gravity = 0;
+    wheelSpark_.dir = XMFLOAT3(1, 0, 1);
+    wheelSpark_.dirErr = XMFLOAT3(0, 0, 0);
+    wheelSpark_.speed = 0.05f;
+    wheelSpark_.speedErr = 0.01f;
+    wheelSpark_.size = XMFLOAT2(1.25, 1.25);
+    wheelSpark_.sizeErr = XMFLOAT2(0.5, 0.5);
+    wheelSpark_.scale = XMFLOAT2(1.01, 1.01);
+    wheelSpark_.color = XMFLOAT4(1, 1, 0, 1);
+    wheelSpark_.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
+
+#if 0
+    wheelSpark_.textureFileName = "image\\PaticleAssets\\flashB_R.png";
+    wheelSpark_.position = XMFLOAT3(0, 1, 0);
+    wheelSpark_.positionErr = XMFLOAT3(0.1, 0.1, 0);
+    wheelSpark_.delay = 0;
+    wheelSpark_.number = 1;
+    wheelSpark_.lifeTime = 30;
+    wheelSpark_.dir = XMFLOAT3(1, 0, 1);
+    wheelSpark_.dirErr = XMFLOAT3(0, 20, 0);
+    wheelSpark_.gravity = 0.002;
+    wheelSpark_.speed = 0.2f;
+    wheelSpark_.accel = 0.98;
+    wheelSpark_.speedErr = 0.0;
+    wheelSpark_.size = XMFLOAT2(0.5, 0.5);
+    wheelSpark_.sizeErr = XMFLOAT2(0.1, 0.1);
+    wheelSpark_.scale = XMFLOAT2(0.9, 0.9);
+    wheelSpark_.color = XMFLOAT4(1, 1, 0, 1);
+    wheelSpark_.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
+#endif
 }
 
 #if 0

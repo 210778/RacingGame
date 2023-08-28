@@ -24,7 +24,6 @@ void Debug::Log(std::string value, bool isLineFeed)
 #include <list>
 #include<vector>
 #include <chrono>
-//#include <string>
 #include <map>
 
 using std::list;
@@ -47,13 +46,12 @@ namespace Debug
 	class TimeLogClass
 	{
 	public:
-
 		unsigned long long count_;
 		long double time_;
 		long double average_;
 
 		system_clock::time_point startTime_;
-		system_clock::time_point  endTime_;
+		system_clock::time_point endTime_;
 
 		int nameType_;
 
@@ -65,6 +63,7 @@ namespace Debug
 			nameType_ = _microseconds;
 		}
 		~TimeLogClass() {};
+
 		//カウント
 		void TimeCount(long double addTime)
 		{
@@ -150,7 +149,7 @@ namespace Debug
 		string debugMessage = "Timer log::";
 		debugMessage += message + "\n";
 		debugMessage += "\t平均時間「" + to_string(timeLog_[name].average_) + unit + "」\n";
-		debugMessage += "\t合計回数「" + to_string(timeLog_[name].count_) + "」\n";
+		debugMessage += "\t実行回数「" + to_string(timeLog_[name].count_) + "」\n";
 		Debug::Log(debugMessage, true);
 	}
 	//カウント終了
@@ -162,8 +161,6 @@ namespace Debug
 
 		//カウント終了
 		timeLog_[name].TimeCountEnd(timeType);
-		//表示
-		//TimerLogPrint(name, timeType, message);
 	}
 	//カウント終了　メッセージ省略版
 	void TimerLogEnd(string name, int timeType)
@@ -186,31 +183,3 @@ namespace Debug
 		}
 	}
 };
-
-#if 0
-std::chrono::system_clock::time_point  start, end; // 型は auto で可
-start = std::chrono::system_clock::now(); // 計測開始時間
-long long elapsed = 0;
-string message = "";
-
-#define chronoS start = std::chrono::system_clock::now();
-#define chronoG end = std::chrono::system_clock::now();\
-elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();\
-message = "Debug::";\
-message += std::to_string(elapsed);\
-Debug::Log(message.c_str(), true);
-
-chronoS;
-static long long count3 = 0;
-static long long time3 = 0;
-static string ave3 = "";
-XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
-Debug::Log("位置にベクトル・バージョン３");
-chronoG;
-count3++;
-time3 += elapsed;
-ave3 = std::to_string((long double)time3 / (long double)count3);
-ave3 += "/time:" + std::to_string(time3) + "/count:" + std::to_string(count3);
-Debug::Log(ave3.c_str(), true);
-Debug::Log("", true);
-#endif

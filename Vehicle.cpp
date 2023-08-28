@@ -25,6 +25,7 @@
 #include "VehicleWheel.h"
 #include "ParticlePackage.h"
 #include "MeasurePole.h"
+#include "Music.h"
 
 using std::vector;
 using std::string;
@@ -55,7 +56,6 @@ Vehicle::Vehicle(GameObject* parent)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f)
-    , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_()
     , handleRight_(1), handleLeft_(-1)
@@ -99,9 +99,9 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
-    , startPosition_({ 0.0f,0.0f,0.0f }), startRotate_({ 0.0f,0.0f,0.0f })
     , vehicleModelName_(""), wheelModelName_("")
-    , startTransform_()
+    , startTransform_(), restartTransform_()
+
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
@@ -109,6 +109,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f)
     , isPlayer_(false)
     , collideBoxValue_(0.5f)
+    , isOperationInvalid_(false)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -180,6 +181,9 @@ void Vehicle::Initialize()
     assert(pGround_ != nullptr);
     assert(!(pGround_->GetCircuitUnion() == nullptr));
     assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
+
+    //再スタート地点
+    restartTransform_ = startTransform_;
 
     //UI初期化
     PlayerUI_Initialize();
@@ -261,8 +265,8 @@ void Vehicle::Update()
         {
             //奈落に落下
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
-            transform_.position_ = startTransform_.position_;
-            transform_.rotate_   = startTransform_.rotate_;
+            transform_.position_ = restartTransform_.position_;
+            transform_.rotate_   = restartTransform_.rotate_;
         }
     }
 
@@ -279,14 +283,11 @@ void Vehicle::Update()
         handleRotate_ *= handleAdjust_;
 
     //タイヤの角度と減速
-    //正面やタイヤの方向へは減速しないが、タイヤの方向と平行のほうこうへは減速する
+    //正面やタイヤの方向へは減速しないが、タイヤの方向と平行の方向へは減速する
     //タイヤの方向と平行なら何もしないが、垂直に近いほどタイヤの方向にベクトルを発生させる
     //メモ：これのせいで重い可能性があるから変えるべきかもしれない
     Debug::TimerLogStart("vehicleタイヤ横押し");
-    if (landingFlag_)
-    {
-        TurnWheel();
-    }
+    TurnWheel();
     Debug::TimerLogEnd("vehicleタイヤ横押し");
 
 
@@ -317,7 +318,12 @@ void Vehicle::Update()
 
 
     //サウンドデータのロード
-    hSound_ = Audio::Load("music\\loop100201.wav");
+    //int first = Audio::Load("music\\maou_se_sound_car01.wav");
+    //int sec = Audio::Load("music\\maou_se_sound_car02.wav");
+    //int thi = Audio::Load("music\\maou_se_sound_car04.wav");
+
+
+    hSound_ = Audio::Load("music\\carstop.wav");
     assert(hSound_ >= 0);
     if (Input::IsKeyDown(DIK_J))
     {
@@ -446,6 +452,12 @@ void Vehicle::AngleLimit(float& angle, const float limit)
 //タイヤ回転
 void Vehicle::TurnWheel()
 {
+    //地面にいるなら実行
+    if (!landingFlag_)
+    {
+        return;
+    }
+
     //加速度を正規化
     //左だとy軸が上向き+、右だと下向き-
     //回転して加速度に足す
@@ -963,8 +975,6 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
 
     //角度が指定角度より急だとやめる
     //角度計算は謎
-    float e = XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32);
-
     if (XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32) > limitAngle)
     {
         return false;
@@ -1047,8 +1057,16 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     //操作入力
     InputOperate();
 
-    //ハンドルの操作
+    //ハンドルリセット
     handleFlag_ = false;
+
+    //操作できない状態か？
+    if (isOperationInvalid_)
+    {
+        return;
+    }
+
+    //ハンドルの操作
     if (Operation.inputNow[Operation.inputName::handleLeft])
     {
         HandleTurnLR(handleLeft_);
@@ -1119,7 +1137,6 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
         boostCapacity_ += boostIncrease_;
     }
 
-
 #ifdef _DEBUG
     //左右
     if (Operation.inputNow[Operation.inputName::turnLeft])
@@ -1149,6 +1166,24 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
 #endif
 }
 
+//タイヤの高さセッター //車体との差分も計算
+void Vehicle::SetWheelHeight(float height)
+{
+    Size.wheelHeight_ = height;
+
+    Size.wheelRemainder_ = height - Size.wheelFL_.y;
+    if (Size.wheelRemainder_ < 0.0f)
+        Size.wheelRemainder_ = 0.0f;
+
+    Size.toWheelBottom_ = Size.toBottom_ + Size.wheelRemainder_;
+    Size.topToWheelBottom_ = Size.toWheelBottom_ + Size.toTop_;
+    Size.centerPositionRemainder_ = Size.centerTopToBottom_ - Size.wheelRemainder_;
+    Size.centerTopToBottom_ = (Size.topToBottom_ + Size.wheelRemainder_) * 0.5f;
+}
+
+//車両の操作、入力の受付
+void Vehicle::InputOperate() {};
+
 //UIの関数群　プレイヤー限定で作用する
     //UIの初期化
     void Vehicle::PlayerUI_Initialize() {};
@@ -1160,8 +1195,6 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     void Vehicle::PlayerCamera_Initialize() {};
     //エフェクトを表示
     void Vehicle::PlayerParticle() {};
-    //車両の操作、入力の受付
-    void Vehicle::InputOperate() {};
     //カメラ更新
     void Vehicle::PlayerCamera_Update() {};
 

@@ -140,9 +140,6 @@
     <ClCompile Include="Engine\Global.cpp">
       <Filter>01Engine</Filter>
     </ClCompile>
-    <ClCompile Include="VehicleWheel.cpp">
-      <Filter>04Play</Filter>
-    </ClCompile>
     <ClCompile Include="ParticlePackage.cpp">
       <Filter>04Play\Others</Filter>
     </ClCompile>
@@ -160,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="Music.cpp">
       <Filter>04Play\Others</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleWheel.cpp">
+      <Filter>04Play\Vehicle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -262,9 +262,6 @@
     <ClInclude Include="Engine\Debug.h">
       <Filter>01Engine\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="VehicleWheel.h">
-      <Filter>04Play</Filter>
-    </ClInclude>
     <ClInclude Include="ParticlePackage.h">
       <Filter>04Play\Others</Filter>
     </ClInclude>
@@ -282,6 +279,9 @@
     </ClInclude>
     <ClInclude Include="Music.h">
       <Filter>04Play\Others</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleWheel.h">
+      <Filter>04Play\Vehicle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

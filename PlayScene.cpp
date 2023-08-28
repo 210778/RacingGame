@@ -26,7 +26,8 @@ using std::vector;
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
-	, pGround_(nullptr), universalTime_(0)
+	, pGround_(nullptr)
+	, universalTime_(0), standbyTime_(0)
 {
 }
 
@@ -77,11 +78,20 @@ void PlayScene::Initialize()
 	{
 		(*i).SetPopulation(vehicles_.size());
 	}
+
+	//動けない状態にする
+	for (auto& i : vehicles_)
+	{
+		(*i).SetOperationInvalid(true);
+	}
 }
 
 //更新
 void PlayScene::Update()
 {
+	//音楽
+	//Music::Update();
+
 	//時間
 	CountUniversalTime();
 
@@ -258,6 +268,6 @@ void PlayScene::CountUniversalTime()
 
 	for (const auto& itr : vehicles_)
 	{
-		itr->setTime(universalTime_);
+		itr->SetTime(universalTime_);
 	}
 }
