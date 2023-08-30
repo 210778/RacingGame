@@ -4,7 +4,6 @@
 class Ground;
 class Vehicle;
 
-
 //■■シーンを管理するクラス
 class PlayScene : public GameObject
 {
@@ -17,7 +16,8 @@ class PlayScene : public GameObject
 
 	unsigned long long universalTime_;	//車両の共通時間(単位：フレーム)
 
-	unsigned long long standbyTime_;	//発車前の待機時間
+	unsigned long long standbyTime_;	//発車前の待機時間(単位：フレーム)
+	unsigned int	   standbySeconds_;	//何秒発射前に待つのか(単位：フレーム * 60)
 
 	enum RankName
 	{

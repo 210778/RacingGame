@@ -18,6 +18,7 @@
 #include "VehiclePlayer.h"
 #include "VehicleOpponent.h"
 #include "Music.h"
+#include "Background.h"
 
 using std::tuple;
 using std::sort;
@@ -27,20 +28,14 @@ using std::vector;
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
 	, pGround_(nullptr)
-	, universalTime_(0), standbyTime_(0)
+	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
 {
 }
 
 //初期化
 void PlayScene::Initialize()
 {
-	hImage_ = Image::Load("image\\skyField.png");
-	assert(hImage_ >= 0);
-	
-	hModel_ = Model::Load("model\\SkyFieldSphere.fbx");
-	//hModel_ = Model::Load("model\\CarRed2.fbx");
-	assert(hModel_ >= 0);
-
+	//Instantiate<Background>(this);
 	pGround_ = Instantiate<Ground>(this);
 	pGround_->SetChosenCircuit(1);
 
@@ -84,11 +79,29 @@ void PlayScene::Initialize()
 	{
 		(*i).SetOperationInvalid(true);
 	}
+
+	standbyTime_ = standbySeconds_ * 60;
+
 }
 
 //更新
 void PlayScene::Update()
 {
+	if (standbyTime_ > 0)
+	{
+		standbyTime_--;
+
+		//pTextUI_->Print("std::to_string(stangroieahgoirea\nreagera\nareg\nreag\neraga\naerg\ngrrg");
+	}
+	if (standbyTime_ == 0)
+	{
+		for (auto& i : vehicles_)
+		{
+			(*i).SetOperationInvalid(false);
+		}
+	}
+	
+
 	//音楽
 	//Music::Update();
 
@@ -105,19 +118,6 @@ void PlayScene::Update()
 //描画
 void PlayScene::Draw()
 {
-#if 1
-		Transform ImaTra = transform_;
-		ImaTra.scale_ = XMFLOAT3(0.25f, 0.25f, 0.25f);
-		Image::SetTransform(hImage_, transform_);
-		Image::Draw(hImage_);
-#else
-		Transform modTra = transform_;
-		modTra.scale_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		modTra.rotate_.y = 180;
-		Model::SetTransform(hModel_, modTra);
-		Model::Draw(hModel_);
-#endif
-	
 }
 
 //開放

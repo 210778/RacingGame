@@ -161,6 +161,12 @@
     <ClCompile Include="VehicleWheel.cpp">
       <Filter>04Play\Vehicle</Filter>
     </ClCompile>
+    <ClCompile Include="Background.cpp">
+      <Filter>04Play</Filter>
+    </ClCompile>
+    <ClCompile Include="TextPrinter.cpp">
+      <Filter>04Play</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -282,6 +288,12 @@
     </ClInclude>
     <ClInclude Include="VehicleWheel.h">
       <Filter>04Play\Vehicle</Filter>
+    </ClInclude>
+    <ClInclude Include="Background.h">
+      <Filter>04Play</Filter>
+    </ClInclude>
+    <ClInclude Include="TextPrinter.h">
+      <Filter>04Play</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
