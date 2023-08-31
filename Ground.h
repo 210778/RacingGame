@@ -6,10 +6,6 @@ class CheckPoint;
 //◆◆◆を管理するクラス
 class Ground : public GameObject
 {
-    int hModel_;    //モデル番号
-
-    //std::vector<int> circuit;
-
     //コース部品
     struct CircuitParts
     {
@@ -27,6 +23,23 @@ class Ground : public GameObject
         {
             model_ = m;
             type_ = t;
+        }
+    };
+
+    //チェックポイント型
+    struct CircuitCheckPoint
+    {
+        CheckPoint* pCP;
+        XMFLOAT3    CP_position;
+        float       CP_Radius;
+        CircuitCheckPoint()
+        {
+            pCP = nullptr;
+            CP_Radius = 0.0f;
+        }
+        CircuitCheckPoint(CheckPoint* poi, XMFLOAT3 pos, float rad)
+        {
+
         }
     };
 
@@ -97,14 +110,6 @@ public:
     //開放
     void Release() override;
 
-
-
-    //セッターとゲッター
-    int GetModelHandle()
-    { 
-        return hModel_;
-    }
-
     //番号をセットして配列の中からコース選択
     void SetChosenCircuit(int i) { chosenCircuit_ = i; }
     //選択したコースの番号を取得
@@ -128,4 +133,9 @@ public:
     //次のチェックポイントの位置を返す
     //ただしサイズがオーバーしてれば０番の位置を返す
     XMFLOAT3 NextCheckPointPosition(int number);
+
+    //
+    void SetCircuitParts(CircuitUnion* pCU, std::string modelName, int modelType);
+
+    void MakeCircuit();
 };

@@ -8,7 +8,8 @@ using std::to_string;
 
 //コンストラクタ
 Ground::Ground(GameObject* parent)
-    :GameObject(parent, "Ground"), hModel_(-1), chosenCircuit_(0)
+    :GameObject(parent, "Ground")
+    , chosenCircuit_(0)
     , defaultCheckpointSize_(60.0f), defaultStartRotate_(0.0f)
 {
 }
@@ -21,53 +22,8 @@ Ground::~Ground()
 //初期化
 void Ground::Initialize()
 {
-    hModel_ = Model::Load("model\\Ground13-G.fbx");
-    assert(hModel_ >= 0);
-
-    //コース１
-    CircuitUnion circuit_1("circuit_1",1);
-    //パーツ
-    CircuitParts circuit_1_R(Model::Load("model\\Ground17-R.fbx"), road);
-    CircuitParts circuit_1_G(Model::Load("model\\Ground17-I.fbx"), ice);
-    CircuitParts circuit_1_D(Model::Load("model\\Ground17-D.fbx"), dirt);
-    CircuitParts circuit_1_B(Model::Load("model\\Ground17-Rainbow.fbx"), boost);
-    CircuitParts circuit_1_A(Model::Load("model\\bottomWater.fbx"), abyss);
-    //まとめ
-    circuit_1.parts_.push_back(circuit_1_R);
-    circuit_1.parts_.push_back(circuit_1_G);
-
-    circuit_1.parts_.push_back(circuit_1_D);
-    circuit_1.parts_.push_back(circuit_1_B);
-
-    circuit_1.parts_.push_back(circuit_1_A);
-    //追加
-    circuits_.push_back(circuit_1);
-
-    //コース2
-    CircuitUnion circuit_2("circuit_2", 1);
-    //パーツ
-    CircuitParts circuit_2_R(Model::Load("model\\circuit_12_R.fbx"), road);
-    circuit_2.parts_.push_back(circuit_2_R);
-
-    CircuitParts circuit_2_G(Model::Load("model\\circuit_1_G.fbx"), turf);
-    circuit_2.parts_.push_back(circuit_2_G);
-
-    circuit_2.parts_.push_back(circuit_1_A);
-    //追加
-    circuits_.push_back(circuit_2);
-
-    //コース3
-    CircuitUnion circuit_3("circuit_3", 1);
-    //パーツ
-    CircuitParts circuit_3_R(Model::Load("model\\Ground16-R.fbx"), road);
-    circuit_3.parts_.push_back(circuit_3_R);
-
-    CircuitParts circuit_3_G(Model::Load("model\\Ground16-G.fbx"), turf);
-    circuit_3.parts_.push_back(circuit_3_G);
-
-    circuit_3.parts_.push_back(circuit_1_A);
-    //追加
-    circuits_.push_back(circuit_3);
+    //
+    MakeCircuit();
 
     //チェックポイント設置
     MakeCheckPoint();
@@ -275,5 +231,38 @@ void Ground::MakeStartPoint()
                 break;
             }
         }
+    }
+}
+
+//
+void Ground::SetCircuitParts(CircuitUnion* pCU, std::string modelName, int modelType)
+{
+    if (pCU == nullptr)
+        return;
+
+    //パーツ
+    CircuitParts cp(Model::Load(modelName), modelType);
+    pCU->parts_.push_back(cp);
+}
+
+void Ground::MakeCircuit()
+{
+    {
+        //コース
+        CircuitUnion circuit("circuit_1", 2);
+        //パーツ
+        SetCircuitParts(&circuit, "model\\circuit_1_R.fbx", road);
+        SetCircuitParts(&circuit, "model\\circuit_1_G.fbx", turf);
+        SetCircuitParts(&circuit, "model\\circuit_1_A.fbx", abyss);
+        //追加
+        circuits_.push_back(circuit);
+    }
+    {
+        CircuitUnion circuit("circuit_2", 2);
+        SetCircuitParts(&circuit, "model\\circuit_2_R.fbx", road);
+        SetCircuitParts(&circuit, "model\\circuit_2_D.fbx", dirt);
+        SetCircuitParts(&circuit, "model\\circuit_2_I.fbx", ice);
+        SetCircuitParts(&circuit, "model\\circuit_1_A.fbx", abyss);
+        circuits_.push_back(circuit);
     }
 }
