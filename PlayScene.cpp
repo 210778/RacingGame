@@ -19,6 +19,7 @@
 #include "VehicleOpponent.h"
 #include "Music.h"
 #include "Background.h"
+#include "TextPrinter.h"
 
 using std::tuple;
 using std::sort;
@@ -37,8 +38,10 @@ void PlayScene::Initialize()
 {
 	//Instantiate<Background>(this);
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->SetChosenCircuit(1);
+	pGround_->CreateChosenCircuit(1);
 
+	//文字
+	Instantiate<TextPrinter>(this);
 
 	//エフェクト用
 	ParticlePackage::Initialize();
@@ -46,7 +49,7 @@ void PlayScene::Initialize()
 	Music::Initialize();
 
 
-	int population = 2;
+	int population = 1;
 	int playerNumber = 0;
 	//車両をセット
 	for (int i = 0; i < population; i++)
@@ -91,7 +94,7 @@ void PlayScene::Update()
 	{
 		standbyTime_--;
 
-		//pTextUI_->Print("std::to_string(stangroieahgoirea\nreagera\nareg\nreag\neraga\naerg\ngrrg");
+		TextValue::SetStandby((standbyTime_ / 60) + 1);
 	}
 	if (standbyTime_ == 0)
 	{
@@ -151,7 +154,7 @@ void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::stri
 	pVehicle->SetPosition(pGround_->GetCircuitUnion()->startTransform_[number].position_);
 	pVehicle->SetRotate(pGround_->GetCircuitUnion()->startTransform_[number].rotate_);
 	pVehicle->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[number]);
-	pVehicle->SetPointCountMax(pGround_->GetCircuitUnion()->checkPoint_.size());
+	pVehicle->SetPointCountMax(pGround_->GetCircuitUnion()->check_.size());
 	pVehicle->SetLapMax(pGround_->GetCircuitUnion()->maxLap_);
 }
 

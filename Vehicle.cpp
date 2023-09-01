@@ -260,6 +260,13 @@ void Vehicle::Update()
     {
         acceleration_ *= { GroundTypeFriction_[landingType_].landing, 1.0f
                          , GroundTypeFriction_[landingType_].landing, 1.0f };
+        
+        //復活地点更新
+        if (landingType_ == Ground::road)
+        {
+            restartTransform_.position_ = transform_.position_;
+            restartTransform_.rotate_ = transform_.rotate_;
+        }
 
         if (landingType_ == Ground::abyss)
         {
@@ -936,6 +943,11 @@ void Vehicle::HandleTurnLR(int LR)
 //次のチェックポイントの位置を取得
 XMFLOAT3* Vehicle::GetNextCheckPosition()
 {
+    XMFLOAT3* pos = pGround_->NextCheckPointPosition(pointCount_);
+    return pos;
+#if 0
+    pGround_->GetCircuitUnion()->check_[pointCount_].CP_position_
+
     if(pointCount_ < pointCountMax_ && pointCount_ >= 0)
     {
         XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[pointCount_]->GetPosition();
@@ -943,7 +955,7 @@ XMFLOAT3* Vehicle::GetNextCheckPosition()
     }
 
     XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[0]->GetPosition();
-    return &pos;
+#endif
 }
 //次のチェックポイントまでの距離を取得
 float Vehicle::GetNextCheckDistance()

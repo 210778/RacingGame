@@ -1,15 +1,17 @@
 #pragma once
+#include <unordered_map>
 #include "Engine/GameObject.h"
 
 namespace TextValue
 {
-
+    void SetStandby(int value);
 }
 
 //ŸŸŸ‚ğŠÇ—‚·‚éƒNƒ‰ƒX
 class TextPrinter : public GameObject
 {
     std::vector<int> hImage_;
+    std::unordered_map<std::string, int> imageMap_;
     enum StartImageName
     {
         go = 0,

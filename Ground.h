@@ -29,17 +29,19 @@ class Ground : public GameObject
     //チェックポイント型
     struct CircuitCheckPoint
     {
-        CheckPoint* pCP;
-        XMFLOAT3    CP_position;
-        float       CP_Radius;
+        CheckPoint* pCP_;
+        XMFLOAT3    CP_position_;
+        float       CP_Radius_;
         CircuitCheckPoint()
         {
-            pCP = nullptr;
-            CP_Radius = 0.0f;
+            pCP_ = nullptr;
+            CP_Radius_ = 0.0f;
         }
-        CircuitCheckPoint(CheckPoint* poi, XMFLOAT3 pos, float rad)
+        CircuitCheckPoint(CheckPoint* poi,const XMFLOAT3& pos, float rad)
         {
-
+            pCP_ = poi;
+            CP_position_ = pos;
+            CP_Radius_ = rad;
         }
     };
 
@@ -50,6 +52,7 @@ class Ground : public GameObject
         std::string  name_;                 //コースの名前
         int maxLap_;                        //必要周回数
         std::vector<CheckPoint*> checkPoint_;   //チェックポイントのポインタ
+        std::vector<CircuitCheckPoint> check_;
         std::vector<Transform> startTransform_;              //スタート地点のトランスフォーム(位置と回転)
 
         //引数なしコンストラクタ
@@ -132,10 +135,20 @@ public:
 
     //次のチェックポイントの位置を返す
     //ただしサイズがオーバーしてれば０番の位置を返す
-    XMFLOAT3 NextCheckPointPosition(int number);
+
+    /// <summary>
+    /// 次のチェックポイントの位置
+    /// </summary>
+    /// <param name="point">自分のチェックポイント</param>
+    /// <param name="next">知りたい自分からX個次のポイント（デフォルト：１）</param>
+    /// <returns>次のチェックポイントの位置のポインタ　配列の端に来たら最初から数える</returns>
+    XMFLOAT3* NextCheckPointPosition(int point,int next = 1);
 
     //
     void SetCircuitParts(CircuitUnion* pCU, std::string modelName, int modelType);
 
     void MakeCircuit();
+
+    //選んだコースのチェックポイントを作る
+    void CreateChosenCircuit(int value);
 };

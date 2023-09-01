@@ -41,16 +41,16 @@ void VehicleOpponent::InputOperate()
         //ゴールの方向にカーブ
         if (anleToCheck > 180)
         {
-            Operation.inputNow[Operation.inputName::turnLeft] = 1.0f;
-            Operation.inputNow[Operation.inputName::turnRight] = 0.0f;
+            //Operation.inputNow[Operation.inputName::turnLeft] = 1.0f;
+            //Operation.inputNow[Operation.inputName::turnRight] = 0.0f;
 
             Operation.inputNow[Operation.inputName::handleLeft] = 0.0f;
             Operation.inputNow[Operation.inputName::handleRight] = 1.0f;
         }
         else
         {
-            Operation.inputNow[Operation.inputName::turnRight] = 1.0f;
-            Operation.inputNow[Operation.inputName::turnLeft] = 0.0f;
+            //Operation.inputNow[Operation.inputName::turnRight] = 1.0f;
+            //Operation.inputNow[Operation.inputName::turnLeft] = 0.0f;
 
             Operation.inputNow[Operation.inputName::handleRight] = 0.0f;
             Operation.inputNow[Operation.inputName::handleLeft] = 1.0f;
@@ -64,13 +64,13 @@ void VehicleOpponent::InputOperate()
 
         if (anleToCheck > 180)
         {
-            Operation.inputNow[Operation.inputName::turnLeft] = 1.0f;
-            //Operation.inputNow[Operation.inputName::handleLeft] = 1.0f;
+            //Operation.inputNow[Operation.inputName::turnLeft] = 1.0f;
+            Operation.inputNow[Operation.inputName::handleLeft] = 1.0f;
         }
         else
         {
-            Operation.inputNow[Operation.inputName::turnRight] = 1.0f;
-            //Operation.inputNow[Operation.inputName::handleRight] = 1.0f;
+            //Operation.inputNow[Operation.inputName::turnRight] = 1.0f;
+            Operation.inputNow[Operation.inputName::handleRight] = 1.0f;
         }
 
         //ランダム性

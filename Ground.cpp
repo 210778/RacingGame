@@ -102,13 +102,20 @@ void Ground::MakeCheckPoint()
                             XMVECTOR centerVec = XMLoadFloat3(&centerPos);
                             XMVECTOR outVec = XMLoadFloat3(&outPos);
 
-                            //チェックポイント作る
-                            CheckPoint *pCheckPoint = Instantiate<CheckPoint>(this);
-                            pCheckPoint->MakeSphereCollider(&centerPos
-                                , *XMVector3Length(outVec - centerVec).m128_f32
-                                , last);
-                            //プッシュバック
-                            circuits_[circuit].checkPoint_.push_back(pCheckPoint);
+                            ////チェックポイント作る
+                            //CheckPoint *pCheckPoint = Instantiate<CheckPoint>(this);
+                            //pCheckPoint->MakeSphereCollider(&centerPos
+                            //    , *XMVector3Length(outVec - centerVec).m128_f32
+                            //    , last);
+                            ////プッシュバック
+                            //circuits_[circuit].checkPoint_.push_back(pCheckPoint);
+
+                            //新規
+                            CircuitCheckPoint ccp(nullptr, centerPos
+                                , *XMVector3Length(outVec - centerVec).m128_f32);
+                            ccp.CP_position_.x *= -1;  //mayaとのずれの解消
+                            circuits_[circuit].check_.push_back(ccp);
+
                             last++;
                             break;
                         }
@@ -116,13 +123,19 @@ void Ground::MakeCheckPoint()
 
                     if (!outSuccess)
                     {
-                        //内側は見つかったけど外側は見つからなかった
-                        //チェックポイント作る
-                        CheckPoint* pCheckPoint = Instantiate<CheckPoint>(this);
-                        pCheckPoint->MakeSphereCollider(&centerPos
-                            , defaultCheckpointSize_ , last);
-                        //プッシュバック
-                        circuits_[circuit].checkPoint_.push_back(pCheckPoint);
+                        ////内側は見つかったけど外側は見つからなかった
+                        ////チェックポイント作る
+                        //CheckPoint* pCheckPoint = Instantiate<CheckPoint>(this);
+                        //pCheckPoint->MakeSphereCollider(&centerPos
+                        //    , defaultCheckpointSize_ , last);
+                        ////プッシュバック
+                        //circuits_[circuit].checkPoint_.push_back(pCheckPoint);
+
+                        //新規
+                        CircuitCheckPoint ccp(nullptr, centerPos, defaultCheckpointSize_);
+                        ccp.CP_position_.x *= -1;  //mayaとのずれの解消
+                        circuits_[circuit].check_.push_back(ccp);
+
                         last++;
                     }
                 }
@@ -179,25 +192,9 @@ void Ground::MakeStartPoint()
                             //見つかった
                             dirSuccess = true;
                             last++;
-
                             
                             XMVECTOR startVec = XMVector3Normalize(XMLoadFloat3(&startPos) - XMLoadFloat3(&dirPos));
-                            /*
-                            //正規化しなくていいはず
-                            XMVECTOR vecZ = { 0.0f,0.0f,1.0f,0.0f };
-                            XMVECTOR vecUp = { 0.0f,1.0f,0.0f,0.0f };
-
-
-                            //ベクトルから角度を計算
-                            defaultStartRotate_ = XMConvertToDegrees(acos(*XMVector3Dot(startVec, vecZ).m128_f32
-                                / (*XMVector3Length(startVec).m128_f32 * *XMVector3Length(vecZ).m128_f32)));
-
-                            //外積を使わないと0 ~ 180　になってしまう
-                            XMVECTOR cro = XMVector3Cross(startVec, vecZ - startVec);
-                            if (*XMVector3Dot(cro, vecUp).m128_f32 > 0.0f)
-                                defaultStartRotate_ += 180;
-                            */
-
+  
                             defaultStartRotate_ = Calculator::AngleBetweenVector(startVec, { 0.0f,0.0f,1.0f,0.0f });
 
                             //更新
@@ -234,6 +231,18 @@ void Ground::MakeStartPoint()
     }
 }
 
+//次のチェックポイントの位置を返す
+XMFLOAT3* Ground::NextCheckPointPosition(int point, int next)
+{
+    //正規化する
+    int number = (point + next - 1) % circuits_[chosenCircuit_].check_.size();
+    if (number < 0)
+        number += circuits_[chosenCircuit_].check_.size();
+
+    XMFLOAT3 position = circuits_[chosenCircuit_].check_[number].CP_position_;
+    return &position;
+}
+
 //
 void Ground::SetCircuitParts(CircuitUnion* pCU, std::string modelName, int modelType)
 {
@@ -264,5 +273,27 @@ void Ground::MakeCircuit()
         SetCircuitParts(&circuit, "model\\circuit_2_I.fbx", ice);
         SetCircuitParts(&circuit, "model\\circuit_1_A.fbx", abyss);
         circuits_.push_back(circuit);
+    }
+}
+
+//選んだコースのチェックポイントを作る
+void Ground::CreateChosenCircuit(int value)
+{
+    chosenCircuit_ = value;
+    
+    //安全
+    if (circuits_.empty())
+        return;
+    if (chosenCircuit_ < 0 || chosenCircuit_ >= circuits_.size())
+        chosenCircuit_ = 0;
+
+    for (int i = 0; i < circuits_[chosenCircuit_].check_.size(); i++)
+    {
+        if (circuits_[chosenCircuit_].check_[i].pCP_ == nullptr)
+        {
+            circuits_[chosenCircuit_].check_[i].pCP_ = Instantiate<CheckPoint>(this);
+            circuits_[chosenCircuit_].check_[i].pCP_->MakeSphereCollider(&circuits_[chosenCircuit_].check_[i].CP_position_
+                , circuits_[chosenCircuit_].check_[i].CP_Radius_, i);
+        }
     }
 }

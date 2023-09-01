@@ -29,18 +29,6 @@ void Sample::Initialize()
 //XV
 void Sample::Update()
 {
-/*
-XMFLOAT3 ¨ XMVECTOR
-
-XMFLOAT3 f;	//‰½‚©“ü‚Á‚Ä‚é‚Æ‚µ‚Ä
-XMVECTOR v = XMLoadFloat3(&f);
-
-XMFLOAT3 © XMVECTOR
-
-XMVECTOR v; 	//‰½‚©“ü‚Á‚Ä‚é‚Æ‚µ‚Ä
-XMFLOAT3 f;
-XMStoreFloat3(&f, v);
-*/
 }
 
 //‰½‚©‚É“–‚½‚Á‚½
@@ -52,8 +40,10 @@ void Sample::OnCollision(GameObject* pTarget)
 //•`‰æ
 void Sample::Draw()
 {
+#ifdef _DEBUG
     Model::SetTransform(hModel_, transform_);
     Model::Draw(hModel_);
+#endif
 }
 
 //ŠJ•ú

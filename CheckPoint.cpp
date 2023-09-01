@@ -44,7 +44,7 @@ void CheckPoint::MakeSphereCollider(const XMFLOAT3* position, float size, int nu
 {
     //const‚È‚Ì‚Å
     transform_.position_ = *position;
-    transform_.position_.x *= -1;  //maya‚Æ‚Ì‚¸‚ê‚Ì‰ğÁ
+    //transform_.position_.x *= -1;  //maya‚Æ‚Ì‚¸‚ê‚Ì‰ğÁ
     SphereCollider* collision = new SphereCollider({ 0.0f,0.0f,0.0f } , size);
     AddCollider(collision);
     number_ = number;
