@@ -127,6 +127,7 @@ protected:
         int goalRanking_;   //ゴールした時の順位 ゴール前は0
         int population_;    //レースに参加している人数
         unsigned long long goalTime_;//ゴールした時の経過タイム
+        unsigned long long standbyTime_;
 
     float mass_;            //車の重量
     float engineRotate_;    //エンジン回転数
@@ -447,7 +448,8 @@ public:
         void SetTime(unsigned long long time) { time_ = time; }
         //操作を無効化するかどうかのセッター
         void SetOperationInvalid(bool value) { isOperationInvalid_ = value; }
-        
+        //
+        void SetStandbyTime(unsigned long long time) { standbyTime_ = time; }
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

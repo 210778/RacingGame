@@ -30,6 +30,17 @@ class VehiclePlayer : public Vehicle
     int imageBoostMax_;
     int imageBoost_;
 
+    //画像
+    std::unordered_map<std::string, int> imageMap_;
+    float countDrawTime_;   //画像を表示する時間(単位：秒)
+    enum StartImageName
+    {
+        go = 0,
+        one,
+        two,
+        three
+    };
+
 public:
     //コンストラクタ
     VehiclePlayer(GameObject* parent);

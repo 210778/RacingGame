@@ -36,6 +36,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     , km_hAdd(120.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
     , imageBoostMax_(-1), imageBoost_(-1)
+    , countDrawTime_(1.0f)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -84,6 +85,15 @@ void VehiclePlayer::PlayerUI_Initialize()
     //画像
     imageBoostMax_ = Image::Load("image\\grayBar.png");
     imageBoost_    = Image::Load("image\\redBar.png");
+
+    imageMap_["go"] = Image::Load("image\\count_go.png");
+    assert(imageMap_["go"] >= 0);
+    imageMap_["1"] = Image::Load("image\\count_1.png");
+    assert(imageMap_["1"] >= 0);
+    imageMap_["2"] = Image::Load("image\\count_2.png");
+    assert(imageMap_["2"] >= 0);
+    imageMap_["3"] = Image::Load("image\\count_3.png");
+    assert(imageMap_["3"] >= 0);
 }
 
 //UIの表示
@@ -113,14 +123,15 @@ void VehiclePlayer::PlayerUI_Draw()
     }
 
     //経過時間表示
+    int standard = Global::GetStandardFPS();
     int min = 0;
     int sec = 0;
     int mSec = 0;
     int rest = 0;
-    min = time / 3600;
-    rest = time % 3600;
-    sec = rest / 60;
-    rest = rest % 60;
+    min = time / (standard * standard);
+    rest = time % (standard * standard);
+    sec = rest / standard;
+    rest = rest % standard;
     mSec = rest;
     string timeStr = "time:";    //= to_string(min) + ":" + to_string(sec) + ":" + to_string(mSec);
     if (min < 10)
@@ -232,6 +243,33 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
                  + " Z:" + to_string(transform_.rotate_.z);
     pTextAcceleration_->Draw(280, 60, accStr.c_str());
 #endif
+
+    if (time_ <= 0)
+    {
+        switch (standbyTime_ / standard)
+        {
+        default:
+            break;
+        case 0:
+            Image::Draw(imageMap_["1"]);
+            break;
+        case 1:
+            Image::Draw(imageMap_["2"]);
+            break;
+        case 2:
+            Image::Draw(imageMap_["3"]);
+            break;
+        }
+    }
+    else if (time_ <= countDrawTime_ * standard)
+    {
+        Image::Draw(imageMap_["go"]);
+    }
+
+    if (goalFlag_ && time < goalTime_ + countDrawTime_ * standard)
+    {
+        Image::Draw(imageMap_["go"]);
+    }
 }
 
 //UIの情報更新

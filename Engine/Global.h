@@ -32,7 +32,8 @@ namespace Global
 	void SetCurrentFPS(int);
 	//Œ»İ‚ÌFPS
 	int GetCurrentFPS();
-
+	//FPS‚Ìİ’è‚ÉŠÖŒW‚È‚­‚Â‚©‚¤ƒtƒŒ[ƒ€‚Ì’l
+	int GetStandardFPS();
 };
 
 namespace Calculator

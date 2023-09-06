@@ -18,6 +18,8 @@ class PlayScene : public GameObject
 
 	unsigned long long standbyTime_;	//発車前の待機時間(単位：フレーム)
 	unsigned int	   standbySeconds_;	//何秒発射前に待つのか(単位：フレーム * 60)
+	bool startFlag_;	//スタートしたか
+
 
 	enum RankName
 	{

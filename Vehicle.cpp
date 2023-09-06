@@ -90,7 +90,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
 
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), goalRanking_(0), population_(1)
+    , ranking_(0), goalRanking_(0), population_(1), goalTime_(0)
     , mass_(1.0f), engineRotate_(0.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
@@ -158,6 +158,7 @@ void Vehicle::Initialize()
     hModel_ = Model::Load(vehicleModelName_);
     assert(hModel_ >= 0);
 
+    //
     PlayerCamera_Initialize();
 
     //サイズ計算

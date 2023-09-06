@@ -30,6 +30,7 @@ PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
 	, pGround_(nullptr)
 	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
+	, startFlag_(false)
 {
 }
 
@@ -38,19 +39,14 @@ void PlayScene::Initialize()
 {
 	//Instantiate<Background>(this);
 	pGround_ = Instantiate<Ground>(this);
-	pGround_->CreateChosenCircuit(1);
+	pGround_->CreateChosenCircuit(0);
 
-	//文字
-	Instantiate<TextPrinter>(this);
 
-	//エフェクト用
-	ParticlePackage::Initialize();
 	//音楽
 	Music::Initialize();
 
-
-	int population = 1;
-	int playerNumber = 0;
+	int population = 2;
+	int playerNumber = population - 1;
 	//車両をセット
 	for (int i = 0; i < population; i++)
 	{
@@ -83,28 +79,20 @@ void PlayScene::Initialize()
 		(*i).SetOperationInvalid(true);
 	}
 
-	standbyTime_ = standbySeconds_ * 60;
+	//待機時間
+	standbyTime_ = standbySeconds_ * Global::GetStandardFPS();
 
+
+	//エフェクト用
+	ParticlePackage::Initialize();
+
+	//文字
+	//Instantiate<TextPrinter>(this);
 }
 
 //更新
 void PlayScene::Update()
 {
-	if (standbyTime_ > 0)
-	{
-		standbyTime_--;
-
-		TextValue::SetStandby((standbyTime_ / 60) + 1);
-	}
-	if (standbyTime_ == 0)
-	{
-		for (auto& i : vehicles_)
-		{
-			(*i).SetOperationInvalid(false);
-		}
-	}
-	
-
 	//音楽
 	//Music::Update();
 
@@ -266,11 +254,34 @@ void PlayScene::CalculateRanking()
 //時間を加算して車両に教える
 void PlayScene::CountUniversalTime()
 {
-	//加算 オーバーフローは考えない
-	universalTime_++;
-
-	for (const auto& itr : vehicles_)
+	if(standbyTime_ > 0)
 	{
-		itr->SetTime(universalTime_);
+		standbyTime_--;
+
+		for (auto& itr : vehicles_)
+		{
+			itr->SetStandbyTime(standbyTime_);
+		}
+	}
+	else
+	{
+		//加算 オーバーフローは考えない
+		universalTime_++;
+
+		for (auto& itr : vehicles_)
+		{
+			itr->SetTime(universalTime_);
+		}
+	}
+
+	//車両を操作可能にする
+	if (standbyTime_ <= 0 && startFlag_ == false)
+	{
+		startFlag_ = true;
+
+		for (auto& i : vehicles_)
+		{
+			(*i).SetOperationInvalid(false);
+		}
 	}
 }

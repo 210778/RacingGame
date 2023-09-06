@@ -10,6 +10,7 @@ namespace Global
 	int isDrawFps_;			//キャプションに現在のFPSを表示するかどうか
 
 	int currentFPS_;	//現在のFPS
+	int standardFPS_ = 60;	//FPSの設定に関係なくつかうフレームの値
 };
 
 //スクリーンの幅
@@ -63,7 +64,10 @@ int Global::GetCurrentFPS()
 	return currentFPS_;
 }
 
-
+int Global::GetStandardFPS()
+{
+	return standardFPS_;
+}
 
 bool Calculator::IsEqualFloat(float alfa, float bravo)
 {

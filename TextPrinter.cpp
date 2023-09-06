@@ -7,7 +7,7 @@
 namespace TextValue
 {
 	Text* pText = nullptr;
-	std::string standbyCount_ = "";
+	int standbyCount_ = 0;
 
 	void Initialize()
 	{
@@ -57,14 +57,21 @@ void TextPrinter::Update()
 //•`‰æ
 void TextPrinter::Draw()
 {
-	TextValue::pText->Draw(300, 300, TextValue::standbyCount_.c_str());
+	//TextValue::pText->Draw(300, 300, TextValue::standbyCount_.c_str());
 
-	for (auto& itr : imageMap_)
+	switch (TextValue::standbyCount_)
 	{
-		if (rand() % 10 == 0)
-		{
-			Image::Draw(itr.second);
-		}
+	default:
+		break;
+	case 0:
+		Image::Draw(imageMap_["1"]);
+		break;
+	case 1:
+		Image::Draw(imageMap_["2"]);
+		break;
+	case 2:
+		Image::Draw(imageMap_["3"]);
+		break;
 	}
 
 }
@@ -76,5 +83,5 @@ void TextPrinter::Release()
 
 void TextValue::SetStandby(int value)
 {
-	standbyCount_ = std::to_string(value);
+	standbyCount_ = value;
 }
