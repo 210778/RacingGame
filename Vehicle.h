@@ -173,7 +173,7 @@ protected:
 
     bool isOperationInvalid_;   //操作を無効化する
 
-    bool isPause_;  //動作を止める
+    bool pauseFlag_;  //ポーズ中かどうか
 
     //車両の各サイズ
     struct
@@ -226,8 +226,6 @@ protected:
             moveRight,
             moveLeft,
 
-            pause,
-
             MAX
         };
 
@@ -261,7 +259,7 @@ protected:
             return inputNow[in];
         }
 
-    }Operation;
+    }operation_;
 
     //NPCのためのレイが当たったかどうかの情報まとめ
     struct RayCastHit
@@ -452,8 +450,10 @@ public:
         void SetTime(unsigned long long time) { time_ = time; }
         //操作を無効化するかどうかのセッター
         void SetOperationInvalid(bool value) { isOperationInvalid_ = value; }
-        //
+        //待機時間のセッター
         void SetStandbyTime(unsigned long long time) { standbyTime_ = time; }
+        //ポーズ状態のセッター
+        void SetPauseFlag(bool flag) { pauseFlag_ = flag; }
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

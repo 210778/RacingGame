@@ -35,13 +35,11 @@ void Speedometer::Initialize()
         hImage_.push_back(Image::Load(header + imageName[i]));
         assert(hImage_[i] >= 0);
     }
-
 }
 
 //XV
 void Speedometer::Update()
 {
-    speed_ += 1;
 }
 
 //•`‰æ

@@ -28,7 +28,7 @@ using std::vector;
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
-	, pGround_(nullptr)
+	, pGround_(nullptr), pVehiclePlayer_(nullptr)
 	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
 	, startFlag_(false)
 {
@@ -45,14 +45,15 @@ void PlayScene::Initialize()
 	//音楽
 	Music::Initialize();
 
+#if 0
 	//初期化ファイル（setup.ini）から必要な情報を取得
 	int h = GetPrivateProfileInt("GAM", "Fp", 656565, ".\\setup.ini");
-
 	//タイトルバーに表示する内容
 	std::string moji;
 	char caption[MAX_PATH];
 	GetPrivateProfileString("moji", "alfa", "***", caption, MAX_PATH, ".\\setup.ini");
 	moji = caption;
+#endif
 
 	int population = 2;
 	int playerNumber = 0;
@@ -95,7 +96,8 @@ void PlayScene::Initialize()
 		, "model\\car_race_1_blue.fbx"
 		, "model\\wheel_race_1_white.fbx"
 		, playerNumber);
-
+	//ポインタを記憶
+	pVehiclePlayer_ = vehicles_[playerNumber];
 
 	//参加人数をセット
 	for (auto& i : vehicles_)
@@ -123,6 +125,15 @@ void PlayScene::Initialize()
 //更新
 void PlayScene::Update()
 {
+	//ポーズ
+	PlayPause();
+
+	//ポーズしてるなら停止
+	if (pauseFlag_)
+	{
+		return;
+	}
+
 	//音楽
 	//Music::Update();
 
@@ -179,45 +190,6 @@ void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::stri
 //車両が衝突してるか調べる
 void PlayScene::CollideVehicle()
 {
-#if 0
-	Debug::TimerLogStart("衝突（１）");
-
-	for (auto& first : vehicles_)
-	{
-		for (auto& second : vehicles_)
-		{
-			//同一ならやめる
-			if (first == second)
-			{
-				continue;
-			}
-
-			BoundingOrientedBox BOB1;
-			BOB1.Center = first->GetBoundingBoxCenter();
-			BOB1.Extents = first->GetBoundingBoxExtents();
-			XMFLOAT3 rotate1 = first->GetRotate();
-			XMStoreFloat4(&BOB1.Orientation, XMQuaternionRotationRollPitchYaw(
-			XMConvertToRadians(rotate1.x), XMConvertToRadians(rotate1.y), XMConvertToRadians(rotate1.z)));
-			
-			BoundingOrientedBox BOB2;
-			BOB2.Center = second->GetBoundingBoxCenter();
-			BOB2.Extents = second->GetBoundingBoxExtents();
-			XMFLOAT3 rotate2 = second->GetRotate();
-			XMStoreFloat4(&BOB2.Orientation, XMQuaternionRotationRollPitchYaw(
-			XMConvertToRadians(rotate2.x), XMConvertToRadians(rotate2.y), XMConvertToRadians(rotate2.z)));
-
-			int answer = BOB1.Contains(BOB2);
-			//交差する、あるいは含まれる
-			if (answer != 0)
-			{
-				first->CollideBoundingBox(second);
-				second->CollideBoundingBox(first);
-			}
-		}
-	}
-	Debug::TimerLogEnd("衝突（１）");
-#endif
-
 	Debug::TimerLogStart("衝突");
 	//重複なし
 	for (int one = 0; one < vehicles_.size(); one++)
@@ -313,5 +285,22 @@ void PlayScene::CountUniversalTime()
 		{
 			(*i).SetOperationInvalid(false);
 		}
+	}
+}
+
+//ポーズ
+void PlayScene::PlayPause()
+{
+	if (Input::IsKeyDown(DIK_ESCAPE))
+	{
+		if (pauseFlag_)
+			pauseFlag_ = false;
+		else
+			pauseFlag_ = true;
+	}
+
+	for (auto& i : vehicles_)
+	{
+		(*i).SetPauseFlag(pauseFlag_);
 	}
 }

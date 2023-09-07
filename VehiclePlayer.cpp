@@ -276,8 +276,7 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 //UIの情報更新
 void VehiclePlayer::PlayerUI_Update()
 {
-    XMVECTOR speedVec = acceleration_ * XMVECTOR{ 1,0,1,1 };
-    pSpeedometer_->SetSpeed(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd);
+    pSpeedometer_->SetSpeed(*XMVector3LengthEst(acceleration_).m128_f32 * km_hAdd);
 }
 
 //カメラの用意
@@ -308,9 +307,6 @@ void VehiclePlayer::PlayerParticle()
     {
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
         ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
-
-        //ParticlePackage::ActLandingSpark(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
-        //ParticlePackage::ActLandingSpark(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
     //草地乗り上げ
@@ -336,198 +332,54 @@ void VehiclePlayer::InputOperate()
     //ハンドルの操作
         if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
         {
-            Operation.inputNow[Operation.inputName::handleLeft] = 1.0f;
+            operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
         }
         if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT))
         {
-            Operation.inputNow[Operation.inputName::handleRight] = 1.0f;
+            operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
         }
 
     //全身後退
         if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
         {
-            Operation.inputNow[Operation.inputName::moveFront] = 1.0f;
+            operation_.inputNow[operation_.inputName::moveFront] = 1.0f;
         }
         if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
         {
-            Operation.inputNow[Operation.inputName::moveRear] = 1.0f;
+            operation_.inputNow[operation_.inputName::moveRear] = 1.0f;
         }
 
     //ブースト
         if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
         {
-            Operation.inputNow[Operation.inputName::boost] = 1.0f;
+            operation_.inputNow[operation_.inputName::boost] = 1.0f;
         }
 
 
     //左右回転
         if (Input::IsKey(DIK_Z) || Input::IsKey(DIK_Q))
         {
-            Operation.inputNow[Operation.inputName::turnLeft] = 1.0f;
+            operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
         }
         if (Input::IsKey(DIK_X) || Input::IsKey(DIK_E))
         {
-            Operation.inputNow[Operation.inputName::turnRight] = 1.0f;
+            operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
         }
 
     //ジャンプ
         if (Input::IsKey(DIK_M))
         {
-            Operation.inputNow[Operation.inputName::jump] = 1.0f;    
+            operation_.inputNow[operation_.inputName::jump] = 1.0f;    
         }
 
     //左右移動
         if (Input::IsKey(DIK_V))
         {
-            Operation.inputNow[Operation.inputName::moveLeft] = 1.0f;
+            operation_.inputNow[operation_.inputName::moveLeft] = 1.0f;
         }
         if (Input::IsKey(DIK_B))
         {
-            Operation.inputNow[Operation.inputName::moveRight] = 1.0f;
+            operation_.inputNow[operation_.inputName::moveRight] = 1.0f;
         }
 
-
-#if 0
-    Debug::TimerLogStart("vehicle操作受けつけ");
-    //ハンドルの操作
-    handleFlag_ = false;
-    if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
-    {
-        HandleTurnLR(handleLeft_);
-    }
-    if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT))
-    {
-        HandleTurnLR(handleRight_);
-    }
-
-    //ハンドル角度制限
-    //曲がりやすい
-    if (slideFlag_)
-        AngleLimit(handleRotate_, handleRotateMax_ * slideHandleAngleLimitAdd_);
-    else
-        AngleLimit(handleRotate_, handleRotateMax_);
-
-    if (landingFlag_)
-    {
-        //全身後退
-        if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
-        {
-            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
-        }
-
-        if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
-        {
-            acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
-        }
-    }
-
-    //ブースト
-    if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
-    {
-        //容量があるなら
-        if (boostCapacity_ >= boostSpending_)
-        {
-            //消費
-            boostCapacity_ -= boostSpending_;
-
-            slideFlag_ = true;
-
-            acceleration_ += vecZ * 2.0f;
-
-            XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
-            ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
-    }
 }
-    else
-    {
-        slideFlag_ = false;
-
-        //ちょっと位置が悪い
-        boostCapacity_ += boostIncrease_;
-        //あふれる
-        if (boostCapacity_ > boostCapacityMax_)
-            boostCapacity_ = boostCapacityMax_;
-    }
-
-
-#ifdef _DEBUG
-    //左右
-    if (Input::IsKey(DIK_Z))
-    {
-        transform_.rotate_.y -= rotateSPD_;
-    }
-    if (Input::IsKey(DIK_X))
-    {
-        transform_.rotate_.y += rotateSPD_;
-    }
-
-    if (Input::IsKey(DIK_E))
-    {
-    }
-    if (Input::IsKey(DIK_Q))
-    {
-    }
-
-    //上昇
-    if (Input::IsKeyDown(DIK_M))
-    {
-        acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
-        landingFlag_ = false;
-    }
-
-    if (Input::IsKey(DIK_V))
-    {
-        acceleration_ -= vecX;
-    }
-    if (Input::IsKey(DIK_B))
-    {
-        acceleration_ += vecX;
-    }
-#endif
-    Debug::TimerLogEnd("vehicle操作受けつけ");
-#endif
-}
-
-#if 0
-
-//初期化
-void VehiclePlayer::Initialize()
-{
-    hModel_ = Model::Load("model\\Tri_Lines.fbx");
-    assert(hModel_ >= 0);
-
-    transform_.scale_ = { 3,3,3 };
-}
-
-//更新
-void VehiclePlayer::Update()
-{
-    /*
-    XMFLOAT3 → XMVECTOR
-
-    XMFLOAT3 f;	//何か入ってるとして
-    XMVECTOR v = XMLoadFloat3(&f);
-
-    XMFLOAT3 ← XMVECTOR
-
-    XMVECTOR v; 	//何か入ってるとして
-    XMFLOAT3 f;
-    XMStoreFloat3(&f, v);
-    */
-}
-
-//何かに当たった
-void VehiclePlayer::OnCollision(GameObject* pTarget)
-{
-    //当たったときの処理
-}
-
-//描画
-void VehiclePlayer::Draw()
-{
-    Model::SetTransform(hModel_, transform_);
-    Model::Draw(hModel_);
-}
-
-
-#endif

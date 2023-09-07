@@ -25,15 +25,11 @@ void VehicleWheel::Initialize()
 //更新
 void VehicleWheel::Update()
 {
-    transform_.rotate_.x += rotateSpeedX_;
 }
 
 //描画
 void VehicleWheel::Draw()
 {
-    //Model::SetTransform(hModel_, transform_);
-    //Model::Draw(hModel_);
-
     //４つのタイヤをそれぞれの位置、回転で表示する
     Transform wheelTrans;
     XMFLOAT3 addPos;
@@ -71,12 +67,14 @@ void VehicleWheel::Draw()
         wheelTrans.position_.y += addPos.y + wheelPos.y;
         wheelTrans.position_.z += addPos.z + wheelPos.z;
 
+#if 1
         wheelTrans.rotate_.x += rotateSpeedX_;
         wheelTrans.rotate_.y += addRotateY;
-
+#else
         //今は左右対称だけど前後対象にしたいなら
-        //wheelTrans.rotate_.x = wheelTrans.rotate_.x * -1.0f + rotateSpeedX_;
-        //wheelTrans.rotate_.y += addRotateY + 180.0f;
+        wheelTrans.rotate_.x = wheelTrans.rotate_.x * -1.0f + rotateSpeedX_;
+        wheelTrans.rotate_.y += addRotateY + 180.0f;
+#endif
 
         Model::SetTransform(hModel_, wheelTrans);
         Model::Draw(hModel_);
@@ -128,4 +126,12 @@ void VehicleWheel::calculateHeight()
 
     //一応拡大に対応
     pVehicle_->SetWheelHeight(Wheels.wheelHeight_ * transform_.scale_.y);
+}
+
+// タイヤの回転速度とハンドル角度をセットして回転させる
+void VehicleWheel::SetWheelSpeedRotate(float speed, float rotate)
+{
+    rotateSpeedX_ = speed;
+    handleRotateY_ = rotate;
+    transform_.rotate_.x += rotateSpeedX_;
 }

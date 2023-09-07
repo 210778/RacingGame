@@ -66,15 +66,9 @@ public:
     void calculateHeight();
 
     /// <summary>
-    /// タイヤの回転速度とハンドル角度をセット
+    /// タイヤの回転速度とハンドル角度をセットして回転させる
     /// </summary>
     /// <param name="speed">タイヤのX軸回転速度（角速度）</param>
     /// <param name="rotate">タイヤのY軸回転角度（ハンドル角度に合わせる）</param>
-    void SetWheelSpeedRotate(float speed, float rotate)
-    {
-        rotateSpeedX_ = speed;
-        handleRotateY_ = rotate;
-    }
-
-
+    void SetWheelSpeedRotate(float speed, float rotate);
 };

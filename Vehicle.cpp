@@ -109,7 +109,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f)
     , isPlayer_(false)
     , collideBoxValue_(0.5f)
-    , isOperationInvalid_(false)
+    , isOperationInvalid_(false), pauseFlag_(false)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -194,6 +194,12 @@ void Vehicle::Initialize()
 //更新
 void Vehicle::Update()
 {
+    //ポーズ
+    if (pauseFlag_)
+    {
+        return;
+    }
+
     Debug::TimerLogStart("vehicle最初");
 
     //行列を用意
@@ -352,6 +358,11 @@ void Vehicle::Update()
 //何かに当たった
 void Vehicle::OnCollision(GameObject* pTarget)
 {
+    //ポーズ
+    if (pauseFlag_){
+        return;
+    }
+
     Debug::TimerLogStart("vehicleチェックポイント");
 
     //当たったときの処理
@@ -1066,7 +1077,7 @@ void Vehicle::CollideBoundingBox(Vehicle* pVehicle)
 void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
 {
     //リセット
-    Operation.Refresh();
+    operation_.Refresh();
 
     //操作入力
     InputOperate();
@@ -1081,11 +1092,11 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     }
 
     //ハンドルの操作
-    if (Operation.inputNow[Operation.inputName::handleLeft])
+    if (operation_.inputNow[operation_.inputName::handleLeft])
     {
         HandleTurnLR(handleLeft_);
     }
-    if (Operation.inputNow[Operation.inputName::handleRight])
+    if (operation_.inputNow[operation_.inputName::handleRight])
     {
         HandleTurnLR(handleRight_);
     }
@@ -1100,12 +1111,12 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     if (landingFlag_)
     {
         //全身後退
-        if (Operation.inputNow[Operation.inputName::moveFront])
+        if (operation_.inputNow[operation_.inputName::moveFront])
         {
             acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
         }
 
-        if (Operation.inputNow[Operation.inputName::moveRear])
+        if (operation_.inputNow[operation_.inputName::moveRear])
         {
             acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
         }
@@ -1114,7 +1125,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     //ブースト
     bool increaseFlag = false;  //容量が増えるか
 
-    if (Operation.inputNow[Operation.inputName::boost])
+    if (operation_.inputNow[operation_.inputName::boost])
     {
         //容量があるなら
         if (boostCapacity_ >= boostSpending_)
@@ -1153,27 +1164,27 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
 
 #ifdef _DEBUG
     //左右
-    if (Operation.inputNow[Operation.inputName::turnLeft])
+    if (operation_.inputNow[operation_.inputName::turnLeft])
     {
         transform_.rotate_.y -= rotateSPD_;
     }
-    if (Operation.inputNow[Operation.inputName::turnRight])
+    if (operation_.inputNow[operation_.inputName::turnRight])
     {
         transform_.rotate_.y += rotateSPD_;
     }
 
     //ジャンプ
-    if (Operation.IsDown(Operation.inputName::jump))
+    if (operation_.IsDown(operation_.inputName::jump))
     {
         acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
         landingFlag_ = false;
     }
 
-    if (Operation.inputNow[Operation.inputName::moveLeft])
+    if (operation_.inputNow[operation_.inputName::moveLeft])
     {
         acceleration_ -= vecX;
     }
-    if (Operation.inputNow[Operation.inputName::moveRight])
+    if (operation_.inputNow[operation_.inputName::moveRight])
     {
         acceleration_ += vecX;
     }

@@ -13,13 +13,14 @@ class PlayScene : public GameObject
 	Ground* pGround_;
 
 	std::vector<Vehicle*> vehicles_;
+	Vehicle* pVehiclePlayer_;
 
 	unsigned long long universalTime_;	//車両の共通時間(単位：フレーム)
 
 	unsigned long long standbyTime_;	//発車前の待機時間(単位：フレーム)
 	unsigned int	   standbySeconds_;	//何秒発射前に待つのか(単位：フレーム * 60)
 	bool startFlag_;	//スタートしたか
-
+	bool pauseFlag_;	//false -> 通常、 true -> ポーズ中
 
 	enum RankName
 	{
@@ -63,4 +64,7 @@ public:
 
 	//時間を加算して車両に教える
 	void CountUniversalTime();
+
+	//ポーズ
+	void PlayPause();
 };
