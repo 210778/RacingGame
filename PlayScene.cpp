@@ -45,20 +45,42 @@ void PlayScene::Initialize()
 	//音楽
 	Music::Initialize();
 
+	//初期化ファイル（setup.ini）から必要な情報を取得
+	int h = GetPrivateProfileInt("GAM", "Fp", 656565, ".\\setup.ini");
+
+	//タイトルバーに表示する内容
+	std::string moji;
+	char caption[MAX_PATH];
+	GetPrivateProfileString("moji", "alfa", "***", caption, MAX_PATH, ".\\setup.ini");
+	moji = caption;
+
 	int population = 2;
-	int playerNumber = population - 1;
+	int playerNumber = 0;
+
+	//人数
+	if (population < 1)
+	{
+		population = 1;
+	}
+	if (population >= pGround_->GetCircuitUnion()->startTransform_.size())
+	{
+		population = pGround_->GetCircuitUnion()->startTransform_.size() - 1;
+	}
+	//順番
+	if (playerNumber < 0)
+	{
+		playerNumber = 0;
+	}
+	if (playerNumber > population - 1)
+	{
+		playerNumber = population - 1;
+	}
+
+
 	//車両をセット
 	for (int i = 0; i < population; i++)
 	{
-		if (i == playerNumber)
-		{
-			VehiclePlayer* pVehiclePlayer = nullptr;
-			SetVehicle<VehiclePlayer>(pVehiclePlayer
-				, "model\\car_race_1_blue.fbx"
-				, "model\\wheel_race_1_white.fbx"
-				, i);
-		}
-		else
+		if (i != playerNumber)
 		{
 			VehicleOpponent* pVehicleOpponent = nullptr;
 			SetVehicle<VehicleOpponent>(pVehicleOpponent
@@ -67,6 +89,14 @@ void PlayScene::Initialize()
 				, i);
 		}
 	}
+	//プレイヤーは最後
+	VehiclePlayer* pVehiclePlayer = nullptr;
+	SetVehicle<VehiclePlayer>(pVehiclePlayer
+		, "model\\car_race_1_blue.fbx"
+		, "model\\wheel_race_1_white.fbx"
+		, playerNumber);
+
+
 	//参加人数をセット
 	for (auto& i : vehicles_)
 	{

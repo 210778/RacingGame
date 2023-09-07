@@ -173,6 +173,8 @@ protected:
 
     bool isOperationInvalid_;   //操作を無効化する
 
+    bool isPause_;  //動作を止める
+
     //車両の各サイズ
     struct
     {
@@ -223,6 +225,8 @@ protected:
             turnLeft,
             moveRight,
             moveLeft,
+
+            pause,
 
             MAX
         };

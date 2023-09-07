@@ -18,6 +18,9 @@ namespace ParticlePackage
     /// <param name="direction">方向</param>
     void ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction);
 
+    //エフェクト起動
+    void ActParticle(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction);
+
     /// <summary>
     /// 虹炎エフェクト起動
     /// </summary>

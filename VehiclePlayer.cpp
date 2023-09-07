@@ -239,11 +239,12 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     pTextAcceleration_->Draw(280, 30, accStr.c_str());
 
     accStr = "X:" + to_string(transform_.rotate_.x)
-                 + " Y:" + to_string(transform_.rotate_.y)
-                 + " Z:" + to_string(transform_.rotate_.z);
+          + " Y:" + to_string(transform_.rotate_.y)
+          + " Z:" + to_string(transform_.rotate_.z);
     pTextAcceleration_->Draw(280, 60, accStr.c_str());
 #endif
 
+    //カウントダウン表示
     if (time_ <= 0)
     {
         switch (standbyTime_ / standard)
@@ -266,7 +267,7 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
         Image::Draw(imageMap_["go"]);
     }
 
-    if (goalFlag_ && time < goalTime_ + countDrawTime_ * standard)
+    if (goalFlag_)
     {
         Image::Draw(imageMap_["go"]);
     }

@@ -153,6 +153,7 @@
     <ClCompile Include="Engine\Texture.cpp" />
     <ClCompile Include="Engine\Transform.cpp" />
     <ClCompile Include="Ground.cpp" />
+    <ClCompile Include="ImagePrinter.cpp" />
     <ClCompile Include="MeasurePole.cpp" />
     <ClCompile Include="Music.cpp" />
     <ClCompile Include="ParticlePackage.cpp" />
@@ -197,6 +198,7 @@
     <ClInclude Include="Engine\Texture.h" />
     <ClInclude Include="Engine\Transform.h" />
     <ClInclude Include="Ground.h" />
+    <ClInclude Include="ImagePrinter.h" />
     <ClInclude Include="MeasurePole.h" />
     <ClInclude Include="Music.h" />
     <ClInclude Include="ParticlePackage.h" />

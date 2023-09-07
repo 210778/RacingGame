@@ -170,7 +170,8 @@ void Vehicle::Initialize()
     MakeWheels(hWheelModel_);
 
     //当たり判定
-    SphereCollider* collision = new SphereCollider(Model::GetBonePosition(hModel_, "center"), Size.frontToRear_ * 0.5f);
+    SphereCollider* collision = new SphereCollider(Model::GetBonePosition(hModel_, "center")
+                                , Size.centerFrontToRear_);
     AddCollider(collision);
 
     //エフェクトのポインタとそれのまとめ
