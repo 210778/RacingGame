@@ -16,12 +16,9 @@ namespace Audio
 	//戻値：そのデータに割り当てられた番号
 	int Load(std::string fileName,int svNum = 1);
 
-	/// <summary>
-	/// 再生
-	/// </summary>
-	/// <param name="ID">鳴らしたいサウンドの番号</param>
-	/// <param name="count">繰り返したい回数（デフォルト：１回）</param>
-	void Play(int ID, int count = 1);
+	//再生
+	//引数：ID	停止したいサウンドの番号
+	void Play(int ID);
 
 	//一時停止
 	//引数：ID	停止したいサウンドの番号

@@ -8,9 +8,24 @@ namespace Music
 	struct MusicData
 	{
 		int hSound;			//ハンドルの値
+		int musicState;		//音楽の状態
 		bool isLoop;		//ループするか trueなら繰り返す回数は無意味になる
 		int repeatCount;	//繰り返す回数
-		int repeated;		//既に繰り返した回数
+
+		enum MusicState
+		{
+			stop,
+			play,
+			pause
+		};
+
+		MusicData()
+		{
+			hSound = -1;
+			musicState = MusicState::stop;
+			isLoop = false;
+			repeatCount = 0;
+		}
 	};
 
 	std::unordered_map<string, MusicData> musicPackage_;	//音楽のまとめmap
@@ -20,19 +35,18 @@ namespace Music
 	/// </summary>
 	/// <param name="musicName">呼び出すときのキー（String）</param>
 	/// <param name="fileName">ファイル名（String）</param>
-	/// <param name="loop">ループするか trueなら繰り返す回数は無意味になる　デフォルトfalse</param>
-	/// <param name="repeat">繰り返す回数 デフォルト１</param>
-	void SetMusic(string musicName, string fileName, bool loop = false, int repeat = 1)
+	/// <param name="loop">ループするか trueなら繰り返す回数は無意味になる(デフォルト:false)</param>
+	void SetMusic(string musicName, string fileName, bool loop = false)
 	{
+		//安全
 		int handle = -1;
 		handle = Audio::Load(fileName);
 		assert(handle >= 0);
 
-		//安全
 		musicPackage_[musicName].hSound = handle;
+		musicPackage_[musicName].musicState = MusicData::stop;
 		musicPackage_[musicName].isLoop = loop;
-		musicPackage_[musicName].repeatCount = repeat;
-		musicPackage_[musicName].repeated = 0;
+		musicPackage_[musicName].repeatCount = 1;
 	}
 
 };
@@ -44,32 +58,55 @@ void Music::Initialize()
 	SetMusic("BGM_1", "music\\loop100201.wav", true);
 	SetMusic("BGM_2", "music\\loop100209.wav", true);
 
+	SetMusic("SE_car_stop", "music\\carstop.wav", false);
+	SetMusic("SE_start_1", "music\\se_amb04.wav", false);
 }
 
 //更新
 void Music::Update()
 {
-	for (const auto& itr : musicPackage_)
+	//再生する
+	for (auto& itr : musicPackage_)
 	{
-		if (itr.second.isLoop && Audio::GetAudioState(itr.second.hSound) == 0)
+		int state = Audio::GetAudioState(itr.second.hSound);
+
+		if (itr.second.musicState == MusicData::play)
 		{
-			//ループ再生
-			Play(itr.first);
+			if (itr.second.isLoop)
+			{
+				//ループ再生
+				Audio::Play(itr.second.hSound);
+			}
+			else
+			{
+				//ループじゃない
+				if (itr.second.repeatCount > 0)
+				{
+					//カウントを減らす
+					if(Audio::GetAudioState(itr.second.hSound) == 0)
+					{
+						itr.second.repeatCount--;
+					}
+
+					//再生
+					Audio::Play(itr.second.hSound);
+				}
+			}
 		}
 	}
 }
 
 //再生
-bool Music::Play(string musicName)
+void Music::Play(string musicName, int count)
 {
 	if (musicPackage_.count(musicName) == 0)
 	{
 		//そんな曲名はない
-		return false;
+		return;
 	}
 
-	Audio::Play(musicPackage_[musicName].hSound, musicPackage_[musicName].repeatCount);
-	return true;
+	musicPackage_[musicName].musicState = MusicData::play;
+	musicPackage_[musicName].repeatCount = count;
 }
 
 //一時停止
@@ -80,6 +117,7 @@ void Music::Pause(string musicName)
 		return;
 	}
 
+	musicPackage_[musicName].musicState = MusicData::pause;
 	Audio::Pause(musicPackage_[musicName].hSound);
 }
 
@@ -91,5 +129,6 @@ void Music::Stop(string musicName)
 		return;
 	}
 
+	musicPackage_[musicName].musicState = MusicData::stop;
 	Audio::Stop(musicPackage_[musicName].hSound);
 }

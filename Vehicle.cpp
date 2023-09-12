@@ -106,7 +106,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
     , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
-    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f)
+    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f), boostValue_(2.0f)
     , isPlayer_(false)
     , collideBoxValue_(0.5f)
     , isOperationInvalid_(false), pauseFlag_(false)
@@ -332,25 +332,17 @@ void Vehicle::Update()
     PlayerParticle();
 
 
-    //サウンドデータのロード
-    //int first = Audio::Load("music\\maou_se_sound_car01.wav");
-    //int sec = Audio::Load("music\\maou_se_sound_car02.wav");
-    //int thi = Audio::Load("music\\maou_se_sound_car04.wav");
-
-
-    hSound_ = Audio::Load("music\\carstop.wav");
-    assert(hSound_ >= 0);
     if (Input::IsKeyDown(DIK_J))
     {
-        Audio::Play(hSound_);
+        Music::Play("SE_start_1");
     }
     if (Input::IsKeyDown(DIK_K))
     {
-        Audio::Stop(hSound_);
+        Music::Pause("SE_start_1");
     }
     if (Input::IsKeyDown(DIK_L))
     {
-        Audio::Pause(hSound_);
+        Music::Stop("SE_start_1");
     }
 
 }
@@ -588,7 +580,7 @@ bool Vehicle::Landing(int hModel,int type)
         if (landingFlag_ || data.dist < Size.toWheelBottom_ + Size.wheelHeight_)
         {
             //回転
-            if (VehicleRotateSlope(data.normal, slopeLimitAngle_) == false)
+            if (VehicleRotateSlope(data.normal, slopeLimitAngle_, RayCastHit::Number::down) == false)
             {
                 //坂道なら落下
                 acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
@@ -622,7 +614,6 @@ bool Vehicle::Landing(int hModel,int type)
     {   
         //NPC用
         SetRayCastHit(RayCastHit::Number::up, data);
-
 
         //ちょっと地面に埋まったとき
         if (data.dist < Size.toTop_)
@@ -683,17 +674,8 @@ bool Vehicle::CollideWall(int hModel, int type)
         //当たったら
         if (wallCollideVertical[i].hit)
         { 
-
             //NPC用
-            if (!isPlayer_) {
-                switch (i) {
-                default:
-                case Direction::front: SetRayCastHit(RayCastHit::Number::front, wallCollideVertical[i]); break;    //前方、その他
-                case Direction::right: SetRayCastHit(RayCastHit::Number::right, wallCollideVertical[i]); break;    //右
-                case Direction::rear:  SetRayCastHit(RayCastHit::Number::rear,  wallCollideVertical[i]); break;    //後ろ
-                case Direction::left:  SetRayCastHit(RayCastHit::Number::left,  wallCollideVertical[i]); break;    //左
-                }
-            }
+            int NPC_Number = 0;
 
             //方向ごとの加速度
             float dirAcc;
@@ -705,27 +687,39 @@ bool Vehicle::CollideWall(int hModel, int type)
             VectorRotateMatrixZXY(accRotVec);
 
             //方向ごとに代入　なんか頭わるいことしてそうな気がする
-            switch (i){             
+            switch (i)
+            {             
             default://前方、その他
             case Direction::front:
                 dirAcc = XMVectorGetZ(accRotVec);
-                dirSize = Size.toFront_; break;
+                dirSize = Size.toFront_;
+                NPC_Number = RayCastHit::Number::front; 
+                break;
             case Direction::right://右
                 dirAcc = XMVectorGetX(accRotVec);
-                dirSize = Size.toRight_; break;                
+                dirSize = Size.toRight_;
+                NPC_Number = RayCastHit::Number::right; 
+                break;
             case Direction::rear://後ろ
                 dirAcc = XMVectorGetZ(accRotVec);
-                dirSize = Size.toRear_; break;                
+                dirSize = Size.toRear_;
+                NPC_Number = RayCastHit::Number::rear; 
+                break;
             case Direction::left://左
                 dirAcc = XMVectorGetX(accRotVec);
-                dirSize = Size.toLeft_; break;
+                dirSize = Size.toLeft_;
+                NPC_Number = RayCastHit::Number::left;
+                break;
             }
+
+            //NPC用
+            SetRayCastHit(NPC_Number, wallCollideVertical[i]);
 
             if (wallCollideVertical[i].dist < abs(dirAcc) + dirSize)
             {
                 //偽 == 壁に衝突 / 真 == 坂道
                 //回転
-                if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_) == false)
+                if (VehicleRotateSlope(wallCollideVertical[i].normal, slopeLimitAngle_, NPC_Number) == false)
                 {
                     //衝突する直前で止まった時の壁までの距離
                     XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideVertical[i].dist - dirSize, 0.0f };
@@ -760,6 +754,10 @@ bool Vehicle::CollideWall(int hModel, int type)
                 }
             }
         }
+
+
+
+        //SetRayCastSlope();
     }
 
     //斜め
@@ -833,7 +831,7 @@ bool Vehicle::CollideWall(int hModel, int type)
             if (wallCollideOblique[i].dist * wallCollideOblique[i].dist <
                 (dirAccX * dirAccX + dirAccZ * dirAccZ) + (vehicleLen * vehicleLen))
             {
-                if (VehicleRotateSlope(wallCollideOblique[i].normal, slopeLimitAngle_) == false)
+                if (VehicleRotateSlope(wallCollideOblique[i].normal, slopeLimitAngle_, NPC_Number) == false)
                 {
                     //衝突する時の壁までの距離
                     XMVECTOR ajustVec = { 0.0f, 0.0f, wallCollideOblique[i].dist - vehicleLen, 0.0f };
@@ -958,17 +956,6 @@ XMFLOAT3* Vehicle::GetNextCheckPosition()
 {
     XMFLOAT3* pos = pGround_->NextCheckPointPosition(pointCount_);
     return pos;
-#if 0
-    pGround_->GetCircuitUnion()->check_[pointCount_].CP_position_
-
-    if(pointCount_ < pointCountMax_ && pointCount_ >= 0)
-    {
-        XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[pointCount_]->GetPosition();
-        return &pos;
-    }
-
-    XMFLOAT3 pos = pGround_->GetCircuitUnion()->checkPoint_[0]->GetPosition();
-#endif
 }
 //次のチェックポイントまでの距離を取得
 float Vehicle::GetNextCheckDistance()
@@ -993,7 +980,7 @@ void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
 }
 
 // 坂道に応じて車両を回転(X、Z軸)
-bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
+bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, float limitAngle, int rayCastType)
 {
     //法線のY軸を反転
     XMVECTOR normalR = normal * XMVECTOR{ 1.0f,-1.0f,1.0f,1.0f };
@@ -1002,6 +989,7 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
     //角度計算は謎
     if (XMConvertToDegrees(*XMVector3AngleBetweenNormals(worldVector_.y, normalR).m128_f32) > limitAngle)
     {
+        SetRayCastSlope(rayCastType, false);
         return false;
     }
 
@@ -1023,9 +1011,11 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, const float limitAngle)
     }
     else
     {
+        SetRayCastSlope(rayCastType, false);
         return false;
     }
 
+    SetRayCastSlope(rayCastType, true);
     return true;
 }
 
@@ -1047,6 +1037,17 @@ void Vehicle::SetRayCastHit(int number, const RayCastData& rcd)
     rayCastHit_[number].dist = rcd.dist;
     rayCastHit_[number].end = rcd.end;
     rayCastHit_[number].hit = rcd.hit;
+}
+
+//NPCのレイキャスト用
+void Vehicle::SetRayCastSlope(int number, bool flag)
+{
+    if (isPlayer_)
+    {
+        return;
+    }
+
+    rayCastHit_[number].road = flag;
 }
 
 //バウンディングボックスの衝突
@@ -1135,7 +1136,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
 
             slideFlag_ = true;
 
-            acceleration_ += vecZ * 2.0f;
+            acceleration_ += vecZ * boostValue_;
 
             //エフェクト
             XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");

@@ -135,7 +135,7 @@ void PlayScene::Update()
 	}
 
 	//‰¹Šy
-	//Music::Update();
+	Music::Update();
 
 	//ŽžŠÔ
 	CountUniversalTime();

@@ -107,7 +107,7 @@ int Audio::Load(std::string fileName, int svNum)
 }
 
 //Ä¶
-void Audio::Play(int ID, int count)
+void Audio::Play(int ID)
 {
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{
@@ -117,15 +117,11 @@ void Audio::Play(int ID, int count)
 		//‚È‚¢‚È‚ç’Ç‰Á
 		if (state.BuffersQueued == 0)
 		{
-			//w’è‚³‚ê‚½‰ñ”‚¾‚¯’Ç‰Á
-			for (int i = 0; i < count; i++)
-			{
-				audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
-			}
+			audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
 		}
 
 		audioDatas[ID].pSourceVoice[i]->Start();
-		break;	//ˆê‰‚Â‚¯‚Ä‚¨‚­
+		break;
 	}
 }
 

@@ -166,6 +166,7 @@ protected:
     float boostCapacity_;//ブーストできる現在残量
     float boostSpending_;//ブーストする時の消費量
     float boostIncrease_;//ブーストできる残量の追加値
+    float boostValue_;   //ブーストしたときに加算する値
 
     bool isPlayer_; //プレイヤーキャラかどうか
 
@@ -268,6 +269,7 @@ protected:
         float       dist;	//衝突点までの距離
         BOOL        hit;	//レイが当たったか
         XMFLOAT3    end;	//命中位置
+        bool        road;   //レイが当たったときに壁なのか坂道なのか
 
         enum Number
         {
@@ -386,8 +388,9 @@ public:
     /// </summary>
     /// <param name="normal">坂道の法線（正規化済）</param>
     /// <param name="limitAngle">回転を許容する坂道の角度(水平線から見る)</param>
+    /// <param name="rayCastType">NPC用のレイキャストの種類</param>
     /// <returns>限界角度以内なら回転してtrue そうでないなら何もせずfalse</returns>
-    bool VehicleRotateSlope(const XMVECTOR& normal,const float limitAngle);
+    bool VehicleRotateSlope(const XMVECTOR& normal, float limitAngle, int rayCastType);
 
     /// <summary>
     /// NPC用レイキャストにデータセット
@@ -395,6 +398,9 @@ public:
     /// <param name="number">mapのキー</param>
     /// <param name="rcd">レイキャストデータ</param>
     void SetRayCastHit(int number, const RayCastData& rcd);
+
+    //NPCのレイキャスト用
+    void SetRayCastSlope(int number, bool flag);
 
     /// <summary>
     /// BoundingOrientedBoxの衝突判定
