@@ -15,6 +15,7 @@ ImagePrinter::~ImagePrinter()
 //‰Šú‰»
 void ImagePrinter::Initialize()
 {
+    imageMap_[ImageNumber::one].
 }
 
 //XV

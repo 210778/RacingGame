@@ -164,11 +164,11 @@
     <ClCompile Include="Background.cpp">
       <Filter>04Play</Filter>
     </ClCompile>
-    <ClCompile Include="TextPrinter.cpp">
-      <Filter>04Play</Filter>
-    </ClCompile>
     <ClCompile Include="ImagePrinter.cpp">
-      <Filter>04Play</Filter>
+      <Filter>04Play\Others</Filter>
+    </ClCompile>
+    <ClCompile Include="TextPrinter.cpp">
+      <Filter>04Play\Others</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -295,11 +295,11 @@
     <ClInclude Include="Background.h">
       <Filter>04Play</Filter>
     </ClInclude>
-    <ClInclude Include="TextPrinter.h">
-      <Filter>04Play</Filter>
-    </ClInclude>
     <ClInclude Include="ImagePrinter.h">
-      <Filter>04Play</Filter>
+      <Filter>04Play\Others</Filter>
+    </ClInclude>
+    <ClInclude Include="TextPrinter.h">
+      <Filter>04Play\Others</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
