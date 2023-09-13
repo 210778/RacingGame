@@ -13,6 +13,8 @@
 #include "Speedometer.h"
 #include "ParticlePackage.h"
 #include "Sample.h"
+#include "Music.h"
+#include "ImagePrinter.h"
 
 using std::string;
 using std::to_string;
@@ -36,7 +38,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     , km_hAdd(120.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
     , imageBoostMax_(-1), imageBoost_(-1)
-    , countDrawTime_(1.0f)
+    , pImagePrinter_(nullptr)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -86,14 +88,12 @@ void VehiclePlayer::PlayerUI_Initialize()
     imageBoostMax_ = Image::Load("image\\grayBar.png");
     imageBoost_    = Image::Load("image\\redBar.png");
 
-    imageMap_["go"] = Image::Load("image\\count_go.png");
-    assert(imageMap_["go"] >= 0);
-    imageMap_["1"] = Image::Load("image\\count_1.png");
-    assert(imageMap_["1"] >= 0);
-    imageMap_["2"] = Image::Load("image\\count_2.png");
-    assert(imageMap_["2"] >= 0);
-    imageMap_["3"] = Image::Load("image\\count_3.png");
-    assert(imageMap_["3"] >= 0);
+    pImagePrinter_ = Instantiate<ImagePrinter>(GetParent());
+    isPrintedMap_["start"] = false;
+    isPrintedMap_["1"] = false;
+    isPrintedMap_["2"] = false;
+    isPrintedMap_["3"] = false;
+    isPrintedMap_["goal"] = false;
 }
 
 //UIの表示
@@ -247,30 +247,93 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     //カウントダウン表示
     if (time_ <= 0)
     {
+        if (((float)standbyTime_ / standard) < 1 && isPrintedMap_["1"] == false)
+        {
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::one);
+            isPrintedMap_["1"] = true;
+            Music::Play(Music::MusicName::se_count123);
+        }
+        if (((float)standbyTime_ / standard) < 2 && isPrintedMap_["2"] == false)
+        {
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::two);
+            isPrintedMap_["2"] = true;
+            Music::Play(Music::MusicName::se_count123);
+        }
+        if (((float)standbyTime_ / standard) < 3 && isPrintedMap_["3"] == false)
+        {
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::three);
+            isPrintedMap_["3"] = true;
+            Music::Play(Music::MusicName::se_count123);
+        }
+    }
+    else
+    {
+        if (isPrintedMap_["start"] == false)
+        {
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::start);
+            isPrintedMap_["start"] = true;
+            Music::Play(Music::MusicName::se_countStart);
+        }
+    }
+
+    if (goalFlag_ && isPrintedMap_["goal"] == false)
+    {
+        pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::goal);
+        isPrintedMap_["goal"] = true;
+        Music::Play(Music::MusicName::se_goal);
+    }
+
+#if 0
+    if (time_ <= 0)
+    {
+        if (standbyTime_ == 1)
+        {
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::start);
+        }
+
         switch (standbyTime_ / standard)
         {
         default:
             break;
         case 0:
-            Image::Draw(imageMap_["1"]);
+            //Image::Draw(imageMap_["1"]);
             break;
         case 1:
-            Image::Draw(imageMap_["2"]);
+            //Image::Draw(imageMap_["2"]);
             break;
         case 2:
-            Image::Draw(imageMap_["3"]);
+            //Image::Draw(imageMap_["3"]);
             break;
         }
     }
     else if (time_ <= countDrawTime_ * standard)
     {
-        Image::Draw(imageMap_["go"]);
+        //Image::Draw(imageMap_["go"]);
     }
 
     if (goalFlag_)
     {
-        Image::Draw(imageMap_["go"]);
+        //Image::Draw(imageMap_["go"]);
     }
+
+    switch (standbyTime_ / standard)
+    {
+    default:
+        break;
+    case 0:
+        if (isPrintedMap_["1"])
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::one);
+        break;
+    case 1:
+        if (isPrintedMap_["2"])
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::two);
+        break;
+    case 2:
+        if (isPrintedMap_["3"])
+            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::three);
+        break;
+    }
+#endif
 }
 
 //UIの情報更新

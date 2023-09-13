@@ -42,6 +42,7 @@ class ImagePrinter : public GameObject
         }
     }imageData_;
 
+public:
     enum class ImageNumber
     {
         start,
@@ -50,6 +51,7 @@ class ImagePrinter : public GameObject
         three,
         goal
     };
+private:
 
     //画像
     std::unordered_map<ImageNumber, ImageData> imageMap_;
@@ -74,4 +76,11 @@ public:
 
     //開放
     void Release() override;
+
+    //画像をセット
+    void SetImage(ImageNumber in, int handle, Transform transform, int time
+        , Transform cTransform, int alpha = 255, int cAlpha = 0);
+
+    //画像描画
+    void DrawImage(ImageNumber in);
 };

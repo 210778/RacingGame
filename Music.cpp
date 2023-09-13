@@ -28,7 +28,7 @@ namespace Music
 		}
 	};
 
-	std::unordered_map<string, MusicData> musicPackage_;	//音楽のまとめmap
+	std::unordered_map<MusicName, MusicData> musicPackage_;	//音楽のまとめmap
 
 	/// <summary>
 	/// 音楽をセットする
@@ -36,7 +36,7 @@ namespace Music
 	/// <param name="musicName">呼び出すときのキー（String）</param>
 	/// <param name="fileName">ファイル名（String）</param>
 	/// <param name="loop">ループするか trueなら繰り返す回数は無意味になる(デフォルト:false)</param>
-	void SetMusic(string musicName, string fileName, bool loop = false)
+	void SetMusic(MusicName musicName, string fileName, bool loop = false)
 	{
 		//安全
 		int handle = -1;
@@ -55,11 +55,13 @@ namespace Music
 //初期化
 void Music::Initialize()
 {
-	SetMusic("BGM_1", "music\\loop100201.wav", true);
-	SetMusic("BGM_2", "music\\loop100209.wav", true);
+	SetMusic(MusicName::bgm_1, "music\\loop100201.wav", true);
+	SetMusic(MusicName::bgm_2, "music\\loop100209.wav", true);
 
-	SetMusic("SE_car_stop", "music\\carstop.wav", false);
-	SetMusic("SE_start_1", "music\\se_amb04.wav", false);
+	SetMusic(MusicName::se_carStop, "music\\carstop.wav", false);
+	SetMusic(MusicName::se_count123, "music\\se_amb04.wav", false);
+	SetMusic(MusicName::se_countStart, "music\\se_ymb04.wav", false);
+	SetMusic(MusicName::se_goal, "music\\se_ymb04.wav", false);
 }
 
 //更新
@@ -97,7 +99,7 @@ void Music::Update()
 }
 
 //再生
-void Music::Play(string musicName, int count)
+void Music::Play(MusicName musicName, int count)
 {
 	if (musicPackage_.count(musicName) == 0)
 	{
@@ -110,7 +112,7 @@ void Music::Play(string musicName, int count)
 }
 
 //一時停止
-void Music::Pause(string musicName)
+void Music::Pause(MusicName musicName)
 {
 	if (musicPackage_.count(musicName) == 0)
 	{
@@ -122,7 +124,7 @@ void Music::Pause(string musicName)
 }
 
 //停止
-void Music::Stop(string musicName)
+void Music::Stop(MusicName musicName)
 {
 	if (musicPackage_.count(musicName) == 0)
 	{

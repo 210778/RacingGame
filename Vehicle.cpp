@@ -26,6 +26,7 @@
 #include "ParticlePackage.h"
 #include "MeasurePole.h"
 #include "Music.h"
+#include "ImagePrinter.h"
 
 using std::vector;
 using std::string;
@@ -330,21 +331,6 @@ void Vehicle::Update()
 
     //エフェクト
     PlayerParticle();
-
-
-    if (Input::IsKeyDown(DIK_J))
-    {
-        Music::Play("SE_start_1");
-    }
-    if (Input::IsKeyDown(DIK_K))
-    {
-        Music::Pause("SE_start_1");
-    }
-    if (Input::IsKeyDown(DIK_L))
-    {
-        Music::Stop("SE_start_1");
-    }
-
 }
 
 //何かに当たった
