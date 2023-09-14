@@ -6,6 +6,7 @@ class Particle;
 class Ground;
 class VehicleWheel;
 class RayCastData;
+class Viewer;
 
 //車両を管理するクラス
 class Vehicle : public GameObject
@@ -127,7 +128,7 @@ protected:
         int goalRanking_;   //ゴールした時の順位 ゴール前は0
         int population_;    //レースに参加している人数
         unsigned long long goalTime_;//ゴールした時の経過タイム
-        unsigned long long standbyTime_;
+        unsigned long long standbyTime_;    //待機する時間
 
     float mass_;            //車の重量
     float engineRotate_;    //エンジン回転数
@@ -176,8 +177,11 @@ protected:
 
     bool pauseFlag_;  //ポーズ中かどうか
 
+    //カメラ
+    Viewer* pViewer_;
+
     //車両の各サイズ
-    struct
+    struct VehicleSize
     {
         float toRight_ = 1.0f;  //右端　までの距離
         float toLeft_ = 1.0f;   //左端　までの距離
@@ -359,9 +363,6 @@ public:
     //タイヤの高さセッター //車体との差分も計算
     void SetWheelHeight(float height);
 
-    int hSound_ = -1;
-
-
     //モデルの大きさセッター
     void SetVehicleSize(int hModel);
 
@@ -460,6 +461,8 @@ public:
         void SetStandbyTime(unsigned long long time) { standbyTime_ = time; }
         //ポーズ状態のセッター
         void SetPauseFlag(bool flag) { pauseFlag_ = flag; }
+        //サイズのゲッター
+        VehicleSize* GetVehicleSize() { return &Size; }
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

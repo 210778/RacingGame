@@ -49,7 +49,7 @@ Vehicle::Vehicle(GameObject* parent)
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
     , ranking_(0), population_(1), goalTime_(0)
-    , mass_(1.0f), engineRotate_(0.0f)
+    , mass_(1.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
     , pParticle_(nullptr)
@@ -91,8 +91,8 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
 
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), goalRanking_(0), population_(1), goalTime_(0)
-    , mass_(1.0f), engineRotate_(0.0f)
+    , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
+    , mass_(1.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Ground::road)
     , pParticle_(nullptr)
@@ -111,6 +111,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , isPlayer_(false)
     , collideBoxValue_(0.5f)
     , isOperationInvalid_(false), pauseFlag_(false)
+    , pViewer_(nullptr)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -159,11 +160,11 @@ void Vehicle::Initialize()
     hModel_ = Model::Load(vehicleModelName_);
     assert(hModel_ >= 0);
 
-    //
-    PlayerCamera_Initialize();
-
     //サイズ計算
     SetVehicleSize(hModel_);
+
+    //プレイヤーのカメラ
+    PlayerCamera_Initialize();
 
     //タイヤ
     hWheelModel_ = Model::Load(wheelModelName_);
@@ -283,6 +284,7 @@ void Vehicle::Update()
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = restartTransform_.position_;
             transform_.rotate_   = restartTransform_.rotate_;
+            pViewer_->WatchPresentPosition();    //今すぐ移動
         }
     }
 

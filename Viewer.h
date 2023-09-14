@@ -8,7 +8,6 @@ class Viewer : public GameObject
 {
     Vehicle* pVehicle;
 
-    float cameraLength_;//モデルの表示用
     //移動、回転の速さ
     float rotateSPD_;
     //カメラが1回転しないための
@@ -32,6 +31,9 @@ class Viewer : public GameObject
     XMVECTOR  viewAcceleration_; //対象の加速度
     float     viewRotate_;       //対象の追加回転値
     float     viewRotateAdd_;    //↑にかける値
+
+    float camHeightPlus_;   //カメラの高さ
+    bool isWatchPresent_;   //今すぐ移動するかどうか
 
 public:
     //コンストラクタ
@@ -60,5 +62,6 @@ public:
     /// <param name="handle">追加で回転したい値</param>
     void SetViewValue(const Transform& transform,const XMVECTOR& speed, const float handle);
 
-    void SetViewPosition();
+    //対象の場所まで今すぐ移動
+    void WatchPresentPosition();
 };

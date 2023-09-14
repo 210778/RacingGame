@@ -8,11 +8,12 @@
 //コンストラクタ
 Viewer::Viewer(GameObject* parent)
     :GameObject(parent, "Viewer"), pVehicle(nullptr)
-    , rotateSPD_(1.0), upLim_(80.0), downLim_(90.0)
+    , rotateSPD_(1.0), upLim_(55.0), downLim_(25.0)
     , nearLim_(4.0f), farLim_(120.0f), zoomUp_(0.95f), zoomOut_(1.05f)
     , camFlo_(XMFLOAT3(0.0f, 10.0f, -20.0f)), camX_(0.0f)
-    , toFutureLength_(0.15f)/*0.1f*/, camTarPlusVec_({0.0f, 0.0f, 0.0f, 0.0f})// camTarPlusVec({ 0.0f, 4.0f, 0.0f, 0.0f })
-    , viewRotate_(0.0f), viewRotateAdd_(0.25f)
+    , toFutureLength_(0.15f), camTarPlusVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
+    , viewRotate_(0.0f), viewRotateAdd_(0.25f), camHeightPlus_(2.0f)
+    , isWatchPresent_(false)
 {
 }
 
@@ -26,6 +27,8 @@ void Viewer::Initialize()
 {
     pVehicle = (Vehicle*)GetParent();
     assert(pVehicle != nullptr);
+
+    camTarPlusVec_ = { 0.0f,pVehicle->GetVehicleSize()->topToWheelBottom_ * camHeightPlus_,0.0f,0.0f};
 }
 
 //更新
@@ -60,26 +63,30 @@ void Viewer::Update()
     vecCam = XMVector3TransformCoord(vecCam
         , XMMatrixRotationY(XMConvertToRadians(viewRotate_ * viewRotateAdd_)));
 
-#if 0
-    Camera::SetPosition(vecPos + vecCam);     //現在の位置とベクトルを足してカメラの位置にする
-    Camera::SetTarget(vecPos);                //カメラの焦点はプレイヤーの位置
-#else
-    //カメラの慣性
-    XMVECTOR futurePosition_ = vecPos + vecCam;  //目標の位置
-    XMVECTOR futureTarget_   = vecPos + camTarPlusVec_;           //目標の焦点 + 追加
+    if (isWatchPresent_)
+    {
+        Camera::SetPosition(vecPos + vecCam);     //現在の位置とベクトルを足してカメラの位置にする
+        Camera::SetTarget(vecPos);                //カメラの焦点はプレイヤーの位置
+        isWatchPresent_ = false;    //元に戻す
+    }
+    else
+    {
+        //カメラの慣性
+        XMVECTOR futurePosition_ = vecPos + vecCam;  //目標の位置
+        XMVECTOR futureTarget_ = vecPos + camTarPlusVec_;           //目標の焦点 + 追加
 
-    XMVECTOR presentPosition = Camera::GetPosition();   //現在の位置
-    XMVECTOR presentTarget   = Camera::GetTarget();     //現在の焦点
+        XMVECTOR presentPosition = Camera::GetPosition();   //現在の位置
+        XMVECTOR presentTarget = Camera::GetTarget();     //現在の焦点
 
-    XMVECTOR presentToFuturePosition = futurePosition_ - presentPosition;   //現在から未来のベクトル
-    XMVECTOR presentToFutureTarget   = futureTarget_ - presentTarget;
+        XMVECTOR presentToFuturePosition = futurePosition_ - presentPosition;   //現在から未来のベクトル
+        XMVECTOR presentToFutureTarget = futureTarget_ - presentTarget;
 
-    presentToFuturePosition *= toFutureLength_;   //長さを短くする
-    presentToFutureTarget   *= toFutureLength_;
+        presentToFuturePosition *= toFutureLength_;   //長さを短くする
+        presentToFutureTarget *= toFutureLength_;
 
-    Camera::SetPosition(presentPosition + presentToFuturePosition); //少しずつ現在のベクトルに足していく
-    Camera::SetTarget(presentTarget + presentToFutureTarget);       //
-#endif
+        Camera::SetPosition(presentPosition + presentToFuturePosition); //少しずつ現在のベクトルに足していく
+        Camera::SetTarget(presentTarget + presentToFutureTarget);       //
+    }
 
     //上下回転
     if (Input::IsKey(DIK_F))
@@ -143,7 +150,8 @@ void Viewer::SetViewValue(const Transform& transform, const XMVECTOR& speed, con
     viewRotate_         = handle;
 }
 
-void Viewer::SetViewPosition()
+//対象の場所まで今すぐ移動
+void Viewer::WatchPresentPosition()
 {
-    ;
+    isWatchPresent_ = true;
 }

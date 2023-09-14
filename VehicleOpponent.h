@@ -4,6 +4,7 @@
 //◆◆◆を管理するクラス
 class VehicleOpponent : public Vehicle
 {
+    float frontHitLength_;  //前の衝突判定長さ
 public:
     //コンストラクタ
     VehicleOpponent(GameObject* parent);

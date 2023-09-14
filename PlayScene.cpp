@@ -114,12 +114,8 @@ void PlayScene::Initialize()
 	//待機時間
 	standbyTime_ = standbySeconds_ * Global::GetStandardFPS();
 
-
 	//エフェクト用
 	ParticlePackage::Initialize();
-
-	//文字
-	//Instantiate<TextPrinter>(this);
 }
 
 //更新

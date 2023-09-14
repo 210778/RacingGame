@@ -42,7 +42,6 @@ namespace Music
 		int handle = -1;
 		handle = Audio::Load(fileName);
 		assert(handle >= 0);
-
 		musicPackage_[musicName].hSound = handle;
 		musicPackage_[musicName].musicState = MusicData::stop;
 		musicPackage_[musicName].isLoop = loop;

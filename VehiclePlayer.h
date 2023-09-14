@@ -10,9 +10,6 @@ class ImagePrinter;
 //◆◆◆を管理するクラス
 class VehiclePlayer : public Vehicle
 {
-    //カメラ
-    Viewer* pViewer;
-
     //スピードメーター
     Speedometer* pSpeedometer_;
 
