@@ -8,6 +8,16 @@ namespace ParticlePackage
     //初期化（データセット）
     void Initialize();
 
+    enum class ParticleName
+    {
+        boost,
+        rainbow,
+        smoke,
+        grass,
+        dirt,
+        spark
+    };
+
     //エフェクト起動関数
 
     /// <summary>

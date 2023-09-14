@@ -34,7 +34,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     :Vehicle(parent, "VehiclePlayer")
     , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
     , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
-    , km_hAdd(120.0f), flashIntervalUI_(15), IsFlashUI_(true)
+    , km_hAdd(122.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
     , imageBoostMax_(-1), imageBoost_(-1)
     , pImagePrinter_(nullptr)
@@ -82,6 +82,7 @@ void VehiclePlayer::PlayerUI_Initialize()
 
     //スピードメーター
     pSpeedometer_ = Instantiate<Speedometer>(GetParent());
+    pSpeedometer_->SetPosition({ -0.875f, -0.8f, 0.0f });
 
     //画像
     imageBoostMax_ = Image::Load("image\\grayBar.png");
@@ -103,7 +104,7 @@ void VehiclePlayer::PlayerUI_Draw()
     XMVECTOR speedVec = acceleration_;
     string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
     speedStr += "km/h";
-    pTextSpeed_->Draw(30, 30, speedStr.c_str());
+    pTextSpeed_->Draw(150, Global::GetScreenHeight() - 20, speedStr.c_str());
 
     unsigned long long time = time_;
     if (goalFlag_)
@@ -145,7 +146,7 @@ void VehiclePlayer::PlayerUI_Draw()
     //点滅
     if(IsFlashUI_)
     {
-        pTextTime_->Draw(30, 70, timeStr.c_str());
+        pTextTime_->Draw(30, 30, timeStr.c_str());
     }
 
     //周回数表示
@@ -154,7 +155,7 @@ void VehiclePlayer::PlayerUI_Draw()
     //点滅
     if (IsFlashUI_)
     {
-        pTextLap_->Draw(30, 110, lapStr.c_str());
+        pTextLap_->Draw(30, 70, lapStr.c_str());
     }
 
     //順位表示
@@ -173,7 +174,7 @@ void VehiclePlayer::PlayerUI_Draw()
     //点滅
     if (IsFlashUI_)
     {
-        pTextRanking_->Draw(30, 150, rank.c_str());
+        pTextRanking_->Draw(30, 110, rank.c_str());
     }
 #if 0
     //順位表示
@@ -226,7 +227,6 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 #ifdef _DEBUG
     //
     pSample_->SetPosition(*GetNextCheckPosition());
-    pSample_->SetScale({ 20.0,20.0,20.0 });
 
     //加速度表示
     XMFLOAT3 floAcc;

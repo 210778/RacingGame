@@ -23,7 +23,7 @@ void Sample::Initialize()
     hModel_ = Model::Load("model\\Tri_Lines.fbx");
     assert(hModel_ >= 0);
 
-    transform_.scale_ = { 3,3,3 };
+    transform_.scale_ = { 15,15,15 };
 }
 
 //XV

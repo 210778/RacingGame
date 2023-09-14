@@ -19,7 +19,7 @@ namespace ParticlePackage
     EmitterData wheelSpark_;    //火花
 
 
-    std::unordered_map<int, std::vector<EmitterData>> emitter_;
+    std::unordered_map<ParticleName, std::vector<EmitterData>> emitter_;
 
 	unsigned long long timeCount_;	//時間のカウント
     int colorSpeed_ = 2;  //カウントのスピード
@@ -31,6 +31,12 @@ namespace ParticlePackage
     void SetGrass();
     void SetDirt();
     void SetSpark();
+
+    void SetParticle(ParticleName key, std::string fileName, XMFLOAT3 position
+        , XMFLOAT3 positionErr, int delay, int mass, float lifeTime, float gravity, XMFLOAT3 dir
+        , XMFLOAT3 dirErr, float speed, float speedErr, float accel, XMFLOAT2 size, XMFLOAT2 sizeErr
+        , XMFLOAT2 scale, XMFLOAT4 colorRGBA, XMFLOAT4 deltaColorRGBA);
+    void ParticleInitialize();
 };
 
 void ParticlePackage::Initialize()
@@ -44,6 +50,61 @@ void ParticlePackage::Initialize()
     SetDirt();
     SetSpark();
 }
+
+/// <summary>
+/// エフェクトセット用
+/// </summary>
+/// <param name="key">エフェクトの名前型</param>
+/// <param name="fileName">画像ファイル名</param>
+/// <param name="position">位置</param>
+/// <param name="positionErr">位置の誤差</param>
+/// <param name="delay">何フレームおきにパーティクルを発生させるか</param>
+/// <param name="mass">1度に出すパーティクル量</param>
+/// <param name="lifeTime">パーティクルの寿命（フレーム数）</param>
+/// <param name="gravity">重力</param>
+/// <param name="dir">パーティクルの移動方向</param>
+/// <param name="dirErr">移動方向の誤差（各軸の角度）</param>
+/// <param name="speed">1フレームの速度</param>
+/// <param name="speedErr">速度誤差（0～1）</param>
+/// <param name="accel">加速度</param>
+/// <param name="size">サイズ</param>
+/// <param name="sizeErr">サイズ誤差（0～1）</param>
+/// <param name="scale">1フレームの拡大率</param>
+/// <param name="colorRGBA">色（RGBA 0～1）</param>
+/// <param name="deltaColorRGBA">色の変化量</param>
+void ParticlePackage::SetParticle(ParticleName key, std::string fileName, XMFLOAT3 position
+    , XMFLOAT3 positionErr, int delay, int mass, float lifeTime, float gravity, XMFLOAT3 dir
+    , XMFLOAT3 dirErr, float speed, float speedErr, float accel, XMFLOAT2 size, XMFLOAT2 sizeErr
+    , XMFLOAT2 scale, XMFLOAT4 colorRGBA, XMFLOAT4 deltaColorRGBA)
+{
+    EmitterData ed;
+
+    ed.textureFileName = fileName;
+    ed.position = position;
+    ed.positionErr = positionErr;
+    ed.delay = delay;
+    ed.number = mass;
+    ed.lifeTime = lifeTime;
+    ed.gravity = gravity;
+    ed.dir = dir;
+    ed.dirErr = dirErr;
+    ed.speed = speed;
+    ed.speedErr = speedErr;
+    ed.accel = accel;
+    ed.size = size;
+    ed.sizeErr = sizeErr;
+    ed.scale = scale;
+    ed.color = colorRGBA;
+    ed.deltaColor = deltaColorRGBA;
+
+    emitter_[key].push_back(ed);
+}
+
+void ParticlePackage::ParticleInitialize()
+{
+
+}
+
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
 {

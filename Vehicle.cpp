@@ -332,7 +332,8 @@ void Vehicle::Update()
     PlayerUI_Update();
 
     //エフェクト
-    PlayerParticle();
+    //PlayerParticle();
+    VehicleParticle();
 }
 
 //何かに当たった
@@ -1193,6 +1194,42 @@ void Vehicle::SetWheelHeight(float height)
     Size.topToWheelBottom_ = Size.toWheelBottom_ + Size.toTop_;
     Size.centerPositionRemainder_ = Size.centerTopToBottom_ - Size.wheelRemainder_;
     Size.centerTopToBottom_ = (Size.topToBottom_ + Size.wheelRemainder_) * 0.5f;
+}
+
+//エフェクト
+void Vehicle::VehicleParticle()
+{
+    float accLength = *XMVector3Length(acceleration_).m128_f32;
+
+    //ゴールしたら
+    if (goalFlag_)
+    {
+        ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
+    }
+
+    //走行中のタイヤの軌跡
+    if (wheelParticleLength_ < accLength
+        && wheelParticleLengthMax_ > accLength)
+    {
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
+        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
+    }
+
+    //草地乗り上げ
+    if (landingType_ == Ground::turf
+        && landingFlag_
+        && wheelParticleLength_ < accLength)
+    {
+        ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
+    }
+
+    //砂地
+    if (landingType_ == Ground::dirt
+        && landingFlag_
+        && wheelParticleLength_ < accLength)
+    {
+        ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
+    }
 }
 
 //車両の操作、入力の受付

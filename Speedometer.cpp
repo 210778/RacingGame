@@ -22,14 +22,14 @@ Speedometer::~Speedometer()
 void Speedometer::Initialize()
 {
     //ゲージのサイズ（画像サイズが基準）
-    transform_.scale_ = XMFLOAT3(0.25f, 0.25f, 1.0f);
+    //transform_.scale_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
 
     //ゲージの位置（画面中心が基準）
-    transform_.position_ = XMFLOAT3(-0.85f, -0.75f, 0);
+    //transform_.position_ = XMFLOAT3(-0.85f, -0.75f, 0);
 
     //画像ロード
     string header = "image\\";
-    vector<string>imageName = { "mator4.png","matorNeedle.png"};
+    vector<string>imageName = { "mator6.png","matorNeedle3.png"};
     for (int i = 0; i < imageName.size(); i++)
     {
         hImage_.push_back(Image::Load(header + imageName[i]));

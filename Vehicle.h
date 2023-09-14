@@ -412,6 +412,9 @@ public:
     //操作入力の反映
     void InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ);
 
+    //エフェクト
+    void VehicleParticle();
+
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得
         int GetPointCount() { return pointCount_; }

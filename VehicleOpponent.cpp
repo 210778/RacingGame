@@ -88,7 +88,7 @@ void VehicleOpponent::InputOperate()
         //ƒ‰ƒ“ƒ_ƒ€«
         if (rand() % 20 == 0)
         {
-            //operation_.inputNow[operation_.inputName::boost] = 1.0f;
+            operation_.inputNow[operation_.inputName::boost] = 1.0f;
         }
 
     }
