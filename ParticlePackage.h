@@ -19,6 +19,27 @@ namespace ParticlePackage
     };
 
     //エフェクト起動関数
+    
+    /// <summary>
+    /// エフェクト起動
+    /// </summary>
+    /// <param name="pParticle">パーティクル型ポインタ</param>
+    /// <param name="pn">エフェクトの名前型</param>
+    /// <param name="position">位置</param>
+    /// <param name="direction">方向(デフォルト：{0,0,0})</param>
+    void ActParticle(Particle* pParticle, ParticleName pn, const XMFLOAT3& position
+        , const XMFLOAT3& direction = { 0.0f,0.0f,0.0f});
+    /// <summary>
+    /// エフェクト起動
+    /// </summary>
+    /// <param name="pParticle">パーティクル型ポインタ</param>
+    /// <param name="pn">エフェクトの名前型</param>
+    /// <param name="position">位置</param>
+    /// <param name="direction">方向(デフォルト：{0,0,0,0})</param>
+    void ActParticle(Particle* pParticle, ParticleName pn, const XMFLOAT3& position
+        , const XMVECTOR& direction = { 0.0f,0.0f,0.0f,0.0f });
+
+
 
     /// <summary>
     /// ブースターエフェクト起動
@@ -28,8 +49,6 @@ namespace ParticlePackage
     /// <param name="direction">方向</param>
     void ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction);
 
-    //エフェクト起動
-    void ActParticle(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction);
 
     /// <summary>
     /// 虹炎エフェクト起動

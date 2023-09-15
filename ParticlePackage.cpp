@@ -32,10 +32,12 @@ namespace ParticlePackage
     void SetDirt();
     void SetSpark();
 
+    //セット用
     void SetParticle(ParticleName key, std::string fileName, XMFLOAT3 position
         , XMFLOAT3 positionErr, int delay, int mass, float lifeTime, float gravity, XMFLOAT3 dir
         , XMFLOAT3 dirErr, float speed, float speedErr, float accel, XMFLOAT2 size, XMFLOAT2 sizeErr
         , XMFLOAT2 scale, XMFLOAT4 colorRGBA, XMFLOAT4 deltaColorRGBA);
+    //セットして初期化
     void ParticleInitialize();
 };
 
@@ -102,7 +104,40 @@ void ParticlePackage::SetParticle(ParticleName key, std::string fileName, XMFLOA
 
 void ParticlePackage::ParticleInitialize()
 {
+    //ブースト炎
+    SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.0f,0.0f,0.0f }
+        , { 0.0f,0.0f,0.0f }, 0, 5, 30.0f, 0.0f, { 0.0f,0.0f,0.0f }, { 50.0f, 50.0f, 50.0f }
+        , 0.1f, 0.0f, 1.0f, { 0.8f, 0.8f }, { 0.1f, 0.1f }, { 0.98f, 0.98f }, { 1.0f, 1.0f, 1.0f, 1.0f }
+    , { 0.0f, -0.06f, -0.12f, -0.05f });
+        //火花
+    SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.0f,0.0f,0.0f }
+        , { 0.5f,0.5f,0.5f }, 0, 1, 40.0f, 0.0f, { 0.0f,0.0f,0.0f }, { 90.0f, 90.0f, 90.0f }, 0.1f, 0.0f
+        , 1.0f, { 0.1f, 0.1f }, { 0.1f, 0.1f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }
+    , { -0.02f, -0.02f, -0.1f, -0.01f });
 
+    //
+
+}
+
+
+//エフェクト起動
+void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn
+    , const XMFLOAT3& position, const XMFLOAT3& direction)
+{
+    for (auto& itr : emitter_[pn])
+    {
+        itr.position = position;
+        itr.dir = direction;
+        pParticle->Start(itr);
+    }
+}
+//オーバーロード
+void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn, const XMFLOAT3& position
+    , const XMVECTOR& direction = { 0.0f,0.0f,0.0f,0.0f })
+{
+    XMFLOAT3 dir;
+    XMStoreFloat3(&dir, direction);
+    ActParticle(pParticle, pn, position, direction);;
 }
 
 
