@@ -1,5 +1,7 @@
 #pragma once
+#include <string>
 #include "Direct3D.h"
+
 
 //安全にメモリを開放するためのマクロ
 #define SAFE_DELETE(p) {if ((p)!=nullptr) { delete (p); (p)=nullptr;}}
@@ -34,6 +36,9 @@ namespace Global
 	int GetCurrentFPS();
 	//FPSの設定に関係なくつかうフレームの値
 	int GetStandardFPS();
+
+	//モデルが入ってるファイルのパスを出力 今は"model\\"
+	std::string GetModelFileName();
 };
 
 namespace Calculator

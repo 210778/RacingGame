@@ -1,5 +1,4 @@
 #include "Global.h"
-#include "Debug.h"
 
 namespace Global
 {
@@ -123,6 +122,10 @@ float Calculator::AngleNormalize(float angle)
 	return normal;
 }
 
+std::string Global::GetModelFileName()
+{
+	return "model\\";
+}
 
 //écä[
 #if 0

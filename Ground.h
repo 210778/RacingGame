@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 #include "Engine/GameObject.h"
 
 class CheckPoint;
@@ -35,6 +36,7 @@ class Ground : public GameObject
         CircuitCheckPoint()
         {
             pCP_ = nullptr;
+            CP_position_ = { 0.0f,0.0f,0.0f };
             CP_Radius_ = 0.0f;
         }
         CircuitCheckPoint(CheckPoint* poi,const XMFLOAT3& pos, float rad)
@@ -80,7 +82,11 @@ class Ground : public GameObject
     float defaultCheckpointSize_;   //チェックポイントの大きさ
 
     float defaultStartRotate_;      //スタート時の回転
+
+    float checkPointLimit_; //チェックポイントを探す限界
     
+    float upPositionHeight_;//スタート地点をちょっと持ち上げる
+
 public:
 
     enum circuitType
@@ -94,6 +100,10 @@ public:
         other,      //どれでもない
         circuitMax  //終点
     };
+
+private:
+    std::map<circuitType, std::string> circuitTypeMap_; //unordered_map ではバグる?
+public:
 
     //コンストラクタ
     Ground(GameObject* parent);
@@ -145,7 +155,7 @@ public:
     XMFLOAT3* NextCheckPointPosition(int point,int next = 1);
 
     //
-    void SetCircuitParts(CircuitUnion* pCU, std::string modelName, int modelType);
+    void SetCircuitParts(CircuitUnion* pCU, std::string modelName, circuitType modelType);
 
     void MakeCircuit();
 

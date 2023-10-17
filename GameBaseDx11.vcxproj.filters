@@ -170,6 +170,12 @@
     <ClCompile Include="TextPrinter.cpp">
       <Filter>04Play\Others</Filter>
     </ClCompile>
+    <ClCompile Include="PoryLine.cpp">
+      <Filter>04Play\Others</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleInput.cpp">
+      <Filter>04Play</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -300,6 +306,12 @@
     </ClInclude>
     <ClInclude Include="TextPrinter.h">
       <Filter>04Play\Others</Filter>
+    </ClInclude>
+    <ClInclude Include="PoryLine.h">
+      <Filter>04Play\Others</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleInput.h">
+      <Filter>04Play</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

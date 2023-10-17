@@ -133,7 +133,7 @@ void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn
 }
 //オーバーロード
 void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn, const XMFLOAT3& position
-    , const XMVECTOR& direction = { 0.0f,0.0f,0.0f,0.0f })
+    , const XMVECTOR& direction)
 {
     XMFLOAT3 dir;
     XMStoreFloat3(&dir, direction);

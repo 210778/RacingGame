@@ -7,6 +7,7 @@ class Ground;
 class VehicleWheel;
 class RayCastData;
 class Viewer;
+class PoryLine;
 
 //車両を管理するクラス
 class Vehicle : public GameObject
@@ -292,6 +293,10 @@ protected:
     std::unordered_map<int, RayCastHit> rayCastHit_;
 
 
+    //
+    PoryLine* pPoryLine_;
+
+
 public:
     //コンストラクタ
     Vehicle(GameObject* parent);
@@ -318,8 +323,6 @@ public:
     //引数：pTarget 当たった相手
     void OnCollision(GameObject* pTarget) override;
 
-    //加速度を位置に加算する。アップデートの最初においとく つもりだった
-    void Accelerator();
     //加速度を取得
     XMVECTOR GetAcceleration() { return acceleration_; };
 

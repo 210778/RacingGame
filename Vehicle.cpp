@@ -27,6 +27,7 @@
 #include "MeasurePole.h"
 #include "Music.h"
 #include "ImagePrinter.h"
+#include "PoryLine.h"
 
 using std::vector;
 using std::string;
@@ -112,6 +113,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , collideBoxValue_(0.5f)
     , isOperationInvalid_(false), pauseFlag_(false)
     , pViewer_(nullptr)
+    , pPoryLine_(nullptr)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -191,6 +193,10 @@ void Vehicle::Initialize()
 
     //UI初期化
     PlayerUI_Initialize();
+
+    //ポリライン初期化
+    pPoryLine_ = new PoryLine;
+    pPoryLine_->Load("image\\PaticleAssets\\tex.png");
 }
 
 //更新
@@ -284,7 +290,10 @@ void Vehicle::Update()
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = restartTransform_.position_;
             transform_.rotate_   = restartTransform_.rotate_;
-            pViewer_->WatchPresentPosition();    //今すぐ移動
+            if (pViewer_ != nullptr)
+            {
+                pViewer_->WatchPresentPosition();    //今すぐ移動
+            }
         }
     }
 
@@ -308,11 +317,6 @@ void Vehicle::Update()
     TurnWheel();
     Debug::TimerLogEnd("vehicleタイヤ横押し");
 
-
-    //長さの調整
-    //いらない
-    //SpeedLimit(acceleration_, speedLimit_);
-
     //位置　＋　ベクトル
     XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
 
@@ -334,6 +338,9 @@ void Vehicle::Update()
     //エフェクト
     //PlayerParticle();
     VehicleParticle();
+
+    //ポリラインに現在の位置を伝える
+    pPoryLine_->AddPosition(transform_.position_);
 }
 
 //何かに当たった
@@ -375,39 +382,21 @@ void Vehicle::Draw()
 
     PlayerUI_Draw();
 
+
+    //ポリラインを描画
+    //pPoryLine_->Draw();
+
+
     Debug::TimerLogEnd("vehicle描画");
 }
 
 //開放
 void Vehicle::Release()
 {
+    //ポリライン解放
+    pPoryLine_->Release();
 }
-/*
-XMFLOAT3 → XMVECTOR
 
-XMFLOAT3 f;	//何か入ってるとして
-XMVECTOR v = XMLoadFloat3(&f);
-
-XMFLOAT3 ← XMVECTOR
-
-XMVECTOR v; 	//何か入ってるとして
-XMFLOAT3 f;
-XMStoreFloat3(&f, v);
-
-std::string str;
-        str = std::to_string(transform_.position_.x);
-        str += "\n" + std::to_string(transform_.position_.y);
-        str += "\n" + std::to_string(transform_.position_.z);
-        MessageBox(NULL, (LPCWSTR)str.c_str(), L" puzzleList_.size() ", MB_OK);
-*/
-void Vehicle::Accelerator()
-{
-#if 0
-    transform_.position_.x += acceleration_.x;
-    transform_.position_.y += acceleration_.y;
-    transform_.position_.z += acceleration_.z;
-#endif
-}
 
 void Vehicle::SpeedLimit(XMVECTOR& speed, const float limit)
 {
@@ -496,13 +485,35 @@ void Vehicle::VehicleCollide()
     bool isHitWall = false;
 
     //種類の分だけ
+    for (auto& itr : pGround_->GetCircuitUnion()->parts_)
+    {
+        Debug::TimerLogStart("vehicle地面当たり判定2");
+
+        //地面
+        if (!isLanding)
+        {
+            isLanding = Landing(itr.model_, itr.type_);
+        }
+
+        Debug::TimerLogEnd("vehicle地面当たり判定2");
+
+
+        Debug::TimerLogStart("vehicle壁当たり判定2");
+
+        //壁
+        CollideWall(itr.model_, itr.type_);
+
+        Debug::TimerLogEnd("vehicle壁当たり判定2");
+    }
+#if 0
+    //種類の分だけ
     for (int i = 0; i < pGround_->GetCircuitUnion()->parts_.size(); i++)
     {
         Debug::TimerLogStart("vehicle地面当たり判定");
 
         //地面
         if (!isLanding)
-        { 
+        {
             isLanding = Landing(pGround_->GetCircuitUnion()->parts_[i].model_
                 , pGround_->GetCircuitUnion()->parts_[i].type_);
         }
@@ -518,6 +529,7 @@ void Vehicle::VehicleCollide()
 
         Debug::TimerLogEnd("vehicle壁当たり判定");
     }
+#endif
 }
 
 //接地 
@@ -546,6 +558,9 @@ bool Vehicle::Landing(int hModel,int type)
 
         if (-data.dist > XMVectorGetY(acceleration_) - Size.toWheelBottom_)
         {
+            if (landingType_ == Ground::road)
+                transform_.position_.x += 0;
+
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             if (!landingFlag_)
             {
@@ -1275,5 +1290,22 @@ F = m * a
 ・タイヤ角度：↑の時に角度の分だけベクトルを回転させる。慣性(遠心力)のために角度が大きいと回転しきれないことにするか
 A, Dキーで操作
 
+/*
+XMFLOAT3 → XMVECTOR
 
+XMFLOAT3 f;	//何か入ってるとして
+XMVECTOR v = XMLoadFloat3(&f);
+
+XMFLOAT3 ← XMVECTOR
+
+XMVECTOR v; 	//何か入ってるとして
+XMFLOAT3 f;
+XMStoreFloat3(&f, v);
+
+std::string str;
+        str = std::to_string(transform_.position_.x);
+        str += "\n" + std::to_string(transform_.position_.y);
+        str += "\n" + std::to_string(transform_.position_.z);
+        MessageBox(NULL, (LPCWSTR)str.c_str(), L" puzzleList_.size() ", MB_OK);
+*/
 #endif

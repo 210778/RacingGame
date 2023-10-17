@@ -45,7 +45,7 @@ void PlayScene::Initialize()
 	//音楽
 	Music::Initialize();
 
-#if 0
+#if 1
 	//初期化ファイル（setup.ini）から必要な情報を取得
 	int h = GetPrivateProfileInt("GAM", "Fp", 656565, ".\\setup.ini");
 	//タイトルバーに表示する内容

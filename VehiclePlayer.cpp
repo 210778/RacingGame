@@ -133,7 +133,7 @@ void VehiclePlayer::PlayerUI_Draw()
     sec = rest / standard;
     rest = rest % standard;
     mSec = rest;
-    string timeStr = "time:";    //= to_string(min) + ":" + to_string(sec) + ":" + to_string(mSec);
+    string timeStr = "Time:";    //= to_string(min) + ":" + to_string(sec) + ":" + to_string(mSec);
     if (min < 10)
         timeStr += "0";
     timeStr += to_string(min) + ":";
