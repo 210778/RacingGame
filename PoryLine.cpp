@@ -29,8 +29,6 @@ void PoryLine::AddPosition(XMFLOAT3 pos)
 
 
 	//現在のカメラの位置をベクトルとして取得
-	//XMFLOAT3 camPos = Camera::GetPositionFloat();
-	//XMVECTOR vCamPos = XMLoadFloat3(&camPos);
 	XMVECTOR vCamPos = Camera::GetPosition();
 
 	//頂点データを作るための配列を準備
@@ -110,18 +108,21 @@ HRESULT PoryLine::Load(std::string fileName)
 void PoryLine::Draw()
 {
 	Direct3D::SetShader(Direct3D::SHADER_BILLBOARD);
-	//Direct3D::SetBlendMode(Direct3D::BLEND_ADD);
+	Direct3D::SetBlendMode(Direct3D::BLEND_ADD);
 
 	//コンスタントバッファに渡す情報
 	ConstantBuffer cb;
 	//XMMATRIX matTrans = XMMatrixTranslation((*particle)->now.position.x
-	//	, (*particle)->now.position.y
-	//	, (*particle)->now.position.z);
+	//	, (*particle)->now.position.y, (*particle)->now.position.z);
 	//XMMATRIX matScale = XMMatrixScaling((*particle)->now.scale.x, (*particle)->now.scale.y, 1.0f);
+	//auto itr = positions_.end();
+	//XMMATRIX matTrans = XMMatrixTranslation((*itr).x, (*itr).y, (*itr).z);
+	//XMMATRIX matScale = XMMatrixScaling(1, 1, 1);
 	//XMMATRIX matWorld = matScale * Camera::GetBillboardMatrix() * matTrans;
 	//XMMATRIX matWorld = Camera::GetBillboardMatrix();
-
+	//cb.matWVP = XMMatrixTranspose(matWorld * Camera::GetViewMatrix() * Camera::GetProjectionMatrix());
 	cb.matWVP = XMMatrixTranspose(Camera::GetViewMatrix() * Camera::GetProjectionMatrix());
+
 	cb.color = XMFLOAT4(1, 1, 1, 1);
 
 	D3D11_MAPPED_SUBRESOURCE pdata;
@@ -136,17 +137,14 @@ void PoryLine::Draw()
 
 	Direct3D::pContext_->Unmap(pConstantBuffer_, 0);	//再開
 
-
 	//頂点バッファ
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	Direct3D::pContext_->IASetVertexBuffers(0, 1, &pVertexBuffer_, &stride, &offset);
 
-
 	//コンスタントバッファ
 	Direct3D::pContext_->VSSetConstantBuffers(0, 1, &pConstantBuffer_);	//頂点シェーダー用	
 	Direct3D::pContext_->PSSetConstantBuffers(0, 1, &pConstantBuffer_);	//ピクセルシェーダー用
-
 
 	//頂点データの並び方を指定
 	Direct3D::pContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

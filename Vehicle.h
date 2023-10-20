@@ -235,7 +235,7 @@ protected:
             MAX
         };
 
-        //現在の値、１つ過去の値
+        //現在の値、１つ過去の値 入る値は0.0f ~ 1.0f
         std::unordered_map<int,float> inputNow,inputAgo;
 
         //現在の値を過去に渡してゼロにする
@@ -383,9 +383,6 @@ public:
 
     //ベクトルを回転行列で"逆"回転 (ZXY順)
     void VectorRotateMatrixZXY_R(XMVECTOR& vec);
-
-    //地面、壁の車両の姿勢を統合する
-    void VehicleRotateTotal(std::vector<XMFLOAT3>* rotate);
 
     /// <summary>
     /// 坂道に応じて車両を回転(X、Z軸)

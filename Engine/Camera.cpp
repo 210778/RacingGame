@@ -49,7 +49,8 @@ void Camera::Update()
 	//ビルボード行列
 	//（常にカメラの方を向くように回転させる行列。パーティクルでしか使わない）
 	//http://marupeke296.com/DXG_No11_ComeOnBillboard.html
-	billBoardMatrix_ = XMMatrixLookAtLH(XMVectorSet(0, 0, 0, 0), target_- position_, XMVectorSet(0, 1, 0, 0));
+	billBoardMatrix_ = XMMatrixLookAtLH(XMVectorSet(0, 0, 0, 0)
+		, target_- position_, XMVectorSet(0, 1, 0, 0));
 	billBoardMatrix_ = XMMatrixInverse(nullptr, billBoardMatrix_);
 }
 

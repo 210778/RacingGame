@@ -1,4 +1,4 @@
-#include <unordered_map>
+#include <map>
 #include "Music.h"
 
 using std::string;
@@ -28,7 +28,7 @@ namespace Music
 		}
 	};
 
-	std::unordered_map<MusicName, MusicData> musicPackage_;	//音楽のまとめmap
+	std::map<MusicName, MusicData> musicPackage_;	//音楽のまとめmap
 
 	/// <summary>
 	/// 音楽をセットする

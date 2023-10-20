@@ -12,6 +12,7 @@
 #include "Engine/Debug.h"
 #include "Engine/Particle.h"
 #include "Engine/Audio.h"
+#include "Engine/Global.h"
 
 #include "Vehicle.h"
 #include "Ground.h"
@@ -237,18 +238,13 @@ void Vehicle::Update()
 
     //その都度加速度を回転させるんじゃなくて最後に回転したほうがいいかも
 
-
     Debug::TimerLogEnd("vehicle最初");
 
-    //クールタイム
-    if (coolTime_ > 0)
-        coolTime_--;
-
-    //Ｇゴール  
+    //ゴール  
     if (lapCount_ >= lapMax_)
     {
         //ゴール順位が更新されてないならセットする
-        if (!goalFlag_)//if (goalRanking_ <= 0)
+        if (!goalFlag_)
         {
             goalRanking_ = ranking_;
             goalTime_ = time_;
@@ -339,6 +335,11 @@ void Vehicle::Update()
     //PlayerParticle();
     VehicleParticle();
 
+    //角度正規化
+    transform_.rotate_.x = Calculator::AngleNormalize(transform_.rotate_.x);
+    transform_.rotate_.y = Calculator::AngleNormalize(transform_.rotate_.y);
+    transform_.rotate_.z = Calculator::AngleNormalize(transform_.rotate_.z);
+
     //ポリラインに現在の位置を伝える
     pPoryLine_->AddPosition(transform_.position_);
 }
@@ -382,10 +383,8 @@ void Vehicle::Draw()
 
     PlayerUI_Draw();
 
-
     //ポリラインを描画
     //pPoryLine_->Draw();
-
 
     Debug::TimerLogEnd("vehicle描画");
 }
@@ -758,10 +757,6 @@ bool Vehicle::CollideWall(int hModel, int type)
                 }
             }
         }
-
-
-
-        //SetRayCastSlope();
     }
 
     //斜め
@@ -1023,12 +1018,6 @@ bool Vehicle::VehicleRotateSlope(const XMVECTOR& normal, float limitAngle, int r
     return true;
 }
 
-//地面、壁の車両の姿勢を統合する
-void Vehicle::VehicleRotateTotal(std::vector<XMFLOAT3>* rotate)
-{
-    ;
-}
-
 // NPC用レイキャストにデータセット
 void Vehicle::SetRayCastHit(int number, const RayCastData& rcd)
 {
@@ -1143,8 +1132,8 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
             acceleration_ += vecZ * boostValue_;
 
             //エフェクト
-            XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
-            ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
+            //XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
+            //ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
         }
         else
         {
@@ -1222,12 +1211,24 @@ void Vehicle::VehicleParticle()
         ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
     }
 
+    //ブースト
+    if (slideFlag_)
+    {
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::boost
+            , Model::GetBonePosition(hModel_, "rear"), acceleration_);
+    }
+
     //走行中のタイヤの軌跡
     if (wheelParticleLength_ < accLength
         && wheelParticleLengthMax_ > accLength)
     {
-        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
-        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
+        //ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
+        //ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
+
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::smoke
+            , Model::GetBonePosition(hModel_, "wheelRR"));
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::smoke
+            , Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
     //草地乗り上げ
@@ -1235,7 +1236,9 @@ void Vehicle::VehicleParticle()
         && landingFlag_
         && wheelParticleLength_ < accLength)
     {
-        ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
+        //ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::grass
+            , transform_.position_, worldVector_.y);
     }
 
     //砂地
@@ -1243,7 +1246,9 @@ void Vehicle::VehicleParticle()
         && landingFlag_
         && wheelParticleLength_ < accLength)
     {
-        ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
+        //ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::dirt
+            , transform_.position_, worldVector_.y);
     }
 }
 

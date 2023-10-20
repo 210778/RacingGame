@@ -6,6 +6,8 @@
 
 #include "../TestScene.h"
 #include "../PlayScene.h"
+#include "../StartScene.h"
+#include "../Music.h"
 
 //コンストラクタ
 SceneManager::SceneManager(GameObject * parent)
@@ -20,6 +22,9 @@ void SceneManager::Initialize()
 	currentSceneID_ = SCENE_ID_PLAY;
 	nextSceneID_ = currentSceneID_;
 	Instantiate<PlayScene>(this);
+
+	//音楽
+	Music::Initialize();
 }
 
 //更新
@@ -39,14 +44,14 @@ void SceneManager::Update()
 		//次のシーンを作成
 		switch (nextSceneID_)
 		{
-		case SCENE_ID_TEST:
-			Instantiate<TestScene>(this);
+		default:
 			break;
-
-		case SCENE_ID_PLAY:
-			Instantiate<PlayScene>(this);
+		case SCENE_ID_TEST: Instantiate<TestScene>(this);
 			break;
-
+		case SCENE_ID_PLAY: Instantiate<PlayScene>(this);
+			break;
+		case SCENE_ID_START: Instantiate<StartScene>(this);
+			break;
 		}
 
 		Audio::Initialize();

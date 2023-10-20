@@ -37,7 +37,7 @@ namespace ParticlePackage
     /// <param name="position">位置</param>
     /// <param name="direction">方向(デフォルト：{0,0,0,0})</param>
     void ActParticle(Particle* pParticle, ParticleName pn, const XMFLOAT3& position
-        , const XMVECTOR& direction = { 0.0f,0.0f,0.0f,0.0f });
+        , const XMVECTOR& direction);
 
 
 

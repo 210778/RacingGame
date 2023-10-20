@@ -51,6 +51,9 @@ void ParticlePackage::Initialize()
     SetGrass();
     SetDirt();
     SetSpark();
+
+    //初期化
+    ParticleInitialize();
 }
 
 /// <summary>
@@ -106,17 +109,27 @@ void ParticlePackage::ParticleInitialize()
 {
     //ブースト炎
     SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.0f,0.0f,0.0f }
-        , { 0.0f,0.0f,0.0f }, 0, 5, 30.0f, 0.0f, { 0.0f,0.0f,0.0f }, { 50.0f, 50.0f, 50.0f }
-        , 0.1f, 0.0f, 1.0f, { 0.8f, 0.8f }, { 0.1f, 0.1f }, { 0.98f, 0.98f }, { 1.0f, 1.0f, 1.0f, 1.0f }
-    , { 0.0f, -0.06f, -0.12f, -0.05f });
+    , { 0.0f,0.0f,0.0f }, 0, 5, 30.0f, 0.0f, {0.0f,0.0f,0.0f}, {50.0f,50.0f,50.0f}, 0.1f, 0.0f, 1.0f
+    , {0.8f,0.8f}, {0.1f,0.1f}, {0.98f,0.98f}, {1.0f,1.0f,1.0f,1.0f}, { 0.0f, -0.06f, -0.12f, -0.05f });
         //火花
     SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.0f,0.0f,0.0f }
-        , { 0.5f,0.5f,0.5f }, 0, 1, 40.0f, 0.0f, { 0.0f,0.0f,0.0f }, { 90.0f, 90.0f, 90.0f }, 0.1f, 0.0f
-        , 1.0f, { 0.1f, 0.1f }, { 0.1f, 0.1f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }
-    , { -0.02f, -0.02f, -0.1f, -0.01f });
+    , { 0.5f,0.5f,0.5f }, 0, 1, 40.0f, 0.0f, { 0.0f,0.0f,0.0f }, { 90.0f, 90.0f, 90.0f }, 0.1f, 0.0f, 1.0f
+    , {0.1f,0.1f}, {0.1f,0.1f}, {1.0f,1.0f}, {1.0f,1.0f,1.0f,1.0f}, { -0.02f, -0.02f, -0.1f, -0.01f });
 
-    //
+    //煙
+    SetParticle(ParticleName::smoke, "image\\PaticleAssets\\cloudA.png", { 0.0f,0.0f,0.0f }
+    , { 0.0f,0.0f,0.0f }, 0, 1, 40, 0.0f, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f }, 0.0f, 0.0f, 1.0f
+    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.0f,1.0f }, { 1.0f,1.0f,1.0f,0.1f }, { 0.0f,0.0f,0.0f,-0.005f });
 
+    //草地
+    SetParticle(ParticleName::grass, "image\\PaticleAssets\\flashA_W.png", { 0.0f,0.0f,0.0f }
+    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.0f,1.0f,0.0f }, { 50.0f,50.0f,50.0f }, 0.1f, 0.5f, 1.0f
+    , { 0.5f,0.5f }, { 0.5f,0.5f }, { 1.0f,1.0f }, { 0.1f,1.0f,0.0f,0.5f }, { 0.0f,0.0f,0.0f,-0.01f });
+
+    //砂地
+    SetParticle(ParticleName::dirt, "image\\PaticleAssets\\flashA_W.png", { 0.0f,0.0f,0.0f }
+    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.0f,1.0f,0.0f }, { 50.0f,50.0f,50.0f }, 0.1f, 0.5f, 1.0f
+    , { 0.75f,0.75f },{ 0.5f,0.5f },{ 1.05f,1.05f },{ 0.5f,0.3f,0.0f,0.5f },{ 0.01f,0.01f,0.0f,-0.02f });
 }
 
 
@@ -137,7 +150,7 @@ void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn, const XM
 {
     XMFLOAT3 dir;
     XMStoreFloat3(&dir, direction);
-    ActParticle(pParticle, pn, position, direction);;
+    ActParticle(pParticle, pn, position, dir);
 }
 
 

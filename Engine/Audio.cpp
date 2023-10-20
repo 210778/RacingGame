@@ -96,6 +96,9 @@ int Audio::Load(std::string fileName, int svNum)
 	ad.pSourceVoice = new IXAudio2SourceVoice*[svNum];
 	for (int i = 0; i < svNum; i++)
 	{
+		auto alfa = &ad.pSourceVoice[i];
+		auto bravo = &fmt;
+
 		pXAudio->CreateSourceVoice(&ad.pSourceVoice[i], &fmt);
 	}
 	ad.svNum = svNum;
