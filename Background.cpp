@@ -31,7 +31,8 @@ void Background::Draw()
     Model::SetTransform(hModel_, transform_);
     Model::Draw(hModel_);
 
-
+    Direct3D::SetShader(Direct3D::SHADER_BILLBOARD);
+    Direct3D::SetBlendMode(Direct3D::BLEND_ADD);
 }
 
 //ŠJ•ú

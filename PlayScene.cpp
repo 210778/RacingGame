@@ -37,7 +37,9 @@ PlayScene::PlayScene(GameObject* parent)
 //‰Šú‰»
 void PlayScene::Initialize()
 {
-	//Instantiate<Background>(this);
+	Instantiate<Background>(this);
+
+
 	pGround_ = Instantiate<Ground>(this);
 	pGround_->CreateChosenCircuit(0);
 

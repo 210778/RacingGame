@@ -179,6 +179,9 @@
     <ClCompile Include="StartScene.cpp">
       <Filter>03Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Circuit.cpp">
+      <Filter>04Play</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -318,6 +321,9 @@
     </ClInclude>
     <ClInclude Include="StartScene.h">
       <Filter>03Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Circuit.h">
+      <Filter>04Play</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

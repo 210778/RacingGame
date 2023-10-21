@@ -43,6 +43,10 @@ namespace ParticlePackage
 
 void ParticlePackage::Initialize()
 {
+    //初期化
+    ParticleInitialize();
+
+
 	timeCount_ = 0;
 
 	SetBooster();
@@ -51,9 +55,6 @@ void ParticlePackage::Initialize()
     SetGrass();
     SetDirt();
     SetSpark();
-
-    //初期化
-    ParticleInitialize();
 }
 
 /// <summary>
@@ -108,28 +109,42 @@ void ParticlePackage::SetParticle(ParticleName key, std::string fileName, XMFLOA
 void ParticlePackage::ParticleInitialize()
 {
     //ブースト炎
-    SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.0f,0.0f,0.0f }
-    , { 0.0f,0.0f,0.0f }, 0, 5, 30.0f, 0.0f, {0.0f,0.0f,0.0f}, {50.0f,50.0f,50.0f}, 0.1f, 0.0f, 1.0f
-    , {0.8f,0.8f}, {0.1f,0.1f}, {0.98f,0.98f}, {1.0f,1.0f,1.0f,1.0f}, { 0.0f, -0.06f, -0.12f, -0.05f });
+    SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }
+    , { 0.f,0.f,0.f }, 0, 5, 30.f, 0.f, {0.f,0.f,0.f}, {50.f,50.f,50.f}, 0.1f, 0.05f, 1.f
+    , {0.8f,0.8f}, {0.1f,0.1f}, {0.98f,0.98f}, {1.f,1.f,1.f,1.f}, { 0.f, -0.06f, -0.12f, -0.05f });
         //火花
-    SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.0f,0.0f,0.0f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 40.0f, 0.0f, { 0.0f,0.0f,0.0f }, { 90.0f, 90.0f, 90.0f }, 0.1f, 0.0f, 1.0f
-    , {0.1f,0.1f}, {0.1f,0.1f}, {1.0f,1.0f}, {1.0f,1.0f,1.0f,1.0f}, { -0.02f, -0.02f, -0.1f, -0.01f });
+    SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }
+    , { 0.5f,0.5f,0.5f }, 0, 1, 40.f, 0.f, { 0.f,0.f,0.f }, { 90.f, 90.f, 90.f }, 0.1f, 0.05f, 1.f
+    , {0.1f,0.1f}, {0.1f,0.1f}, {1.f,1.f}, {1.f,1.f,1.f,1.f}, { -0.02f, -0.02f, -0.1f, -0.01f });
 
     //煙
-    SetParticle(ParticleName::smoke, "image\\PaticleAssets\\cloudA.png", { 0.0f,0.0f,0.0f }
-    , { 0.0f,0.0f,0.0f }, 0, 1, 40, 0.0f, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f }, 0.0f, 0.0f, 1.0f
-    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.0f,1.0f }, { 1.0f,1.0f,1.0f,0.1f }, { 0.0f,0.0f,0.0f,-0.005f });
+    SetParticle(ParticleName::smoke, "image\\PaticleAssets\\cloudA.png", { 0.f,0.f,0.f }
+    , { 0.f,0.f,0.f }, 0, 1, 40, 0.f, { 0.f,0.f,0.f }, { 0.f,0.f,0.f }, 0.f, 0.f, 1.f
+    , { 0.5f,0.5f }, { 0.f,0.f }, { 1.f,1.f }, { 1.f,1.f,1.f,0.1f }, { 0.f,0.f,0.f,-0.005f });
 
     //草地
-    SetParticle(ParticleName::grass, "image\\PaticleAssets\\flashA_W.png", { 0.0f,0.0f,0.0f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.0f,1.0f,0.0f }, { 50.0f,50.0f,50.0f }, 0.1f, 0.5f, 1.0f
-    , { 0.5f,0.5f }, { 0.5f,0.5f }, { 1.0f,1.0f }, { 0.1f,1.0f,0.0f,0.5f }, { 0.0f,0.0f,0.0f,-0.01f });
+    SetParticle(ParticleName::grass, "image\\PaticleAssets\\flashA_W.png", { 0.f,0.f,0.f }
+    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
+    , { 0.5f,0.5f }, { 0.5f,0.5f }, { 1.f,1.f }, { 0.1f,1.f,0.f,0.5f }, { 0.f,0.f,0.f,-0.01f });
 
     //砂地
-    SetParticle(ParticleName::dirt, "image\\PaticleAssets\\flashA_W.png", { 0.0f,0.0f,0.0f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.0f,1.0f,0.0f }, { 50.0f,50.0f,50.0f }, 0.1f, 0.5f, 1.0f
-    , { 0.75f,0.75f },{ 0.5f,0.5f },{ 1.05f,1.05f },{ 0.5f,0.3f,0.0f,0.5f },{ 0.01f,0.01f,0.0f,-0.02f });
+    SetParticle(ParticleName::dirt, "image\\PaticleAssets\\flashA_W.png", { 0.f,0.f,0.f }
+    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
+    , { 0.75f,0.75f },{ 0.5f,0.5f },{ 1.05f,1.05f },{ 0.5f,0.3f,0.f,0.5f },{ 0.01f,0.01f,0.f,-0.02f });
+
+    //スパーク火花
+    SetParticle(ParticleName::spark, "image\\PaticleAssets\\flashB_R.png", { 0.f, 0.f, 0.f }
+    , { 0.15f, 0.15f, 0.f }, 0, 1, 2, 0.f, { 0.f,0.f,0.f }, { 0.f,0.f,0.f }, 0.05f, 0.01f, 1.f
+    , { 1.25f,1.25f }, { 0.5f,0.5f }, { 1.01f,1.01f }, { 1.f,1.f,0.f,1.f }, { 0.f,-0.03f,0.f,-0.01f });
+        //小スパーク
+    SetParticle(ParticleName::spark, "image\\PaticleAssets\\flashB_R.png", { 0.f, 0.f, 0.f }
+    , { 0.15f, 0.15f, 0.15f }, 0, 1, 30, 0.f, { 0.f,0.f,0.f }, { 50.f,50.f,50.f }, 0.2f, 0.98f, 0.f
+    , { 0.5f,0.5f }, { 0.1f,0.1f }, { 0.9f,0.9f }, { 1.f,1.f,0.f,1.f }, { 0.f,-0.03f,0.f,-0.01f });
+
+    //１位金
+    SetParticle(ParticleName::gold, "image\\PaticleAssets\\circle_W.png", { 0.f, 0.f, 0.f }
+    , { 0.15f, 0.15f, 0.15f }, 0, 1, 30, 0.02f, { 0.f,1.f,0.f }, { 60.f,60.f,60.f }, 0.4f, 0.05f, 1.f
+    , { 1.25f,1.25f }, { 0.0f,0.0f }, { 0.9f,0.9f }, { 1.f,1.f,0.f,1.f }, { 0.f,-0.02f,0.f,-0.01f });
 }
 
 
@@ -152,7 +167,15 @@ void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn, const XM
     XMStoreFloat3(&dir, direction);
     ActParticle(pParticle, pn, position, dir);
 }
-
+//方向なし
+void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn, const XMFLOAT3& position)
+{
+    for (auto& itr : emitter_[pn])
+    {
+        itr.position = position;
+        pParticle->Start(itr);
+    }
+}
 
 void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
 {

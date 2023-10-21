@@ -1117,8 +1117,6 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     }
 
     //ブースト
-    bool increaseFlag = false;  //容量が増えるか
-
     if (operation_.inputNow[operation_.inputName::boost])
     {
         //容量があるなら
@@ -1130,30 +1128,24 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
             slideFlag_ = true;
 
             acceleration_ += vecZ * boostValue_;
-
-            //エフェクト
-            //XMFLOAT3 boosterPos = Model::GetBonePosition(hModel_, "rear");
-            //ParticlePackage::ActBooster(pParticle_, boosterPos, -vecZ);
         }
         else
         {
-            increaseFlag = true;
+            slideFlag_ = false;
         }
     }
     else
     {
         slideFlag_ = false;
 
-        increaseFlag = true;
+        if (landingFlag_)
+        {
+            boostCapacity_ += boostIncrease_;   //増える
+        }
 
         //あふれる
         if (boostCapacity_ > boostCapacityMax_)
             boostCapacity_ = boostCapacityMax_;
-    }
-    //増える
-    if (landingFlag_ && increaseFlag)
-    {
-        boostCapacity_ += boostIncrease_;
     }
 
 #ifdef _DEBUG
@@ -1208,8 +1200,15 @@ void Vehicle::VehicleParticle()
     //ゴールしたら
     if (goalFlag_)
     {
-        ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
+            , transform_.position_);
     }
+
+    //ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
+    //    , transform_.position_);
+
+    //ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
+    //   , Model::GetBonePosition(hModel_, "rear"), acceleration_);
 
     //ブースト
     if (slideFlag_)
@@ -1222,33 +1221,27 @@ void Vehicle::VehicleParticle()
     if (wheelParticleLength_ < accLength
         && wheelParticleLengthMax_ > accLength)
     {
-        //ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
-        //ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
-
         ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::smoke
             , Model::GetBonePosition(hModel_, "wheelRR"));
         ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::smoke
             , Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
-    //草地乗り上げ
-    if (landingType_ == Ground::turf
-        && landingFlag_
-        && wheelParticleLength_ < accLength)
+    if (landingFlag_ && wheelParticleLength_ < accLength)
     {
-        //ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
-        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::grass
-            , transform_.position_, worldVector_.y);
-    }
-
-    //砂地
-    if (landingType_ == Ground::dirt
-        && landingFlag_
-        && wheelParticleLength_ < accLength)
-    {
-        //ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
-        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::dirt
-            , transform_.position_, worldVector_.y);
+        switch (landingType_)
+        {
+        default:
+            break;
+        case Ground::turf://草地乗り上げ
+            ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::grass
+                , transform_.position_);
+            break;
+        case Ground::dirt://砂地
+            ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::dirt
+                , transform_.position_);
+            break;
+        }
     }
 }
 
