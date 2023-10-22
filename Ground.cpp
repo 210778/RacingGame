@@ -43,7 +43,6 @@ void Ground::Initialize()
 //更新
 void Ground::Update()
 {
-    transform_.position_.x += 0;
 }
 
 //描画
@@ -76,9 +75,6 @@ void Ground::MakeCheckPoint()
         for (int i = 0; i < checkPointLimit_; i++)
         {
             bool isSuccess = false;//見つかったか
-
-            if (last == 9)
-                transform_.position_.y = 0;
 
             //パーツ
             for (int part = 0; part < circuits_[circuit].parts_.size(); part++)
@@ -327,105 +323,6 @@ void Ground::MakeCircuit()
         if (circuit.parts_.size() >= 1)
             circuits_.push_back(circuit);
     }
-
-#if 0
-    {
-        //コース
-        CircuitUnion circuit("circuit_1", 2);
-        //パーツ
-        SetCircuitParts(&circuit, "model\\circuit_1_R.fbx", road);
-        SetCircuitParts(&circuit, "model\\circuit_1_G.fbx", turf);
-        SetCircuitParts(&circuit, "model\\circuit_1_A.fbx", abyss);
-        //追加
-        circuits_.push_back(circuit);
-    }
-    {
-        CircuitUnion circuit("circuit_2", 2);
-        SetCircuitParts(&circuit, "model\\circuit_2_R.fbx", road);
-        SetCircuitParts(&circuit, "model\\circuit_2_D.fbx", dirt);
-        SetCircuitParts(&circuit, "model\\circuit_2_I.fbx", ice);
-        SetCircuitParts(&circuit, "model\\circuit_1_A.fbx", abyss);
-        circuits_.push_back(circuit);
-    }
-
-    {
-        const int pathSize = MAX_PATH;
-        char caption[pathSize];
-
-        string defaultName = "***";
-        int defaultValue = -1;
-        string fileName = ".\\gameObject.ini";
-
-        int i = 1;
-        string appHead = "circuit_";
-        string app = appHead + to_string(i);
-        string nameKey = "name";
-        string lapKey = "lap";
-
-
-        //名前
-        char circuitName[pathSize];
-        GetPrivateProfileString(app.c_str(), nameKey.c_str(), defaultName.c_str(), circuitName, pathSize, fileName.c_str());
-        string circuitStr = circuitName;
-        //周回数
-        int lap = GetPrivateProfileInt(app.c_str(), lapKey.c_str(), defaultValue, fileName.c_str());
-
-        if (lap < 1)
-        {
-            return;//停止
-        }
-
-        char section[pathSize];
-        DWORD result = GetPrivateProfileSection(app.c_str(), section, pathSize, fileName.c_str());
-
-        if (result >= (pathSize - 2) || result <= 0)
-        {
-            return; // エラーで終了します。
-        }
-
-        std::map<string, string> circuitMap;
-        int start = 0;
-        for (int i = 0; i < result; i++)
-        {
-            string key = "";
-            string name = "";
-            bool equal = false;
-
-            for (int j = start; j < result; j++)
-            {
-                if (section[j] == '\0')
-                {
-                    start = j + 1;
-                    break;
-                }
-                else if (section[j] == '=')
-                {
-                    if (!equal)
-                    {
-                        equal = true;
-                    }
-                }
-                else
-                {
-                    if (equal)
-                    {
-                        name += section[j];
-                    }
-                    else
-                    {
-                        key += section[j];
-                    }
-                }
-            }
-
-            circuitMap[key] = name;
-        }
-
-        //OutputDebugString(str.c_str());
-
-        CircuitUnion circuit(circuitStr, lap);
-    }
-#endif
 
 }
 

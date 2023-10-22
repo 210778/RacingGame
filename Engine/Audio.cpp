@@ -52,7 +52,6 @@ int Audio::Load(std::string fileName, int svNum)
 		}
 	}
 
-
 	struct Chunk
 	{
 		char	id[4]; 		// ID
@@ -114,11 +113,10 @@ void Audio::Play(int ID)
 {
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{
-		XAUDIO2_VOICE_STATE state;
-		audioDatas[ID].pSourceVoice[i]->GetState(&state);
+		int state = GetVoiceStateBuffersQueued(ID, i);
 
 		//ないなら追加
-		if (state.BuffersQueued == 0)
+		if (state == 0)
 		{
 			audioDatas[ID].pSourceVoice[i]->SubmitSourceBuffer(&audioDatas[ID].buf);
 		}
@@ -133,10 +131,9 @@ void Audio::Pause(int ID)
 {
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{
-		XAUDIO2_VOICE_STATE state;
-		audioDatas[ID].pSourceVoice[i]->GetState(&state);
+		int state = GetVoiceStateBuffersQueued(ID, i);
 
-		if (state.BuffersQueued != 0)
+		if (state != 0)
 		{
 			audioDatas[ID].pSourceVoice[i]->Stop();
 			break;
@@ -149,10 +146,9 @@ void Audio::Stop(int ID)
 {
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{
-		XAUDIO2_VOICE_STATE state;
-		audioDatas[ID].pSourceVoice[i]->GetState(&state);
+		int state = GetVoiceStateBuffersQueued(ID, i);
 
-		if (state.BuffersQueued != 0)
+		if (state != 0)
 		{
 			audioDatas[ID].pSourceVoice[i]->Stop();
 			//一時停止したソースボイスの中身を洗い流し、もう一度ソースボイスにデータを設定すればいいらしい
@@ -175,6 +171,9 @@ void Audio::Release()
 		SAFE_DELETE_ARRAY(audioDatas[i].buf.pAudioData);
 	}
 
+	//消去
+	audioDatas.clear();
+
 	CoUninitialize();
 	if (pMasteringVoice)
 	{
@@ -190,15 +189,22 @@ int Audio::GetAudioState(int ID)
 
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{
-		XAUDIO2_VOICE_STATE voiceState;
-
-		if (audioDatas[ID].buf.pAudioData != nullptr)
-		{
-			audioDatas[ID].pSourceVoice[i]->GetState(&voiceState);
-			state = voiceState.BuffersQueued;
-		}
-
+		state = GetVoiceStateBuffersQueued(ID, i);
 	}
 
 	return state;
+}
+
+// 安全か確かめる状態のゲッター
+int Audio::GetVoiceStateBuffersQueued(int ID, int i)
+{
+	if (audioDatas[ID].buf.pAudioData == nullptr)
+	{
+		return -1;
+	}
+
+	XAUDIO2_VOICE_STATE voiceState;
+
+	audioDatas[ID].pSourceVoice[i]->GetState(&voiceState);
+	return voiceState.BuffersQueued;
 }

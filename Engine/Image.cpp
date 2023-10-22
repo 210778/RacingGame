@@ -88,10 +88,20 @@ namespace Image
 			return;
 		}
 
+		if (_datas[handle] == nullptr)
+		{
+			return;
+		}
+
 		//“¯‚¶ƒ‚ƒfƒ‹‚ð‘¼‚Å‚àŽg‚Á‚Ä‚¢‚È‚¢‚©
 		bool isExist = false;
 		for (int i = 0; i < _datas.size(); i++)
 		{
+			if (_datas[i] == nullptr)
+			{
+				continue;
+			}
+
 			//‚·‚Å‚ÉŠJ‚¢‚Ä‚¢‚éê‡
 			if (_datas[i] != nullptr && i != handle && _datas[i]->pSprite == _datas[handle]->pSprite)
 			{

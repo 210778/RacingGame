@@ -20,6 +20,8 @@
 #include "Music.h"
 #include "Background.h"
 #include "TextPrinter.h"
+#include "Circuit.h"
+
 
 using std::tuple;
 using std::sort;
@@ -39,14 +41,14 @@ void PlayScene::Initialize()
 {
 	Instantiate<Background>(this);
 
-
+	Circuit::ResetCircuitModelHandle();
 	pGround_ = Instantiate<Ground>(this);
 	pGround_->CreateChosenCircuit(0);
 
 	//音楽
 	//Music::Initialize();
 
-#if 1
+#if 0
 	//初期化ファイル（setup.ini）から必要な情報を取得
 	int h = GetPrivateProfileInt("GAM", "Fp", 656565, ".\\setup.ini");
 	//タイトルバーに表示する内容

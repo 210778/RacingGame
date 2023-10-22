@@ -54,7 +54,11 @@ void SceneManager::Update()
 			break;
 		}
 
+		//‰Šú‰»
 		Audio::Initialize();
+		//‰¹Šy
+		Music::Initialize();
+
 		currentSceneID_ = nextSceneID_;
 	}
 }

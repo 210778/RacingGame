@@ -124,7 +124,7 @@ void Sprite::Draw(Transform& transform, RECT rect, float alpha)
 
 
 	//表示するサイズに合わせる
-	XMMATRIX cut = XMMatrixScaling((float)rect.right, (float)rect.bottom ,1);
+	XMMATRIX cut = XMMatrixScaling((float)rect.right, (float)rect.bottom ,1.0f);
 
 	//画面に合わせる
 	XMMATRIX view = XMMatrixScaling(1.0f / Direct3D::screenWidth_, 1.0f / Direct3D::screenHeight_, 1.0f);
@@ -143,7 +143,7 @@ void Sprite::Draw(Transform& transform, RECT rect, float alpha)
 	
 
 	// テクスチャ合成色情報を渡す
-	cb.color = XMFLOAT4(1, 1, 1, alpha);
+	cb.color = XMFLOAT4(1.0f, 1.0f, 1.0f, alpha);
 
 	Direct3D::pContext_->Map(pConstantBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &pdata);	// GPUからのリソースアクセスを一時止める
 	memcpy_s(pdata.pData, pdata.RowPitch, (void*)(&cb), sizeof(cb));		// リソースへ値を送る

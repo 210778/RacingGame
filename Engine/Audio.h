@@ -38,8 +38,12 @@ namespace Audio
 	/// <returns>０→再生していない、１以上→その数だけ再生する</returns>
 	int GetAudioState(int ID);
 
-
-
+	/// <summary>
+	/// 安全か確かめる状態のゲッター
+	/// </summary>
+	/// <param name="ID">サウンドの番号</param>
+	/// <param name="i">配列の番号</param>
+	/// <returns>サウンドの状態　nullptrなら-1</returns>
 	int GetVoiceStateBuffersQueued(int ID, int i);
 };
 

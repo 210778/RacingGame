@@ -13,6 +13,7 @@
 #include "Engine/Particle.h"
 #include "Engine/Audio.h"
 #include "Engine/Global.h"
+#include "Engine/SceneManager.h"
 
 #include "Vehicle.h"
 #include "Ground.h"
@@ -290,6 +291,7 @@ void Vehicle::Update()
             {
                 pViewer_->WatchPresentPosition();    //¡‚·‚®ˆÚ“®
             }
+
         }
     }
 

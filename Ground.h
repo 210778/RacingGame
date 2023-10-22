@@ -157,6 +157,7 @@ public:
     //
     void SetCircuitParts(CircuitUnion* pCU, std::string modelName, circuitType modelType);
 
+    //
     void MakeCircuit();
 
     //選んだコースのチェックポイントを作る

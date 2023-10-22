@@ -1,14 +1,19 @@
 #include "Engine/SceneManager.h"
 #include "StartScene.h"
 #include "Music.h"
+#include "Circuit.h"
 
 #include "Engine/Input.h"
 #include "Engine/Text.h"
 
+using std::string;
+using std::to_string;
+using std::stoi;
 
 //コンストラクタ
 StartScene::StartScene(GameObject* parent)
-	: GameObject(parent, "StartScene")
+	: GameObject(parent, "StartScene"),
+	pTextCircuit_(nullptr)
 {
 }
 
@@ -16,12 +21,20 @@ StartScene::StartScene(GameObject* parent)
 void StartScene::Initialize()
 {
 	//音楽
-	Music::Initialize();
+	//Music::Initialize();
+
+	Circuit::Initialize();
+
+	//文字
+	pTextCircuit_ = new Text;
+	pTextCircuit_->Initialize();
 }
 
 //更新
 void StartScene::Update()
 {
+	//Circuit::GetAllCircuit();
+
 	//音楽
 	Music::Update();
 
@@ -35,9 +48,20 @@ void StartScene::Update()
 //描画
 void StartScene::Draw()
 {
+	int height = 30;
+
+	for (auto& itr : *Circuit::GetCircuitNameArray())
+	{
+		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height, itr.c_str());
+
+		height += 40;
+	}
+
 }
 
 //開放
 void StartScene::Release()
 {
+	pTextCircuit_->Release();
+
 }

@@ -1,9 +1,15 @@
 #pragma once
 #include "Engine/GameObject.h"
 
+class Text;
+
 //スタート画面シーンを管理するクラス
 class StartScene : public GameObject
 {
+
+	//文字
+	Text* pTextCircuit_;
+
 public:
 	//コンストラクタ
 	//引数：parent  親オブジェクト（SceneManager）
