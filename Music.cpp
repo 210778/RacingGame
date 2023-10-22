@@ -54,6 +54,9 @@ namespace Music
 //‰Šú‰»
 void Music::Initialize()
 {
+	//Audio::Release();
+	//Audio::Initialize();
+
 	SetMusic(MusicName::bgm_1, "music\\loop100201.wav", true);
 	SetMusic(MusicName::bgm_2, "music\\loop100209.wav", true);
 

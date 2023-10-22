@@ -191,9 +191,13 @@ int Audio::GetAudioState(int ID)
 	for (int i = 0; i < audioDatas[ID].svNum; i++)
 	{
 		XAUDIO2_VOICE_STATE voiceState;
-		audioDatas[ID].pSourceVoice[i]->GetState(&voiceState);
 
-		state = voiceState.BuffersQueued;
+		if (audioDatas[ID].buf.pAudioData != nullptr)
+		{
+			audioDatas[ID].pSourceVoice[i]->GetState(&voiceState);
+			state = voiceState.BuffersQueued;
+		}
+
 	}
 
 	return state;

@@ -37,5 +37,9 @@ namespace Audio
 	/// <param name="ID">取得したいサウンドの番号</param>
 	/// <returns>０→再生していない、１以上→その数だけ再生する</returns>
 	int GetAudioState(int ID);
+
+
+
+	int GetVoiceStateBuffersQueued(int ID, int i);
 };
 
