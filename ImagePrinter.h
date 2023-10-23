@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <map>
 #include "Engine/GameObject.h"
 
 //‰æ‘œ‚ğŠÇ—‚·‚éƒNƒ‰ƒX
@@ -54,7 +54,7 @@ public:
 private:
 
     //‰æ‘œ
-    std::unordered_map<ImageNumber, ImageData> imageMap_;
+    std::map<ImageNumber, ImageData> imageMap_;
 
 
 

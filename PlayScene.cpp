@@ -41,9 +41,13 @@ void PlayScene::Initialize()
 {
 	Instantiate<Background>(this);
 
+	//pGround_ = Instantiate<Ground>(this);
+	//pGround_->CreateChosenCircuit(0);
+
+
 	Circuit::ResetCircuitModelHandle();
-	pGround_ = Instantiate<Ground>(this);
-	pGround_->CreateChosenCircuit(0);
+	Circuit::CreateChosenCircuit(this);
+	//Circuit::SetChosenCircuit(0);
 
 	//‰¹Šy
 	//Music::Initialize();
@@ -66,9 +70,9 @@ void PlayScene::Initialize()
 	{
 		population = 1;
 	}
-	if (population >= pGround_->GetCircuitUnion()->startTransform_.size())
+	if (population >= Circuit::GetChosenCircuit()->startTransform_.size())
 	{
-		population = pGround_->GetCircuitUnion()->startTransform_.size() - 1;
+		population = Circuit::GetChosenCircuit()->startTransform_.size() - 1;
 	}
 	//‡”Ô
 	if (playerNumber < 0)
@@ -149,6 +153,7 @@ void PlayScene::Update()
 //•`‰æ
 void PlayScene::Draw()
 {
+	Circuit::Draw();
 }
 
 //ŠJ•ú
@@ -175,6 +180,19 @@ V* PlayScene::VehicleInstantiate(GameObject* pParent, std::string vehicleName, s
 template <class V>
 void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::string wheelName, int number)
 {
+	auto* pCircuit = Circuit::GetChosenCircuit();
+
+	pVehicle = VehicleInstantiate<V>(this, vehicleName, wheelName);
+	Transform setTra = pCircuit->startTransform_[number];
+
+	vehicles_.push_back(pVehicle);
+	pVehicle->SetPosition(pCircuit->startTransform_[number].position_);
+	pVehicle->SetRotate(pCircuit->startTransform_[number].rotate_);
+	pVehicle->SetStartTransform(pCircuit->startTransform_[number]);
+	pVehicle->SetPointCountMax(pCircuit->check_.size());
+	pVehicle->SetLapMax(pCircuit->maxLap_);
+
+#if 0
 	pVehicle = VehicleInstantiate<V>(this, vehicleName, wheelName);
 	Transform setTra = pGround_->GetCircuitUnion()->startTransform_[number];
 
@@ -184,6 +202,7 @@ void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::stri
 	pVehicle->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[number]);
 	pVehicle->SetPointCountMax(pGround_->GetCircuitUnion()->check_.size());
 	pVehicle->SetLapMax(pGround_->GetCircuitUnion()->maxLap_);
+#endif
 }
 
 //Ô—¼‚ªÕ“Ë‚µ‚Ä‚é‚©’²‚×‚é

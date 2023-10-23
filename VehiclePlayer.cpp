@@ -15,6 +15,7 @@
 #include "Sample.h"
 #include "Music.h"
 #include "ImagePrinter.h"
+#include "Circuit.h"
 
 using std::string;
 using std::to_string;
@@ -373,7 +374,7 @@ void VehiclePlayer::PlayerParticle()
     }
 
     //ëêínèÊÇËè„Ç∞
-    if (landingType_ == Ground::turf
+    if (landingType_ == Circuit::circuitType::turf
         && landingFlag_
         && wheelParticleLength_ < accLength)
     {
@@ -381,7 +382,7 @@ void VehiclePlayer::PlayerParticle()
     }
 
     //çªín
-    if (landingType_ == Ground::dirt
+    if (landingType_ == Circuit::circuitType::dirt
         && landingFlag_
         && wheelParticleLength_ < accLength)
     {

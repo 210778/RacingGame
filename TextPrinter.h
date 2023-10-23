@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <map>
 #include "Engine/GameObject.h"
 
 namespace TextValue
@@ -11,7 +11,7 @@ namespace TextValue
 class TextPrinter : public GameObject
 {
     std::vector<int> hImage_;
-    std::unordered_map<std::string, int> imageMap_;
+    std::map<std::string, int> imageMap_;
     enum StartImageName
     {
         go = 0,

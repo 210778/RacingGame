@@ -20,9 +20,6 @@ StartScene::StartScene(GameObject* parent)
 //初期化
 void StartScene::Initialize()
 {
-	//音楽
-	//Music::Initialize();
-
 	Circuit::Initialize();
 
 	//文字
@@ -33,7 +30,7 @@ void StartScene::Initialize()
 //更新
 void StartScene::Update()
 {
-	//Circuit::GetAllCircuit();
+	Circuit::SetChosenCircuit(0);
 
 	//音楽
 	Music::Update();

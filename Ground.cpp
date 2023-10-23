@@ -1,6 +1,7 @@
 #include "Engine/Model.h"
 #include "Ground.h"
 #include "CheckPoint.h"
+#include "Circuit.h"
 
 using std::string;
 using std::to_string;
@@ -30,6 +31,10 @@ Ground::~Ground()
 //初期化
 void Ground::Initialize()
 {
+    //Circuit::ResetCircuitModelHandle();
+    //Circuit::CreateChosenCircuit(this);
+
+
     //
     MakeCircuit();
 
@@ -48,6 +53,9 @@ void Ground::Update()
 //描画
 void Ground::Draw()
 {
+    //Circuit::Draw();
+
+#if 0
     if (circuits_.empty())
         return;
 
@@ -56,6 +64,7 @@ void Ground::Draw()
         Model::SetTransform(circuits_[chosenCircuit_].parts_[i].model_, transform_);
         Model::Draw(circuits_[chosenCircuit_].parts_[i].model_);
     }
+#endif
 }
 
 //開放
@@ -224,6 +233,8 @@ void Ground::MakeStartPoint()
 //次のチェックポイントの位置を返す
 XMFLOAT3* Ground::NextCheckPointPosition(int point, int next)
 {
+    return Circuit::GetNextCheckPointPosition(point, next);
+
     //正規化する
     int number = (point + next - 1) % circuits_[chosenCircuit_].check_.size();
     if (number < 0)

@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <map>
 #include "Engine/GameObject.h"
 
 class Particle;
@@ -111,7 +111,7 @@ protected:
                 side = _side;
             }
         };
-        std::unordered_map<int, GroundTypeValue> GroundTypeFriction_;    //地面のタイプによる摩擦のまとめ
+        std::map<int, GroundTypeValue> GroundTypeFriction_;    //地面のタイプによる摩擦のまとめ
 
     //弾丸系
     int coolTime_;  //弾丸用
@@ -236,7 +236,7 @@ protected:
         };
 
         //現在の値、１つ過去の値 入る値は0.0f ~ 1.0f
-        std::unordered_map<int,float> inputNow,inputAgo;
+        std::map<int,float> inputNow,inputAgo;
 
         //現在の値を過去に渡してゼロにする
         void Refresh()
@@ -290,7 +290,7 @@ protected:
             frontRight,
         };
     };
-    std::unordered_map<int, RayCastHit> rayCastHit_;
+    std::map<int, RayCastHit> rayCastHit_;
 
 
     //

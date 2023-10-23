@@ -30,6 +30,7 @@
 #include "Music.h"
 #include "ImagePrinter.h"
 #include "PoryLine.h"
+#include "Circuit.h"
 
 using std::vector;
 using std::string;
@@ -54,7 +55,7 @@ Vehicle::Vehicle(GameObject* parent)
     , ranking_(0), population_(1), goalTime_(0)
     , mass_(1.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
-    , landingType_(Ground::road)
+    , landingType_(Circuit::circuitType::road)
     , pParticle_(nullptr)
     , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
@@ -97,7 +98,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
     , mass_(1.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
-    , landingType_(Ground::road)
+    , landingType_(Circuit::circuitType::road)
     , pParticle_(nullptr)
     , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
@@ -129,27 +130,27 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
 
     //地面のタイプ
     //通常道路
-    GroundTypeFriction_[Ground::road].acceleration = 1.0f;
-    GroundTypeFriction_[Ground::road].landing = 0.99f;
-    GroundTypeFriction_[Ground::road].side = 0.2f;
+    GroundTypeFriction_[Circuit::circuitType::road].acceleration = 1.0f;
+    GroundTypeFriction_[Circuit::circuitType::road].landing = 0.99f;
+    GroundTypeFriction_[Circuit::circuitType::road].side = 0.2f;
     //草地
-    GroundTypeFriction_[Ground::turf].acceleration = 0.98f;
-    GroundTypeFriction_[Ground::turf].landing = 0.98f;
-    GroundTypeFriction_[Ground::turf].side = 0.2f;
+    GroundTypeFriction_[Circuit::circuitType::turf].acceleration = 0.98f;
+    GroundTypeFriction_[Circuit::circuitType::turf].landing = 0.98f;
+    GroundTypeFriction_[Circuit::circuitType::turf].side = 0.2f;
     //砂地　草と同じ
-    GroundTypeFriction_[Ground::turf].acceleration = GroundTypeFriction_[Ground::turf].acceleration;
-    GroundTypeFriction_[Ground::turf].landing = GroundTypeFriction_[Ground::turf].landing;
-    GroundTypeFriction_[Ground::turf].side = GroundTypeFriction_[Ground::turf].side;
+    GroundTypeFriction_[Circuit::circuitType::turf].acceleration = GroundTypeFriction_[Circuit::circuitType::turf].acceleration;
+    GroundTypeFriction_[Circuit::circuitType::turf].landing = GroundTypeFriction_[Circuit::circuitType::turf].landing;
+    GroundTypeFriction_[Circuit::circuitType::turf].side = GroundTypeFriction_[Circuit::circuitType::turf].side;
     //氷床
-    GroundTypeFriction_[Ground::ice].acceleration = 0.5f;
-    GroundTypeFriction_[Ground::ice].landing = 0.999f;
-    GroundTypeFriction_[Ground::ice].side = 0.02f;
+    GroundTypeFriction_[Circuit::circuitType::ice].acceleration = 0.5f;
+    GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
+    GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
-    GroundTypeFriction_[Ground::boost].acceleration = 1.0f;
-    GroundTypeFriction_[Ground::boost].landing = 1.05f;
-    GroundTypeFriction_[Ground::boost].side = 0.2f;
+    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
+    GroundTypeFriction_[Circuit::circuitType::boost].side = 0.2f;
     //奈落
-    GroundTypeFriction_[Ground::abyss]; //作るだけ
+    GroundTypeFriction_[Circuit::circuitType::abyss]; //作るだけ
 }
 
 //デストラクタ
@@ -185,10 +186,10 @@ void Vehicle::Initialize()
 
     //ステージオブジェクトを探す
     //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
-    pGround_ = (Ground*)FindObject("Ground");
-    assert(pGround_ != nullptr);
-    assert(!(pGround_->GetCircuitUnion() == nullptr));
-    assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
+    //pGround_ = (Ground*)FindObject("Ground");
+    //assert(pGround_ != nullptr);
+    //assert(!(pGround_->GetCircuitUnion() == nullptr));
+    //assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
 
     //再スタート地点
     restartTransform_ = startTransform_;
@@ -275,13 +276,13 @@ void Vehicle::Update()
                          , GroundTypeFriction_[landingType_].landing, 1.0f };
         
         //復活地点更新
-        if (landingType_ == Ground::road)
+        if (landingType_ == Circuit::circuitType::road)
         {
             restartTransform_.position_ = transform_.position_;
             restartTransform_.rotate_ = transform_.rotate_;
         }
 
-        if (landingType_ == Ground::abyss)
+        if (landingType_ == Circuit::circuitType::abyss)
         {
             //奈落に落下
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
@@ -486,7 +487,7 @@ void Vehicle::VehicleCollide()
     bool isHitWall = false;
 
     //種類の分だけ
-    for (auto& itr : pGround_->GetCircuitUnion()->parts_)
+    for(auto& itr : Circuit::GetChosenCircuit()->parts_)
     {
         Debug::TimerLogStart("vehicle地面当たり判定2");
 
@@ -506,31 +507,6 @@ void Vehicle::VehicleCollide()
 
         Debug::TimerLogEnd("vehicle壁当たり判定2");
     }
-#if 0
-    //種類の分だけ
-    for (int i = 0; i < pGround_->GetCircuitUnion()->parts_.size(); i++)
-    {
-        Debug::TimerLogStart("vehicle地面当たり判定");
-
-        //地面
-        if (!isLanding)
-        {
-            isLanding = Landing(pGround_->GetCircuitUnion()->parts_[i].model_
-                , pGround_->GetCircuitUnion()->parts_[i].type_);
-        }
-
-        Debug::TimerLogEnd("vehicle地面当たり判定");
-
-
-        Debug::TimerLogStart("vehicle壁当たり判定");
-
-        //壁
-        CollideWall(pGround_->GetCircuitUnion()->parts_[i].model_
-            , pGround_->GetCircuitUnion()->parts_[i].type_);
-
-        Debug::TimerLogEnd("vehicle壁当たり判定");
-    }
-#endif
 }
 
 //接地 
@@ -559,7 +535,7 @@ bool Vehicle::Landing(int hModel,int type)
 
         if (-data.dist > XMVectorGetY(acceleration_) - Size.toWheelBottom_)
         {
-            if (landingType_ == Ground::road)
+            if (landingType_ == Circuit::circuitType::road)
                 transform_.position_.x += 0;
 
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
@@ -955,8 +931,7 @@ void Vehicle::HandleTurnLR(int LR)
 //次のチェックポイントの位置を取得
 XMFLOAT3* Vehicle::GetNextCheckPosition()
 {
-    XMFLOAT3* pos = pGround_->NextCheckPointPosition(pointCount_);
-    return pos;
+    return Circuit::GetNextCheckPointPosition(pointCount_);
 }
 //次のチェックポイントまでの距離を取得
 float Vehicle::GetNextCheckDistance()
@@ -1235,11 +1210,11 @@ void Vehicle::VehicleParticle()
         {
         default:
             break;
-        case Ground::turf://草地乗り上げ
+        case Circuit::circuitType::turf://草地乗り上げ
             ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::grass
                 , transform_.position_);
             break;
-        case Ground::dirt://砂地
+        case Circuit::circuitType::dirt://砂地
             ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::dirt
                 , transform_.position_);
             break;

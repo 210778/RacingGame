@@ -1,8 +1,6 @@
 #include "Engine/Model.h"
 #include "Circuit.h"
 #include "CheckPoint.h"
-#include "Ground.h"
-
 
 using std::string;
 using std::to_string;
@@ -11,89 +9,8 @@ using std::vector;
 
 namespace Circuit
 {
-    //コース部品
-    struct CircuitParts
-    {
-        std::string modelName_;  //モデル名
-        int model_; //モデル番号
-        int type_;  //種類
-
-        //引数なし
-        CircuitParts()
-        {
-            modelName_ = "";
-            model_ = -1;
-            type_ = 0;
-        }
-        //コンストラクタ（モデル名、モデル番号、種類）
-        CircuitParts(std::string n, int m, int t)
-        {
-            modelName_ = n;
-            model_ = m;
-            type_ = t;
-        }
-    };
-
-    //チェックポイント型
-    struct CircuitCheckPoint
-    {
-        CheckPoint* pCP_;
-        XMFLOAT3    CP_position_;
-        float       CP_Radius_;
-        CircuitCheckPoint()
-        {
-            pCP_ = nullptr;
-            CP_position_ = { 0.0f,0.0f,0.0f };
-            CP_Radius_ = 0.0f;
-        }
-        CircuitCheckPoint(CheckPoint* poi, const XMFLOAT3& pos, float rad)
-        {
-            pCP_ = poi;
-            CP_position_ = pos;
-            CP_Radius_ = rad;
-        }
-    };
-
-    //コース１つ分
-    struct CircuitUnion
-    {
-        std::vector<CircuitParts> parts_;   //コースのパーツたち
-        std::string  name_;                 //コースの名前
-        int maxLap_;                        //必要周回数
-        std::vector<CheckPoint*> checkPoint_;   //チェックポイントのポインタ
-        std::vector<CircuitCheckPoint> check_;
-        std::vector<Transform> startTransform_;              //スタート地点のトランスフォーム(位置と回転)
-
-        //引数なしコンストラクタ
-        CircuitUnion() {
-            name_ = "circuit";
-            maxLap_ = 3;
-        };
-        //名前コンストラクタ
-        CircuitUnion(std::string name) {
-            name_ = name;
-            maxLap_ = 3;
-        };
-        //名前,周回数コンストラクタ
-        CircuitUnion(std::string name, int lap) {
-            name_ = name;
-            maxLap_ = lap;
-        };
-    };
-
-    //コースの種類
-    enum circuitType
-    {
-        road = 0,   //通常道路 
-        turf,       //芝生
-        abyss,      //奈落
-        ice,        //氷
-        dirt,       //砂地
-        boost,      //加速床
-        other,      //どれでもない
-        circuitMax  //終点
-    };
-
+    Transform circuitTransform_;    //コースのトランスフォーム
+    int chosenCircuit_;             //選択されたコース
     float defaultCheckpointSize_;   //チェックポイントの大きさ
     float defaultStartRotate_;      //スタート時の回転
     float checkPointLimit_;         //チェックポイントを探す限界
@@ -119,6 +36,7 @@ namespace Circuit
 //初期化
 void Circuit::Initialize()
 {
+    chosenCircuit_ = 0;
     defaultCheckpointSize_ = 60.0f;
     defaultStartRotate_ = 0.0f;
     checkPointLimit_ = 500;
@@ -139,6 +57,19 @@ void Circuit::Initialize()
 
     //スタート地点設置
     MakeStartPoint();
+}
+
+//描画
+void Circuit::Draw()
+{
+    if (circuits_.empty())
+        return;
+
+    for (int i = 0; i < circuits_[chosenCircuit_].parts_.size(); i++)
+    {
+        Model::SetTransform(circuits_[chosenCircuit_].parts_[i].model_, circuitTransform_);
+        Model::Draw(circuits_[chosenCircuit_].parts_[i].model_);
+    }
 }
 
 void Circuit::MakeCircuit()
@@ -211,9 +142,6 @@ void Circuit::MakeCircuit()
             {
                 string model = modelFilePath + circuitMap[i.second];
                 SetCircuitParts(&circuit, model, i.first);
-
-                //CircuitParts cp(modelFilePath + circuitMap[i.second], -1, i.first);
-                //circuit.parts_.push_back(cp);
             }
         }
         //追加
@@ -388,11 +316,7 @@ std::vector<std::string>* Circuit::GetCircuitNameArray()
     return &circuitNameArr_;
 }
 
-void Circuit::GetCircuits(std::vector<Circuit::CircuitUnion>* circuitArray)
-{
-    circuitArray = &circuits_;
-}
-
+//パーツのモデル番号を再セットする
 void Circuit::ResetCircuitModelHandle()
 {
     for (auto& itr : circuits_)
@@ -404,4 +328,52 @@ void Circuit::ResetCircuitModelHandle()
             assert(itr2.model_ >= 0);
         }
     }
+}
+
+//コースを選ぶ
+void Circuit::SetChosenCircuit(int value)
+{
+    chosenCircuit_ = value;
+}
+
+//選んだコースのチェックポイントを作る
+void Circuit::CreateChosenCircuit(GameObject* pGO)
+{
+    //安全
+    if (circuits_.empty())
+        return;
+    if (chosenCircuit_ < 0 || chosenCircuit_ >= circuits_.size())
+        chosenCircuit_ = 0;
+
+    for (int i = 0; i < circuits_[chosenCircuit_].check_.size(); i++)
+    {
+        if (circuits_[chosenCircuit_].check_[i].pCP_ == nullptr)
+        {
+            circuits_[chosenCircuit_].check_[i].pCP_ = Instantiate<CheckPoint>(pGO);
+            circuits_[chosenCircuit_].check_[i].pCP_->MakeSphereCollider(&circuits_[chosenCircuit_].check_[i].CP_position_
+            , circuits_[chosenCircuit_].check_[i].CP_Radius_, i);
+        }
+    }
+}
+
+//次のチェックポイントの位置を返す
+XMFLOAT3* Circuit::GetNextCheckPointPosition(int point, int next)
+{
+    //正規化する
+    int number = (point + next - 1) % circuits_[chosenCircuit_].check_.size();
+    if (number < 0)
+        number += circuits_[chosenCircuit_].check_.size();
+
+    XMFLOAT3 position = circuits_[chosenCircuit_].check_[number].CP_position_;
+    return &position;
+}
+
+Circuit::CircuitUnion* Circuit::GetChosenCircuit()
+{
+    if (chosenCircuit_ >= 0 && chosenCircuit_ < circuits_.size())
+    {
+        return &circuits_[chosenCircuit_];
+    }
+    else
+        return nullptr;
 }

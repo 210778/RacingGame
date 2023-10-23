@@ -30,7 +30,7 @@ class VehiclePlayer : public Vehicle
 
     //画像表示クラス
     ImagePrinter* pImagePrinter_;
-    std::unordered_map<std::string, bool> isPrintedMap_;
+    std::map<std::string, bool> isPrintedMap_;
 
 public:
     //コンストラクタ

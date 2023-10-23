@@ -6,7 +6,6 @@ class Text;
 //スタート画面シーンを管理するクラス
 class StartScene : public GameObject
 {
-
 	//文字
 	Text* pTextCircuit_;
 

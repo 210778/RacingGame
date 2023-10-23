@@ -1,4 +1,4 @@
-#include <unordered_map>
+#include <map>
 #include "ParticlePackage.h"
 
 namespace ParticlePackage
@@ -19,7 +19,7 @@ namespace ParticlePackage
     EmitterData wheelSpark_;    //火花
 
 
-    std::unordered_map<ParticleName, std::vector<EmitterData>> emitter_;
+    std::map<ParticleName, std::vector<EmitterData>> emitter_;
 
 	unsigned long long timeCount_;	//時間のカウント
     int colorSpeed_ = 2;  //カウントのスピード
