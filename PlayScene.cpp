@@ -31,7 +31,7 @@ using std::vector;
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
 	, pGround_(nullptr), pVehiclePlayer_(nullptr)
-	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
+	, universalTime_(0), standbyTime_(1), standbySeconds_(0)//5
 	, startFlag_(false)
 {
 }
@@ -62,7 +62,7 @@ void PlayScene::Initialize()
 	moji = caption;
 #endif
 
-	int population = 2;
+	int population = 1;
 	int playerNumber = 0;
 
 	//êlêî

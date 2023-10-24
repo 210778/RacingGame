@@ -21,7 +21,26 @@ struct RayCastData
 	XMVECTOR parallelism;	//命中したポリゴンと平行のベクトル
 	XMVECTOR reflection;	//命中したときの反射方向のベクトル
 
-	RayCastData() { dist = 99999.0f; }
+	//引数なしコンストラクタ　距離はfloat最大距離で初期化
+	RayCastData()
+	{
+		dist = FLT_MAX;
+		hit = false;
+	}
+	//位置と方向つきコンストラクタ
+	RayCastData(XMFLOAT3 startPosition, XMFLOAT3 direction)
+	{
+		start = startPosition;
+		dir = direction;
+		dist = FLT_MAX;
+		hit = false;
+	}
+	//位置と方向ベクトルのコンストラクタ
+	RayCastData(XMFLOAT3 startPosition, XMVECTOR directionVector)
+	{
+		RayCastData(startPosition, XMFLOAT3(XMVectorGetX(directionVector),
+			XMVectorGetY(directionVector), XMVectorGetZ(directionVector)));
+	}
 };
 
 //-----------------------------------------------------------

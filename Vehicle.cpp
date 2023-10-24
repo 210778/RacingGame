@@ -138,17 +138,17 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Circuit::circuitType::turf].landing = 0.98f;
     GroundTypeFriction_[Circuit::circuitType::turf].side = 0.2f;
     //砂地　草と同じ
-    GroundTypeFriction_[Circuit::circuitType::turf].acceleration = GroundTypeFriction_[Circuit::circuitType::turf].acceleration;
-    GroundTypeFriction_[Circuit::circuitType::turf].landing = GroundTypeFriction_[Circuit::circuitType::turf].landing;
-    GroundTypeFriction_[Circuit::circuitType::turf].side = GroundTypeFriction_[Circuit::circuitType::turf].side;
+    GroundTypeFriction_[Circuit::circuitType::dirt].acceleration = GroundTypeFriction_[Circuit::circuitType::turf].acceleration;
+    GroundTypeFriction_[Circuit::circuitType::dirt].landing = GroundTypeFriction_[Circuit::circuitType::turf].landing;
+    GroundTypeFriction_[Circuit::circuitType::dirt].side = GroundTypeFriction_[Circuit::circuitType::turf].side;
     //氷床
-    GroundTypeFriction_[Circuit::circuitType::ice].acceleration = 0.5f;
+    GroundTypeFriction_[Circuit::circuitType::ice].acceleration = 0.2f;
     GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
     GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
     GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
-    GroundTypeFriction_[Circuit::circuitType::boost].side = 0.2f;
+    GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //奈落
     GroundTypeFriction_[Circuit::circuitType::abyss]; //作るだけ
 }
@@ -207,9 +207,7 @@ void Vehicle::Update()
 {
     //ポーズ
     if (pauseFlag_)
-    {
         return;
-    }
 
     Debug::TimerLogStart("vehicle最初");
 
@@ -259,9 +257,7 @@ void Vehicle::Update()
     accZDirection_ = 1;
     if (0 > XMVectorGetZ(XMVector3TransformCoord(acceleration_, XMMatrixRotationY(
         XMConvertToRadians(-transform_.rotate_.y)))))
-    {
         accZDirection_ = -1;
-    }
 
     Debug::TimerLogStart("vehicle操作受けつけ");
 
@@ -282,17 +278,15 @@ void Vehicle::Update()
             restartTransform_.rotate_ = transform_.rotate_;
         }
 
-        if (false && landingType_ == Circuit::circuitType::abyss)
+        if (landingType_ == Circuit::circuitType::abyss)
         {
             //奈落に落下
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
             transform_.position_ = restartTransform_.position_;
             transform_.rotate_   = restartTransform_.rotate_;
+            //今すぐカメラ移動
             if (pViewer_ != nullptr)
-            {
-                pViewer_->WatchPresentPosition();    //今すぐ移動
-            }
-
+                pViewer_->WatchPresentPosition();
         }
     }
 
@@ -320,8 +314,8 @@ void Vehicle::Update()
     XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
 
     Debug::TimerLogStart("vehicle壁床衝突");
-        //接地、壁衝突
-        VehicleCollide();
+    //接地、壁衝突
+    VehicleCollide();
     Debug::TimerLogEnd("vehicle壁床衝突");
 
     //タイヤの値セット
@@ -351,9 +345,8 @@ void Vehicle::Update()
 void Vehicle::OnCollision(GameObject* pTarget)
 {
     //ポーズ
-    if (pauseFlag_){
+    if (pauseFlag_)
         return;
-    }
 
     Debug::TimerLogStart("vehicleチェックポイント");
 
@@ -363,9 +356,8 @@ void Vehicle::OnCollision(GameObject* pTarget)
         CheckPoint* pCP = (CheckPoint*)pTarget;
 
         if (pCP->GetNumber() == pointCount_)
-        {
             pointCount_++;
-        }
+
         if (pCP->GetNumber() <= 0 && pointCount_ >= pointCountMax_)
         {
             pointCount_ = 0;
@@ -399,15 +391,13 @@ void Vehicle::Release()
     pPoryLine_->Release();
 }
 
-
 void Vehicle::SpeedLimit(XMVECTOR& speed, const float limit)
 {
     //長さを調べる
     float* pLength = XMVector3LengthEst(speed).m128_f32;
     if (*pLength > limit)
-    {
         *pLength = limit;
-    }
+
     speed = XMVector3Normalize(speed);
     speed *= *pLength;
 }
@@ -424,20 +414,16 @@ void Vehicle::AngleLimit(float& angle, const float limit)
     //マイナスか調べる
     bool minusFlag = false;
     if (angle < 0)
-    {
         minusFlag = true;
-    }
+
     //角度の絶対値が最大角度の絶対値を超えていたら最大角度にする
     //軽量化できるか
     if (fabs(angle) > fabs(limit))
     {
         angle = fabs(limit);
-
         //マイナスだったらマイナスに戻す
         if (minusFlag == true)
-        {
             angle *= -1;
-        }
     }
 }
 
@@ -446,14 +432,10 @@ void Vehicle::TurnWheel()
 {
     //地面にいるなら実行
     if (!landingFlag_)
-    {
         return;
-    }
-
     //加速度を正規化
     //左だとy軸が上向き+、右だと下向き-
     //回転して加速度に足す
-
     acceleration_ +=  *XMVector3LengthEst(acceleration_).m128_f32
                       * XMVector3TransformCoord(XMVector3Cross(vehicleVector_.z
                       , XMVector3Normalize(acceleration_))
@@ -486,20 +468,18 @@ void Vehicle::VehicleCollide()
     //種類の分だけ
     for(auto& itr : Circuit::GetChosenCircuit()->parts_)
     {
+        landingFlag_ = false;   //接地フラグリセット
+
         //地面
         Landing(itr.model_, itr.type_);
 
         if (landingFlag_)
-        {
             isLanding = true;
-        }
         landingFlag_ = isLanding;   //一度でもtrueなら接地してることにする
-
 
         //壁
         CollideWall(itr.model_, itr.type_);
     }
-
 
     //落下 ここにあるとうまくいく
     if (!landingFlag_)
@@ -509,7 +489,7 @@ void Vehicle::VehicleCollide()
 }
 
 //接地 
-bool Vehicle::Landing(int hModel,int type)
+void Vehicle::Landing(int hModel,int type)
 {
     //レイの発射位置
     RayCastData data;
@@ -521,47 +501,37 @@ bool Vehicle::Landing(int hModel,int type)
     data.dir = { 0.0f, -1.0f, 0.0f };   //レイの方向
     Model::RayCast(hModel, &data);      //レイを発射
 
-    bool isHit = false; //何かに当たったか??
-
     //レイが当たったら
     if (data.hit)
     {
         //NPC用
         SetRayCastHit(RayCastHit::Number::down, data);
 
-        landingType_ = type;    //地面のタイプ
-        isHit = true;           //何かに当たった
-
         if (-data.dist > XMVectorGetY(acceleration_) - Size.toWheelBottom_)
         {
+            landingType_ = type;    //地面のタイプ
+
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             if (!landingFlag_)
             {
                 transform_.position_.y -= data.dist - Size.toWheelBottom_;
                 acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
-                landingFlag_ = true;
             }
+
+            landingFlag_ = true;
         }
         else
-        {
-            //落下 ここにあるとうまくいく
-            //if (!landingFlag_)
-            //{
-            //    acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
-            //}
-
             landingFlag_ = false;
-        }
 
         //角度を変える
         if (landingFlag_ || data.dist < Size.toWheelBottom_ + Size.wheelHeight_)
         {
+            landingFlag_ = true;
+            landingType_ = type;
+
             //回転
             if (VehicleRotateSlope(data.normal, slopeLimitAngle_, RayCastHit::Number::down) == false)
-            {
-                //坂道なら落下
-                acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
-            }
+                acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};  //坂道なら落下
         }
     }
 
@@ -575,14 +545,12 @@ bool Vehicle::Landing(int hModel,int type)
     if (vehicleData.hit && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
     {
         landingType_ = type;    //地面のタイプ
-        isHit = true;           //何かに当たった
 
         XMFLOAT3 wheelFlo;
         XMStoreFloat3(&wheelFlo, -vehicleVector_.y * (vehicleData.dist - Size.toWheelBottom_));
         transform_.position_ = Transform::Float3Add(transform_.position_, wheelFlo);
         landingFlag_ = true;
     }
-
     //天井 ほんとは分割するべきだろうけど天井に当たることは珍しいし重そうだからここに置く
     XMStoreFloat3(&data.dir, vehicleVector_.y);
     Model::RayCast(hModel, &data);  //レイを発射
@@ -604,17 +572,11 @@ bool Vehicle::Landing(int hModel,int type)
         }
         //天井にぶつかったとき
         else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_)
-        {
-            //止める
-            acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
-        }
+            acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};  //止める
     }
-
-
-    return isHit;
 }
 
-bool Vehicle::CollideWall(int hModel, int type)
+void Vehicle::CollideWall(int hModel, int type)
 {
     //前後左右と斜めで分割することにする
     std::array<RayCastData, 4>wallCollideVertical;
@@ -828,8 +790,6 @@ bool Vehicle::CollideWall(int hModel, int type)
             }
         }
     }
-
-    return true;
 }
 
 void Vehicle::MakeWheels(int hModel)

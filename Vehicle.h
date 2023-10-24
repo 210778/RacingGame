@@ -292,10 +292,24 @@ protected:
     };
     std::map<int, RayCastHit> rayCastHit_;
 
-
     //
     PoryLine* pPoryLine_;
 
+    //壁や床との接触
+    void VehicleCollide();
+
+    /// <summary>
+    /// 床があるか調べ、落下や接地
+    /// </summary>
+    /// <param name="hModel">モデル番号</param>
+    /// <param name="type">モデルの種類</param>
+    void Landing(int hModel, int type);
+
+    /// <summary>
+    /// 壁との接触
+    /// </summary>
+    /// <param name="hModel">モデル番号</param>
+    void CollideWall(int hModel, int type);
 
 public:
     //コンストラクタ
@@ -338,24 +352,6 @@ public:
 
     //タイヤを回転させるときの物理
     void TurnWheel();
-
-    //壁や床との接触
-    void VehicleCollide();
-
-    /// <summary>
-    /// 床があるか調べ、落下や接地
-    /// </summary>
-    /// <param name="hModel">モデル番号</param>
-    /// <param name="type">モデルの種類</param>
-    /// <returns>なにかに当たった場合true</returns>
-    bool Landing(int hModel , int type);
-
-    /// <summary>
-    /// 壁との接触
-    /// </summary>
-    /// <param name="hModel">モデル番号</param>
-    /// <returns>なにかに当たった場合true</returns>
-    bool CollideWall(int hModel, int type);
 
     /// <summary>
     /// タイヤを用意
