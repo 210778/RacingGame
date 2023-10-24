@@ -30,7 +30,7 @@ void StartScene::Initialize()
 //çXêV
 void StartScene::Update()
 {
-	Circuit::SetChosenCircuit(0);
+	Circuit::SetChosenCircuit(1);
 
 	//âπäy
 	Music::Update();

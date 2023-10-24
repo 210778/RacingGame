@@ -282,7 +282,7 @@ void Vehicle::Update()
             restartTransform_.rotate_ = transform_.rotate_;
         }
 
-        if (landingType_ == Circuit::circuitType::abyss)
+        if (false && landingType_ == Circuit::circuitType::abyss)
         {
             //奈落に落下
             acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
@@ -482,30 +482,29 @@ void Vehicle::TurnWheel()
 void Vehicle::VehicleCollide()
 {
     bool isLanding = false;
-    
-    //壁も一回だけ当たる？
-    bool isHitWall = false;
 
     //種類の分だけ
     for(auto& itr : Circuit::GetChosenCircuit()->parts_)
     {
-        Debug::TimerLogStart("vehicle地面当たり判定2");
-
         //地面
-        if (!isLanding)
+        Landing(itr.model_, itr.type_);
+
+        if (landingFlag_)
         {
-            isLanding = Landing(itr.model_, itr.type_);
+            isLanding = true;
         }
+        landingFlag_ = isLanding;   //一度でもtrueなら接地してることにする
 
-        Debug::TimerLogEnd("vehicle地面当たり判定2");
-
-
-        Debug::TimerLogStart("vehicle壁当たり判定2");
 
         //壁
         CollideWall(itr.model_, itr.type_);
+    }
 
-        Debug::TimerLogEnd("vehicle壁当たり判定2");
+
+    //落下 ここにあるとうまくいく
+    if (!landingFlag_)
+    {
+        acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
     }
 }
 
@@ -535,9 +534,6 @@ bool Vehicle::Landing(int hModel,int type)
 
         if (-data.dist > XMVectorGetY(acceleration_) - Size.toWheelBottom_)
         {
-            if (landingType_ == Circuit::circuitType::road)
-                transform_.position_.x += 0;
-
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             if (!landingFlag_)
             {
@@ -549,10 +545,10 @@ bool Vehicle::Landing(int hModel,int type)
         else
         {
             //落下 ここにあるとうまくいく
-            if (!landingFlag_)
-            {
-                acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
-            }
+            //if (!landingFlag_)
+            //{
+            //    acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
+            //}
 
             landingFlag_ = false;
         }
@@ -613,6 +609,7 @@ bool Vehicle::Landing(int hModel,int type)
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};
         }
     }
+
 
     return isHit;
 }
