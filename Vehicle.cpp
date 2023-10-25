@@ -104,6 +104,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
+    , sparkParticleLength_(0.95), sparkParticleHanlde_(15)
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_(), restartTransform_()
 
@@ -112,9 +113,8 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     //ブースト
     , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f), boostValue_(2.0f)
-    , isPlayer_(false)
-    , collideBoxValue_(0.5f)
-    , isOperationInvalid_(false), pauseFlag_(false)
+    , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(200.0f)
+    , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
     , pViewer_(nullptr)
     , pPoryLine_(nullptr)
 {
@@ -1015,19 +1015,13 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
 
     //操作できない状態か？
     if (isOperationInvalid_)
-    {
         return;
-    }
 
     //ハンドルの操作
     if (operation_.inputNow[operation_.inputName::handleLeft])
-    {
         HandleTurnLR(handleLeft_);
-    }
     if (operation_.inputNow[operation_.inputName::handleRight])
-    {
         HandleTurnLR(handleRight_);
-    }
 
     //ハンドル角度制限
     //曲がりやすい
@@ -1040,14 +1034,10 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     {
         //全身後退
         if (operation_.inputNow[operation_.inputName::moveFront])
-        {
             acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
-        }
 
         if (operation_.inputNow[operation_.inputName::moveRear])
-        {
             acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
-        }
     }
 
     //ブースト
@@ -1058,40 +1048,30 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
         {
             //消費
             boostCapacity_ -= boostSpending_;
-
             slideFlag_ = true;
-
             acceleration_ += vecZ * boostValue_;
         }
         else
-        {
             slideFlag_ = false;
-        }
     }
     else
     {
         slideFlag_ = false;
-
+        //増える
         if (landingFlag_)
-        {
-            boostCapacity_ += boostIncrease_;   //増える
-        }
-
+            boostCapacity_ += boostIncrease_;
         //あふれる
         if (boostCapacity_ > boostCapacityMax_)
             boostCapacity_ = boostCapacityMax_;
     }
 
 #ifdef _DEBUG
-    //左右
+    //左右回転
     if (operation_.inputNow[operation_.inputName::turnLeft])
-    {
         transform_.rotate_.y -= rotateSPD_;
-    }
+
     if (operation_.inputNow[operation_.inputName::turnRight])
-    {
         transform_.rotate_.y += rotateSPD_;
-    }
 
     //ジャンプ
     if (operation_.IsDown(operation_.inputName::jump))
@@ -1100,14 +1080,11 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
         landingFlag_ = false;
     }
 
+    //左右移動
     if (operation_.inputNow[operation_.inputName::moveLeft])
-    {
         acceleration_ -= vecX;
-    }
     if (operation_.inputNow[operation_.inputName::moveRight])
-    {
         acceleration_ += vecX;
-    }
 #endif
 }
 
@@ -1129,6 +1106,10 @@ void Vehicle::SetWheelHeight(float height)
 //エフェクト
 void Vehicle::VehicleParticle()
 {
+    //遠くにいるNPCは
+    if (!isPlayer_ && toPlayerVehicleLength_ > particleLimitLength_)
+        return;
+
     float accLength = *XMVector3Length(acceleration_).m128_f32;
 
     //ゴールしたら
@@ -1138,12 +1119,6 @@ void Vehicle::VehicleParticle()
             , transform_.position_);
     }
 
-    //ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
-    //    , transform_.position_);
-
-    //ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
-    //   , Model::GetBonePosition(hModel_, "rear"), acceleration_);
-
     //ブースト
     if (slideFlag_)
     {
@@ -1152,22 +1127,30 @@ void Vehicle::VehicleParticle()
     }
 
     //走行中のタイヤの軌跡
-    if (wheelParticleLength_ < accLength
-        && wheelParticleLengthMax_ > accLength)
+    if (wheelParticleLength_ < accLength && wheelParticleLengthMax_ > accLength)
     {
         ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::smoke
             , Model::GetBonePosition(hModel_, "wheelRR"));
         ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::smoke
             , Model::GetBonePosition(hModel_, "wheelRL"));
     }
+    //ドリフトの火花
+    else if (landingFlag_ && accLength > sparkParticleLength_ && abs(handleRotate_) > sparkParticleHanlde_)
+    {
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
+            , Model::GetBonePosition(hModel_, "wheelRR"), acceleration_);
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
+            , Model::GetBonePosition(hModel_, "wheelRL"), acceleration_);
+    }
 
+    //走行中のそれぞれのエフェクト
     if (landingFlag_ && wheelParticleLength_ < accLength)
     {
         switch (landingType_)
         {
         default:
             break;
-        case Circuit::circuitType::turf://草地乗り上げ
+        case Circuit::circuitType::turf://草地
             ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::grass
                 , transform_.position_);
             break;
@@ -1175,9 +1158,15 @@ void Vehicle::VehicleParticle()
             ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::dirt
                 , transform_.position_);
             break;
+        case Circuit::circuitType::ice://氷床
+            ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::ice
+                , transform_.position_);
+            break;
         }
     }
+
 }
+
 
 //車両の操作、入力の受付
 void Vehicle::InputOperate() {};
@@ -1191,8 +1180,6 @@ void Vehicle::InputOperate() {};
     void Vehicle::PlayerUI_Update() {};
     //カメラの用意
     void Vehicle::PlayerCamera_Initialize() {};
-    //エフェクトを表示
-    void Vehicle::PlayerParticle() {};
     //カメラ更新
     void Vehicle::PlayerCamera_Update() {};
 

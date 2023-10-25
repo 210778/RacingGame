@@ -3,34 +3,7 @@
 
 namespace ParticlePackage
 {
-	//パーティクルまとめ
-	EmitterData boosterFire_;   //火１
-	EmitterData boosterSpark_;  //火２
-
-	EmitterData rainbowFire_;   //虹１
-	EmitterData rainbowSpark_;  //虹２
-
-	EmitterData smokeCloud_;    //走行跡
-
-    EmitterData landingGrass_;  //草
-
-    EmitterData landingDirt_;   //砂
-
-    EmitterData wheelSpark_;    //火花
-
-
     std::map<ParticleName, std::vector<EmitterData>> emitter_;
-
-	unsigned long long timeCount_;	//時間のカウント
-    int colorSpeed_ = 2;  //カウントのスピード
-
-    //セッター
-	void SetBooster();
-    void SetRainbow();
-    void SetSmoke();
-    void SetGrass();
-    void SetDirt();
-    void SetSpark();
 
     //セット用
     void SetParticle(ParticleName key, std::string fileName, XMFLOAT3 position
@@ -45,16 +18,6 @@ void ParticlePackage::Initialize()
 {
     //初期化
     ParticleInitialize();
-
-
-	timeCount_ = 0;
-
-	SetBooster();
-    SetRainbow();
-    SetSmoke();
-    SetGrass();
-    SetDirt();
-    SetSpark();
 }
 
 /// <summary>
@@ -129,22 +92,27 @@ void ParticlePackage::ParticleInitialize()
 
     //砂地
     SetParticle(ParticleName::dirt, "image\\PaticleAssets\\flashA_W.png", { 0.f,0.f,0.f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
-    , { 0.75f,0.75f },{ 0.5f,0.5f },{ 1.05f,1.05f },{ 0.5f,0.3f,0.f,0.5f },{ 0.01f,0.01f,0.f,-0.02f });
+    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.005f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
+    , { 0.75f,0.75f },{ 0.5f,0.5f },{ 1.07f,1.07f },{ 0.5f,0.3f,0.f,0.5f },{ 0.01f,0.01f,0.f,-0.02f });
 
     //スパーク火花
     SetParticle(ParticleName::spark, "image\\PaticleAssets\\flashB_R.png", { 0.f, 0.f, 0.f }
     , { 0.15f, 0.15f, 0.f }, 0, 1, 2, 0.f, { 0.f,0.f,0.f }, { 0.f,0.f,0.f }, 0.05f, 0.01f, 1.f
-    , { 1.25f,1.25f }, { 0.5f,0.5f }, { 1.01f,1.01f }, { 1.f,1.f,0.f,1.f }, { 0.f,-0.03f,0.f,-0.01f });
+    , { 1.25f,1.25f }, { 0.5f,0.5f }, { 1.01f,1.01f }, { 1.f,1.f,0.f,0.8f }, { 0.f,-0.03f,0.f,-0.02f });
         //小スパーク
     SetParticle(ParticleName::spark, "image\\PaticleAssets\\flashB_R.png", { 0.f, 0.f, 0.f }
-    , { 0.15f, 0.15f, 0.15f }, 0, 1, 30, 0.f, { 0.f,0.f,0.f }, { 50.f,50.f,50.f }, 0.2f, 0.98f, 0.f
-    , { 0.5f,0.5f }, { 0.1f,0.1f }, { 0.9f,0.9f }, { 1.f,1.f,0.f,1.f }, { 0.f,-0.03f,0.f,-0.01f });
+    , { 0.1f, 0.1f, 0.1f }, 0, 1, 30, 0.f, { 0.f,0.f,0.f }, { 20.f,20.f,20.f }, 0.2f, 0.5f, 1.f
+    , { 0.5f,0.5f }, { 0.1f,0.1f }, { 0.95f,0.95f }, { 1.f,1.f,0.f,0.8f }, { 0.f,-0.03f,0.f,-0.02f });
 
     //１位金
     SetParticle(ParticleName::gold, "image\\PaticleAssets\\circle_W.png", { 0.f, 0.f, 0.f }
-    , { 0.15f, 0.15f, 0.15f }, 0, 1, 30, 0.02f, { 0.f,1.f,0.f }, { 60.f,60.f,60.f }, 0.4f, 0.05f, 1.f
-    , { 1.25f,1.25f }, { 0.0f,0.0f }, { 0.9f,0.9f }, { 1.f,1.f,0.f,1.f }, { 0.f,-0.02f,0.f,-0.01f });
+    , { 0.15f, 0.15f, 0.15f }, 0, 1, 20, -0.01f, { 0.f,1.f,0.f }, { 60.f,60.f,60.f }, 0.2f, 0.05f, 1.f
+    , { 1.f,1.f }, { 0.0f,0.0f }, { 1.01f,1.01f }, { 1.f,1.f,0.f,1.f }, { 0.f,0.f,0.02f,-0.05f });
+
+    //氷
+    SetParticle(ParticleName::ice, "image\\PaticleAssets\\flashC_W.png", { 0.f, 0.f, 0.f }
+    , { 0.15f, 0.15f, 0.15f }, 0, 1, 20, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
+    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.05f,1.05f }, { 0.2f,1.f,1.f,0.7f }, { 0.05f,0.f,0.f,-0.03f });
 }
 
 
@@ -175,232 +143,6 @@ void ParticlePackage::ActParticle(Particle* pParticle, ParticleName pn, const XM
         itr.position = position;
         pParticle->Start(itr);
     }
-}
-
-void ParticlePackage::ActBooster(Particle* pParticle, XMFLOAT3 position, XMVECTOR direction)
-{
-    boosterFire_.position = position;
-    XMStoreFloat3(&boosterFire_.dir, direction);
-    pParticle->Start(boosterFire_);
-
-    boosterSpark_.position = position;
-    XMStoreFloat3(&boosterSpark_.dir, direction);
-    pParticle->Start(boosterSpark_);
-}
-
-void ParticlePackage::ActRainbowFire(Particle* pParticle, XMFLOAT3 position)
-{
-    timeCount_ += colorSpeed_;
-    XMFLOAT4 HSV((timeCount_ % 360) / 360.0f, 1.0f, 1.0f, 0.7f);//色相、彩度、明度、アルファ
-    XMVECTOR vecRainbowRGB = XMColorHSVToRGB(XMLoadFloat4(&HSV));
-    XMFLOAT4 rainbowRGB;
-    XMStoreFloat4(&rainbowRGB, vecRainbowRGB);
-
-    rainbowFire_.position = position;
-    rainbowFire_.color = rainbowRGB;
-    pParticle->Start(rainbowFire_);
-
-    rainbowSpark_.position = position;
-    rainbowSpark_.color = rainbowRGB;
-    pParticle->Start(rainbowSpark_);
-}
-
-void ParticlePackage::ActSmokeCloud(Particle* pParticle, XMFLOAT3 position)
-{
-    smokeCloud_.position = position;
-    pParticle->Start(smokeCloud_);
-}
-
-void ParticlePackage::ActLandingGrass(Particle* pParticle, XMFLOAT3 position)
-{
-    landingGrass_.position = position;
-    pParticle->Start(landingGrass_);
-}
-
-void ParticlePackage::ActLandingDirt(Particle* pParticle, XMFLOAT3 position)
-{
-    landingDirt_.position = position;
-    pParticle->Start(landingDirt_);
-}
-
-void ParticlePackage::ActLandingSpark(Particle* pParticle, XMFLOAT3 position)
-{
-    wheelSpark_.position = position;
-    pParticle->Start(wheelSpark_);
-}
-
-//セッター
-void ParticlePackage::SetBooster()
-{
-    //ジェット炎
-    boosterFire_.textureFileName = "image\\PaticleAssets\\circle_W.png";
-    boosterFire_.position = { 0.0f,0.0f,0.0f };
-    boosterFire_.positionErr = { 0.2f, 0.2f, 0.2f };
-    boosterFire_.delay = 0;
-    boosterFire_.number = 5;
-    boosterFire_.lifeTime = 30.0f;
-    boosterFire_.gravity = 0.0f;
-    boosterFire_.dir = { 0.0f,0.0f,0.0f };
-    boosterFire_.dirErr = { 50.0f, 50.0f, 50.0f };
-    boosterFire_.speed = 0.1f;
-    boosterFire_.speedErr = 0.0f;
-    boosterFire_.size = { 0.8f, 0.8f };
-    boosterFire_.sizeErr = { 0.1f, 0.1f };
-    boosterFire_.scale = { 0.98f, 0.98f };
-    boosterFire_.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    boosterFire_.deltaColor = { 0.0f, -0.06f, -0.12f, -0.05f };
-    //ジェット火花
-    boosterSpark_.textureFileName = "image\\PaticleAssets\\circle_W.png";
-    boosterSpark_.position = { 0.0f,0.0f,0.0f };
-    boosterSpark_.positionErr = { 0.5f, 0.5f, 0.5f };
-    boosterSpark_.delay = 0;
-    boosterSpark_.number = 1;
-    boosterSpark_.lifeTime = 40.0f;
-    boosterSpark_.gravity = 0.0f;
-    boosterSpark_.dir = { 0.0f,0.0f,0.0f };
-    boosterSpark_.dirErr = { 90.0f, 90.0f, 90.0f };
-    boosterSpark_.speed = 0.1f;
-    boosterSpark_.speedErr = 0.0f;
-    boosterSpark_.size = { 0.1f, 0.1f };
-    boosterSpark_.scale = { 1.0f, 1.0f };
-    boosterSpark_.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    boosterSpark_.deltaColor = { -0.02f, -0.02f, -0.1f, -0.01f };
-}
-
-void ParticlePackage::SetRainbow()
-{
-    //虹炎
-    rainbowFire_.textureFileName = "image\\PaticleAssets\\cloudB.png";
-    rainbowFire_.position = { 0.0f,0.0f,0.0f };
-    rainbowFire_.positionErr = { 0.2f,0.0f,0.2f };
-    rainbowFire_.delay = 0;
-    rainbowFire_.number = 1;
-    rainbowFire_.lifeTime = 15.0f;
-    rainbowFire_.gravity = 0.0f;
-    rainbowFire_.dir = { 0.0f,1.0f,0.0f };
-    rainbowFire_.dirErr = { 15.0f,0.0f,15.0f };
-    rainbowFire_.speed = 0.75f;
-    rainbowFire_.speedErr = 0.2f;
-    rainbowFire_.size = { 6.0f, 6.0f };
-    rainbowFire_.sizeErr = { 0.5f, 0.5f };
-    rainbowFire_.scale = { 0.8f, 0.8f };;
-    rainbowFire_.color = { 0.0f,0.0f,0.0f,0.0f };
-    rainbowFire_.deltaColor = { 0.0f,0.0f,0.0f,-0.01f };
-
-    //虹火花
-    rainbowSpark_ = rainbowFire_;
-    rainbowSpark_.number = 1;
-    rainbowSpark_.positionErr = { 0.8f, 0.0f, 0.8f };
-    rainbowSpark_.dir = { 0.0f, 1.0f, 0.0f };
-    rainbowSpark_.dirErr = { 10.0f, 10.0f, 10.0f };
-    rainbowSpark_.size = { 0.5f, 0.5f };
-    rainbowSpark_.scale = { 0.98f, 0.98f };
-    rainbowSpark_.lifeTime = 30.0f;
-    rainbowSpark_.speed = 0.2f;
-    rainbowSpark_.gravity = -0.002f;
-}
-
-void ParticlePackage::SetSmoke()
-{
-    //煙
-    smokeCloud_.textureFileName = "image\\PaticleAssets\\cloudA.png";
-    smokeCloud_.position = { 0.0f,0.0f,0.0f };
-    smokeCloud_.positionErr = { 0.0f,0.0f,0.0f };
-    smokeCloud_.delay = 0;
-    smokeCloud_.number = 1;
-    smokeCloud_.lifeTime = 40;
-    smokeCloud_.gravity = 0.0f;
-    smokeCloud_.dir = { 0.0f,0.0f,0.0f };
-    smokeCloud_.dirErr = { 0.0f,0.0f,0.0f };
-    smokeCloud_.speed = 0.0f;
-    smokeCloud_.speedErr = 0.0f;
-    smokeCloud_.size = { 0.5f,0.5f };
-    smokeCloud_.sizeErr = { 0.0f,0.0f };
-    smokeCloud_.scale = { 1.0f,1.0f };
-    smokeCloud_.color = { 1.0f,1.0f,1.0f,0.1f };
-    smokeCloud_.deltaColor = { 0.0f,0.0f,0.0f,-0.005f };
-}
-
-void ParticlePackage::SetGrass()
-{
-    //草地
-    landingGrass_.textureFileName = "image\\PaticleAssets\\flashA_W.png";
-    landingGrass_.position = { 0.0f,0.0f,0.0f };
-    landingGrass_.positionErr = { 0.5f,0.5f,0.5f };
-    landingGrass_.delay = 0;
-    landingGrass_.number = 1;
-    landingGrass_.lifeTime = 30;
-    landingGrass_.gravity = 0.01f;
-    landingGrass_.dir = { 0.0f,1.0f,0.0f };
-    landingGrass_.dirErr = { 50.0f,50.0f,50.0f };
-    landingGrass_.speed = 0.1f;
-    landingGrass_.speedErr = 0.5f;
-    landingGrass_.size = { 0.5f,0.5f };
-    landingGrass_.sizeErr = { 0.5f,0.5f };
-    landingGrass_.scale = { 1.0f,1.0f };
-    landingGrass_.color = { 0.1f,1.0f,0.0f,0.5f };
-    landingGrass_.deltaColor = { 0.0f,0.0f,0.0f,0.0f };
-}
-
-void ParticlePackage::SetDirt()
-{
-    //土
-    landingDirt_.textureFileName = "image\\PaticleAssets\\cloudA.png";
-    landingDirt_.position = { 0.0f,0.0f,0.0f };
-    landingDirt_.positionErr = { 0.5f,0.5f,0.5f };
-    landingDirt_.delay = 0;
-    landingDirt_.number = 1;
-    landingDirt_.lifeTime = 30;
-    landingDirt_.gravity = 0.01f;
-    landingDirt_.dir = { 0.0f,1.0f,0.0f };
-    landingDirt_.dirErr = { 50.0f,50.0f,50.0f };
-    landingDirt_.speed = 0.1f;
-    landingDirt_.speedErr = 0.5f;
-    landingDirt_.size = { 0.75f,0.75f };
-    landingDirt_.sizeErr = { 0.5f,0.5f };
-    landingDirt_.scale = { 1.05f,1.05f };
-    landingDirt_.color = { 0.5f,0.3f,0.0f,0.5f };
-    landingDirt_.deltaColor = { 0.01f,0.01f,0.0f,-0.02f };
-}
-
-void ParticlePackage::SetSpark()
-{
-    wheelSpark_.textureFileName = "image\\PaticleAssets\\flashB_R.png";
-    wheelSpark_.position = XMFLOAT3(0, 1, 0);
-    wheelSpark_.positionErr = XMFLOAT3(0.15, 0.15, 0);
-    wheelSpark_.delay = 0;
-    wheelSpark_.number = 1;
-    wheelSpark_.lifeTime = 2;
-    wheelSpark_.gravity = 0;
-    wheelSpark_.dir = XMFLOAT3(1, 0, 1);
-    wheelSpark_.dirErr = XMFLOAT3(0, 0, 0);
-    wheelSpark_.speed = 0.05f;
-    wheelSpark_.speedErr = 0.01f;
-    wheelSpark_.size = XMFLOAT2(1.25, 1.25);
-    wheelSpark_.sizeErr = XMFLOAT2(0.5, 0.5);
-    wheelSpark_.scale = XMFLOAT2(1.01, 1.01);
-    wheelSpark_.color = XMFLOAT4(1, 1, 0, 1);
-    wheelSpark_.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-
-#if 0
-    wheelSpark_.textureFileName = "image\\PaticleAssets\\flashB_R.png";
-    wheelSpark_.position = XMFLOAT3(0, 1, 0);
-    wheelSpark_.positionErr = XMFLOAT3(0.1, 0.1, 0);
-    wheelSpark_.delay = 0;
-    wheelSpark_.number = 1;
-    wheelSpark_.lifeTime = 30;
-    wheelSpark_.dir = XMFLOAT3(1, 0, 1);
-    wheelSpark_.dirErr = XMFLOAT3(0, 20, 0);
-    wheelSpark_.gravity = 0.002;
-    wheelSpark_.speed = 0.2f;
-    wheelSpark_.accel = 0.98;
-    wheelSpark_.speedErr = 0.0;
-    wheelSpark_.size = XMFLOAT2(0.5, 0.5);
-    wheelSpark_.sizeErr = XMFLOAT2(0.1, 0.1);
-    wheelSpark_.scale = XMFLOAT2(0.9, 0.9);
-    wheelSpark_.color = XMFLOAT4(1, 1, 0, 1);
-    wheelSpark_.deltaColor = XMFLOAT4(0, -0.03, 0, -0.01);
-#endif
 }
 
 #if 0
@@ -657,9 +399,7 @@ void TestScene::Update()
         pParticle_->Start(data);
     }
 }
-#endif
-//power oh-ra
-#if 0
+
 if (!Input::IsKey(DIK_C))
 {
     EmitterData data;

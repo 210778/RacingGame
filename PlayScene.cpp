@@ -31,7 +31,7 @@ using std::vector;
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
 	, pGround_(nullptr), pVehiclePlayer_(nullptr)
-	, universalTime_(0), standbyTime_(1), standbySeconds_(0)//5
+	, universalTime_(0), standbyTime_(1), standbySeconds_(5)//5
 	, startFlag_(false)
 {
 }
@@ -62,7 +62,7 @@ void PlayScene::Initialize()
 	moji = caption;
 #endif
 
-	int population = 1;
+	int population = 2;
 	int playerNumber = 0;
 
 	//人数
@@ -84,27 +84,30 @@ void PlayScene::Initialize()
 		playerNumber = population - 1;
 	}
 
+	//配列
+	vehicles_.clear();
+	vehicles_.resize(population);
 
 	//車両をセット
 	for (int i = 0; i < population; i++)
 	{
-		if (i != playerNumber)
-		{
-			VehicleOpponent* pVehicleOpponent = nullptr;
-			SetVehicle<VehicleOpponent>(pVehicleOpponent
-				, "model\\car_race_1_red.fbx"
-				, "model\\wheel_industry_1_yellow.fbx"
-				, i);
-		}
+		if (i == playerNumber)
+			continue;	//プレイヤーでない
+
+		VehicleOpponent* pVehicleOpponent = nullptr;
+		SetVehicle<VehicleOpponent>(pVehicleOpponent
+			, "model\\car_race_1_red.fbx"
+			, "model\\wheel_industry_1_yellow.fbx", i);
 	}
+
 	//プレイヤーは最後
 	VehiclePlayer* pVehiclePlayer = nullptr;
 	SetVehicle<VehiclePlayer>(pVehiclePlayer
 		, "model\\car_race_1_blue.fbx"
-		, "model\\wheel_race_1_white.fbx"
-		, playerNumber);
+		, "model\\wheel_race_1_white.fbx", playerNumber);
 	//ポインタを記憶
 	pVehiclePlayer_ = vehicles_[playerNumber];
+
 
 	//参加人数をセット
 	for (auto& i : vehicles_)
@@ -142,6 +145,9 @@ void PlayScene::Update()
 
 	//時間
 	CountUniversalTime();
+
+	//プレイヤーまでの距離
+	SetNPCToPlayer();
 
 	//順位
 	CalculateRanking();
@@ -185,24 +191,13 @@ void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::stri
 	pVehicle = VehicleInstantiate<V>(this, vehicleName, wheelName);
 	Transform setTra = pCircuit->startTransform_[number];
 
-	vehicles_.push_back(pVehicle);
 	pVehicle->SetPosition(pCircuit->startTransform_[number].position_);
 	pVehicle->SetRotate(pCircuit->startTransform_[number].rotate_);
 	pVehicle->SetStartTransform(pCircuit->startTransform_[number]);
 	pVehicle->SetPointCountMax(pCircuit->check_.size());
 	pVehicle->SetLapMax(pCircuit->maxLap_);
 
-#if 0
-	pVehicle = VehicleInstantiate<V>(this, vehicleName, wheelName);
-	Transform setTra = pGround_->GetCircuitUnion()->startTransform_[number];
-
-	vehicles_.push_back(pVehicle);
-	pVehicle->SetPosition(pGround_->GetCircuitUnion()->startTransform_[number].position_);
-	pVehicle->SetRotate(pGround_->GetCircuitUnion()->startTransform_[number].rotate_);
-	pVehicle->SetStartTransform(pGround_->GetCircuitUnion()->startTransform_[number]);
-	pVehicle->SetPointCountMax(pGround_->GetCircuitUnion()->check_.size());
-	pVehicle->SetLapMax(pGround_->GetCircuitUnion()->maxLap_);
-#endif
+	vehicles_[number] = pVehicle;
 }
 
 //車両が衝突してるか調べる
@@ -320,5 +315,24 @@ void PlayScene::PlayPause()
 	for (auto& i : vehicles_)
 	{
 		(*i).SetPauseFlag(pauseFlag_);
+	}
+}
+
+//NPCにプレイヤーまでの距離を教える
+void PlayScene::SetNPCToPlayer()
+{
+	if (pVehiclePlayer_ == nullptr)
+		return;
+
+	for (auto& itr : vehicles_)
+	{
+		if (itr == pVehiclePlayer_)
+			continue;	//プレイヤーは無視
+
+		XMFLOAT3 pPos = pVehiclePlayer_->GetPosition();
+		XMFLOAT3 nPos = itr->GetPosition();
+		float leng = *XMVector3Length(XMLoadFloat3(&pPos) - XMLoadFloat3(&nPos)).m128_f32;
+
+		itr->SetToPlayerVehicleLength(*XMVector3Length(XMLoadFloat3(&pPos) - XMLoadFloat3(&nPos)).m128_f32);
 	}
 }

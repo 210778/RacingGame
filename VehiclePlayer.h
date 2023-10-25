@@ -54,8 +54,6 @@ public:
     void PlayerUI_Update() override;
     //カメラの用意
     void PlayerCamera_Initialize() override;
-    //エフェクト表示
-    void PlayerParticle() override;
     //カメラ更新
     void PlayerCamera_Update() override;
 

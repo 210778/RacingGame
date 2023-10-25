@@ -42,7 +42,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
-    isPlayer_ = true;
+    isPlayer_ = true;/////////////////////////
 }
 
 //デストラクタ
@@ -282,58 +282,6 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
         isPrintedMap_["goal"] = true;
         Music::Play(Music::MusicName::se_goal);
     }
-
-#if 0
-    if (time_ <= 0)
-    {
-        if (standbyTime_ == 1)
-        {
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::start);
-        }
-
-        switch (standbyTime_ / standard)
-        {
-        default:
-            break;
-        case 0:
-            //Image::Draw(imageMap_["1"]);
-            break;
-        case 1:
-            //Image::Draw(imageMap_["2"]);
-            break;
-        case 2:
-            //Image::Draw(imageMap_["3"]);
-            break;
-        }
-    }
-    else if (time_ <= countDrawTime_ * standard)
-    {
-        //Image::Draw(imageMap_["go"]);
-    }
-
-    if (goalFlag_)
-    {
-        //Image::Draw(imageMap_["go"]);
-    }
-
-    switch (standbyTime_ / standard)
-    {
-    default:
-        break;
-    case 0:
-        if (isPrintedMap_["1"])
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::one);
-        break;
-    case 1:
-        if (isPrintedMap_["2"])
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::two);
-        break;
-    case 2:
-        if (isPrintedMap_["3"])
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::three);
-        break;
-    }
-#endif
 }
 
 //UIの情報更新
@@ -353,41 +301,6 @@ void VehiclePlayer::PlayerCamera_Initialize()
 void VehiclePlayer::PlayerCamera_Update()
 {
     pViewer_->SetViewValue(transform_, acceleration_, handleRotate_);
-}
-
-void VehiclePlayer::PlayerParticle()
-{
-    float accLength = *XMVector3Length(acceleration_).m128_f32;
-
-    //ゴールしたら
-    if (goalFlag_)
-    {
-        ParticlePackage::ActRainbowFire(pParticle_, transform_.position_);
-    }
-
-    //走行中のタイヤの軌跡
-    if (wheelParticleLength_ < accLength
-        && wheelParticleLengthMax_ > accLength)
-    {
-        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRR"));
-        ParticlePackage::ActSmokeCloud(pParticle_, Model::GetBonePosition(hModel_, "wheelRL"));
-    }
-
-    //草地乗り上げ
-    if (landingType_ == Circuit::circuitType::turf
-        && landingFlag_
-        && wheelParticleLength_ < accLength)
-    {
-        ParticlePackage::ActLandingGrass(pParticle_, transform_.position_);
-    }
-
-    //砂地
-    if (landingType_ == Circuit::circuitType::dirt
-        && landingFlag_
-        && wheelParticleLength_ < accLength)
-    {
-        ParticlePackage::ActLandingDirt(pParticle_, transform_.position_);
-    }
 }
 
 //操作

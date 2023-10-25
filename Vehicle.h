@@ -148,8 +148,10 @@ protected:
 
     short accZDirection_; //前向きに進んでるか後ろ向きか。前：+1, 後：-1
 
-    float wheelParticleLength_;//タイヤのエフェクトが発生するベクトルの長さ
-    float wheelParticleLengthMax_;//タイヤのエフェクトが発生するベクトルの長さの上限
+    float wheelParticleLength_;     //タイヤのエフェクトが発生するベクトルの長さ
+    float wheelParticleLengthMax_;  //タイヤのエフェクトが発生するベクトルの長さの上限
+    float sparkParticleLength_;     //ドリフトのエフェクトが発生するベクトルの長さ
+    float sparkParticleHanlde_;     //ドリフトのエフェクトが発生するハンドルの回転
 
     std::string vehicleModelName_;  //車両モデルの名前
     std::string wheelModelName_;    //タイヤモデルの名前
@@ -159,24 +161,23 @@ protected:
 
     float slopeLimitAngle_; //坂道を上るときの上限角度（水平線から見る）この値を超えるとバグりがち
 
-    float wallReflectionForce_;//壁にぶつかったときの減速する値
+    float wallReflectionForce_; //壁にぶつかったときの減速する値
 
-    const short handleRight_;
-    const short handleLeft_;
+    const short handleRight_;   //右を表す定数
+    const short handleLeft_;    //左を表す定数
 
-    float boostCapacityMax_;//ブーストできる最大容量
-    float boostCapacity_;//ブーストできる現在残量
-    float boostSpending_;//ブーストする時の消費量
-    float boostIncrease_;//ブーストできる残量の追加値
-    float boostValue_;   //ブーストしたときに加算する値
+    float boostCapacityMax_;    //ブーストできる最大容量
+    float boostCapacity_;   //ブーストできる現在残量
+    float boostSpending_;   //ブーストする時の消費量
+    float boostIncrease_;   //ブーストできる残量の追加値
+    float boostValue_;      //ブーストしたときに加算する値
 
-    bool isPlayer_; //プレイヤーキャラかどうか
-
-    float collideBoxValue_;//相手とぶつかったときの掛ける値
-
-    bool isOperationInvalid_;   //操作を無効化する
-
-    bool pauseFlag_;  //ポーズ中かどうか
+    bool isPlayer_;         //プレイヤーキャラかどうか
+    float toPlayerVehicleLength_;   //NPCから見たプレイヤーまでの距離
+    float particleLimitLength_;     //NPCがこの距離より離れてるとエフェクトを表示しない
+    float collideBoxValue_;         //相手とぶつかったときの掛ける値
+    bool isOperationInvalid_;       //操作を無効化する
+    bool pauseFlag_;        //ポーズ中かどうか
 
     //カメラ
     Viewer* pViewer_;
@@ -462,6 +463,8 @@ public:
         void SetPauseFlag(bool flag) { pauseFlag_ = flag; }
         //サイズのゲッター
         VehicleSize* GetVehicleSize() { return &Size; }
+        //NPCから見たプレイヤーまでの距離
+        void SetToPlayerVehicleLength(float value) { toPlayerVehicleLength_ = value; }
 
     //プレイヤー限定で実行する関数  
         //UIの初期化
@@ -474,6 +477,4 @@ public:
         virtual void PlayerCamera_Initialize();
         //カメラ更新
         virtual void PlayerCamera_Update();
-        //エフェクトを表示(重くなるのでNPCはやらない)
-        virtual void PlayerParticle();
 };

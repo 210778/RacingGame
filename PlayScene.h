@@ -67,4 +67,7 @@ public:
 
 	//ポーズ
 	void PlayPause();
+
+	//NPCにプレイヤーまでの距離を教える
+	void SetNPCToPlayer();
 };
