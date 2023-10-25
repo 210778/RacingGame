@@ -1,7 +1,6 @@
 #pragma once
 #include "Vehicle.h"
 
-class Speedometer;
 class Text;
 class Sample;
 class Viewer;
@@ -10,9 +9,6 @@ class ImagePrinter;
 //◆◆◆を管理するクラス
 class VehiclePlayer : public Vehicle
 {
-    //スピードメーター
-    Speedometer* pSpeedometer_;
-
     //文字シリーズ
     Text* pTextSpeed_;  //時速
     Text* pTextTime_;   //経過時間
@@ -28,9 +24,69 @@ class VehiclePlayer : public Vehicle
     int imageBoostMax_;
     int imageBoost_;
 
-    //画像表示クラス
-    ImagePrinter* pImagePrinter_;
-    std::map<std::string, bool> isPrintedMap_;
+    //スピードメーター
+    int hImageSpeedFrame_;
+    int hImageSpeedNeedle_;
+    Transform SpeedmeterTransform_;
+
+    unsigned long long drawTime_;//描画に使う時間の値
+    int standardTime_;  //描画に使うFPSの値
+
+    //カウントダウン表示
+    struct ImageData
+    {
+        int imageHandle_;   //画像番号
+        Transform imageTransform_;  //画像トランスフォーム
+        int imageAlpha_;  //不透明度　　透明　0 ~ 255　不透明
+
+        int lifeTime_;   //表示するする時間(単位：フレーム)
+        int life_;       //表示している時間
+
+        bool isPrint_;   //表示するかどうか
+        bool isAlreadyPrint_;   //既に表示したかどうか
+
+        Transform changeTransform_; //トランスフォームの変化
+        int changeAlpha_;   //不透明度の変化
+
+        enum class ImageNumber
+        {
+            start,
+            one,
+            two,
+            three,
+            goal
+        };
+        ImageData()
+        {
+            imageHandle_ = -1;
+            imageAlpha_ = 255;
+            lifeTime_ = 0;
+            life_ = 0;
+            isPrint_ = false;
+            isAlreadyPrint_ = false;
+            changeAlpha_ = 0;
+        }
+        ImageData(int handle, Transform transform, int time
+            , Transform cTransform, int alpha = 255, int cAlpha = 0)
+        {
+            imageHandle_ = handle;
+            imageTransform_ = transform;
+            imageAlpha_ = alpha;
+            lifeTime_ = time;
+            life_ = 0;
+            isPrint_ = false;
+            isAlreadyPrint_ = false;
+            changeTransform_ = cTransform;
+            changeAlpha_ = cAlpha;
+        }
+    }imageData_;
+    //画像をセット
+    void SetImage(ImageData::ImageNumber in, int handle, Transform transform, int time
+        , Transform cTransform, int alpha = 255, int cAlpha = 0);
+    //画像描画
+    void DrawImage(ImageData::ImageNumber in);
+    //画像まとめ
+    std::map<ImageData::ImageNumber, ImageData> imageMap_;
 
 public:
     //コンストラクタ
@@ -60,18 +116,12 @@ public:
     //操作
     void InputOperate() override;
 
-#if 0
-    //初期化
-    void Initialize() override;
-
-    //更新
-    void Update() override;
-
-    //描画
-    void Draw() override;
-
-    //何かに当たった
-    //引数：pTarget 当たった相手
-    void OnCollision(GameObject* pTarget) override;
-#endif
+    //スピードメーター描画
+    void DrawSpeedmeter();
+    //時速描画
+    void DrawKmH();
+    //経過時間描画
+    void DrawElapsedTime();
+    //カウントダウン描画
+    void DrawStandbyCount();
 };

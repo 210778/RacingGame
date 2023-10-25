@@ -1106,7 +1106,7 @@ void Vehicle::SetWheelHeight(float height)
 //エフェクト
 void Vehicle::VehicleParticle()
 {
-    //遠くにいるNPCは
+    //遠くにいるNPCはエフェクト表示しない
     if (!isPlayer_ && toPlayerVehicleLength_ > particleLimitLength_)
         return;
 

@@ -6,7 +6,6 @@
 #include "Engine/SphereCollider.h"
 #include "Engine/BoxCollider.h"
 
-#include "Speedometer.h"
 #include "Viewer.h"
 #include "Ground.h"
 #include "Bullet.h"
@@ -23,7 +22,7 @@ using std::to_string;
 //コンストラクタ
 VehiclePlayer::VehiclePlayer(GameObject* parent)
     :Vehicle(parent, "VehiclePlayer")
-    , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
+    , pTextSpeed_(nullptr), pTextTime_(nullptr)
     , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
     , km_hAdd(120.0f)
     , pSample_(nullptr)
@@ -33,12 +32,13 @@ VehiclePlayer::VehiclePlayer(GameObject* parent)
 //コンストラクタ
 VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::string wheelName)
     :Vehicle(parent, "VehiclePlayer")
-    , pSpeedometer_(nullptr), pTextSpeed_(nullptr), pTextTime_(nullptr)
+    , pTextSpeed_(nullptr), pTextTime_(nullptr)
     , pTextLap_(nullptr), pTextRanking_(nullptr), pTextAcceleration_(nullptr)
     , km_hAdd(122.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
     , imageBoostMax_(-1), imageBoost_(-1)
-    , pImagePrinter_(nullptr)
+    , hImageSpeedFrame_(-1), hImageSpeedNeedle_(-1)
+    , drawTime_(0), standardTime_(60)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -63,6 +63,8 @@ void VehiclePlayer::Release()
 //UIの初期化
 void VehiclePlayer::PlayerUI_Initialize()
 {
+    standardTime_ = Global::GetStandardFPS();
+
     //文字
     pTextSpeed_ = new Text;
     pTextSpeed_->Initialize();
@@ -82,73 +84,56 @@ void VehiclePlayer::PlayerUI_Initialize()
     pSample_ = Instantiate<Sample>(GetParent());
 
     //スピードメーター
-    pSpeedometer_ = Instantiate<Speedometer>(GetParent());
-    pSpeedometer_->SetPosition({ -0.875f, -0.8f, 0.0f });
+    hImageSpeedFrame_ = Image::Load("image\\mator6.png");
+    hImageSpeedNeedle_ = Image::Load("image\\matorNeedle3.png");
+    SpeedmeterTransform_.position_ = { -0.875f, -0.8f, 0.0f };
 
     //画像
     imageBoostMax_ = Image::Load("image\\grayBar.png");
     imageBoost_    = Image::Load("image\\redBar.png");
 
-    pImagePrinter_ = Instantiate<ImagePrinter>(GetParent());
-    isPrintedMap_["start"] = false;
-    isPrintedMap_["1"] = false;
-    isPrintedMap_["2"] = false;
-    isPrintedMap_["3"] = false;
-    isPrintedMap_["goal"] = false;
+    //カウントダウン表
+    Transform trans;
+    Transform change;
+    change.scale_ = { 0.05f, 0.05f, 0.05f };
+    int cAlpha = -5;
+    SetImage(ImageData::ImageNumber::start, Image::Load("image\\count_start.png"), trans
+        , Global::GetStandardFPS(), change, 255, cAlpha);
+    SetImage(ImageData::ImageNumber::one, Image::Load("image\\count_1.png"), trans
+        , Global::GetStandardFPS(), change, 255, cAlpha);
+    SetImage(ImageData::ImageNumber::two, Image::Load("image\\count_2.png"), trans
+        , Global::GetStandardFPS(), change, 255, cAlpha);
+    SetImage(ImageData::ImageNumber::three, Image::Load("image\\count_3.png"), trans
+        , Global::GetStandardFPS(), change, 255, cAlpha);
+    SetImage(ImageData::ImageNumber::goal, Image::Load("image\\count_goal.png"), trans
+        , Global::GetStandardFPS(), change, 255, cAlpha);
+
 }
 
 //UIの表示
 void VehiclePlayer::PlayerUI_Draw()
 {
-    //時速表示
-    //平面のベクトルの長さ
-    XMVECTOR speedVec = acceleration_;
-    string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
-    speedStr += "km/h";
-    pTextSpeed_->Draw(150, Global::GetScreenHeight() - 20, speedStr.c_str());
+    //スピードメーター  
+    DrawSpeedmeter();
 
-    unsigned long long time = time_;
+    //時速表示
+    DrawKmH();
+
+    drawTime_ = time_;
     if (goalFlag_)
     {
         //ゴールしてるなら
-        time = goalTime_;
+        drawTime_ = goalTime_;
 
         //点滅させる
         if (time_ % flashIntervalUI_ == 0)
         {
-            if (IsFlashUI_)
-                IsFlashUI_ = false;
-            else
-                IsFlashUI_ = true;
+            IsFlashUI_ = (IsFlashUI_) ? false : true;
         }
     }
 
     //経過時間表示
-    int standard = Global::GetStandardFPS();
-    int min = 0;
-    int sec = 0;
-    int mSec = 0;
-    int rest = 0;
-    min = time / (standard * standard);
-    rest = time % (standard * standard);
-    sec = rest / standard;
-    rest = rest % standard;
-    mSec = rest;
-    string timeStr = "Time:";    //= to_string(min) + ":" + to_string(sec) + ":" + to_string(mSec);
-    if (min < 10)
-        timeStr += "0";
-    timeStr += to_string(min) + ":";
-    if (sec < 10)
-        timeStr += "0";
-    timeStr += to_string(sec) + ":";
-    if (mSec < 10)
-        timeStr += "0";
-    timeStr += to_string(mSec);
-    //点滅
-    if(IsFlashUI_)
-    {
-        pTextTime_->Draw(30, 30, timeStr.c_str());
-    }
+    DrawElapsedTime();
 
     //周回数表示
     string lapStr = "Lap:";
@@ -226,7 +211,7 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     }
 
 #ifdef _DEBUG
-    //
+    //次のチェックポイント位置
     pSample_->SetPosition(*GetNextCheckPosition());
 
     //加速度表示
@@ -245,49 +230,22 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 #endif
 
     //カウントダウン表示
-    if (time_ <= 0)
-    {
-        if (((float)standbyTime_ / standard) < 1 && isPrintedMap_["1"] == false)
-        {
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::one);
-            isPrintedMap_["1"] = true;
-            Music::Play(Music::MusicName::se_count123);
-        }
-        if (((float)standbyTime_ / standard) < 2 && isPrintedMap_["2"] == false)
-        {
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::two);
-            isPrintedMap_["2"] = true;
-            Music::Play(Music::MusicName::se_count123);
-        }
-        if (((float)standbyTime_ / standard) < 3 && isPrintedMap_["3"] == false)
-        {
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::three);
-            isPrintedMap_["3"] = true;
-            Music::Play(Music::MusicName::se_count123);
-        }
-    }
-    else
-    {
-        if (isPrintedMap_["start"] == false)
-        {
-            pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::start);
-            isPrintedMap_["start"] = true;
-            Music::Play(Music::MusicName::se_countStart);
-        }
-    }
-
-    if (goalFlag_ && isPrintedMap_["goal"] == false)
-    {
-        pImagePrinter_->DrawImage(ImagePrinter::ImageNumber::goal);
-        isPrintedMap_["goal"] = true;
-        Music::Play(Music::MusicName::se_goal);
-    }
+    DrawStandbyCount();
 }
 
 //UIの情報更新
 void VehiclePlayer::PlayerUI_Update()
 {
-    pSpeedometer_->SetSpeed(*XMVector3LengthEst(acceleration_).m128_f32 * km_hAdd);
+    //カウントダウン表示
+    for (auto& itr : imageMap_)
+    {
+        //表示しなくする
+        if (itr.second.life_ >= itr.second.lifeTime_)
+        {
+            itr.second.isPrint_ = false;
+        }
+    }
+
 }
 
 //カメラの用意
@@ -359,4 +317,138 @@ void VehiclePlayer::InputOperate()
             operation_.inputNow[operation_.inputName::moveRight] = 1.0f;
         }
 
+}
+
+//画像をセット
+void VehiclePlayer::SetImage(ImageData::ImageNumber in, int handle, Transform transform
+    , int time, Transform cTransform, int alpha, int cAlpha)
+{
+    imageMap_[in].imageHandle_ = handle;
+    imageMap_[in].imageTransform_ = transform;
+    imageMap_[in].lifeTime_ = time;
+    imageMap_[in].changeTransform_ = cTransform;
+    imageMap_[in].imageAlpha_ = alpha;
+    imageMap_[in].changeAlpha_ = cAlpha;
+}
+//画像描画
+void VehiclePlayer::DrawImage(ImageData::ImageNumber in)
+{
+    imageMap_[in].isPrint_ = true;
+    imageMap_[in].isAlreadyPrint_ = true;
+    imageMap_[in].life_ = 0;
+}
+
+//スピードメーター描画
+void VehiclePlayer::DrawSpeedmeter()
+{
+    //枠
+    SpeedmeterTransform_.rotate_.z = 0;
+    Image::SetTransform(hImageSpeedFrame_, SpeedmeterTransform_);
+    Image::Draw(hImageSpeedFrame_);
+    //針
+    SpeedmeterTransform_.rotate_.z = -(*XMVector3LengthEst(acceleration_).m128_f32 * km_hAdd);
+    Image::SetTransform(hImageSpeedNeedle_, SpeedmeterTransform_);
+    Image::Draw(hImageSpeedNeedle_);
+}
+
+void VehiclePlayer::DrawKmH()
+{
+    //平面のベクトルの長さ
+    XMVECTOR speedVec = acceleration_;
+    string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
+    speedStr += "km/h";
+    pTextSpeed_->Draw(150, Global::GetScreenHeight() - 20, speedStr.c_str());
+}
+
+void VehiclePlayer::DrawElapsedTime()
+{
+    int standard = 60;
+    int min = 0;
+    int sec = 0;
+    int mSec = 0;
+    int rest = 0;
+    min = drawTime_ / (standard * standard);
+    rest = drawTime_ % (standard * standard);
+    sec = rest / standard;
+    rest = rest % standard;
+    mSec = rest;
+    string timeStr = "Time:";
+    if (min < 10)
+        timeStr += "0";
+    timeStr += to_string(min) + ":";
+    if (sec < 10)
+        timeStr += "0";
+    timeStr += to_string(sec) + ":";
+    if (mSec < 10)
+        timeStr += "0";
+    timeStr += to_string(mSec);
+    //点滅
+    if (IsFlashUI_)
+    {
+        pTextTime_->Draw(30, 30, timeStr.c_str());
+    }
+}
+
+//カウントダウン描画
+void VehiclePlayer::DrawStandbyCount()
+{
+    if (time_ <= 0)
+    {
+        if (((float)standbyTime_ / standardTime_) < 1
+            && imageMap_[ImageData::ImageNumber::one].isAlreadyPrint_ == false)
+        {
+            DrawImage(ImageData::ImageNumber::one);
+            Music::Play(Music::MusicName::se_count123);
+        }
+        if (((float)standbyTime_ / standardTime_) < 2
+            && imageMap_[ImageData::ImageNumber::two].isAlreadyPrint_ == false)
+        {
+            DrawImage(ImageData::ImageNumber::two);
+            Music::Play(Music::MusicName::se_count123);
+        }
+        if (((float)standbyTime_ / standardTime_) < 3
+            && imageMap_[ImageData::ImageNumber::three].isAlreadyPrint_ == false)
+        {
+            DrawImage(ImageData::ImageNumber::three);
+            Music::Play(Music::MusicName::se_count123);
+        }
+    }
+    else
+    {
+        if (imageMap_[ImageData::ImageNumber::start].isAlreadyPrint_ == false)
+        {
+            DrawImage(ImageData::ImageNumber::start);
+            Music::Play(Music::MusicName::se_countStart);
+        }
+    }
+
+    if (goalFlag_ && imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_ == false)
+    {
+        DrawImage(ImageData::ImageNumber::goal);
+        Music::Play(Music::MusicName::se_goal);
+    }
+
+    for (auto& itr : imageMap_)
+    {
+        //表示する
+        if (itr.second.isPrint_)
+        {
+            //トランスフォーム
+            Transform tra;
+            tra.position_ = Transform::Float3Add(itr.second.imageTransform_.position_
+                , Transform::Float3Times(itr.second.changeTransform_.position_, itr.second.life_));
+            tra.rotate_ = Transform::Float3Add(itr.second.imageTransform_.rotate_
+                , Transform::Float3Times(itr.second.changeTransform_.rotate_, itr.second.life_));
+            tra.scale_ = Transform::Float3Add(itr.second.imageTransform_.scale_
+                , Transform::Float3Times(itr.second.changeTransform_.scale_, itr.second.life_));
+            Image::SetTransform(itr.second.imageHandle_, tra);
+            //透明度
+            Image::SetAlpha(itr.second.imageHandle_
+                , itr.second.imageAlpha_ + (itr.second.changeAlpha_ * itr.second.life_));
+            //描画
+            Image::Draw(itr.second.imageHandle_);
+            //加算
+            itr.second.life_++;
+        }
+    }
 }
