@@ -64,6 +64,7 @@ void Music::Initialize()
 	SetMusic(MusicName::se_count123, "music\\se_amb04.wav", false);
 	SetMusic(MusicName::se_countStart, "music\\se_ymb04.wav", false);
 	SetMusic(MusicName::se_goal, "music\\se_ymb04.wav", false);
+	SetMusic(MusicName::se_lap, "music\\se_ymb04.wav", false);
 }
 
 //çXêV

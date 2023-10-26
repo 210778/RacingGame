@@ -23,6 +23,8 @@ namespace Input
 	//更新
 	void Update();
 
+	//開放
+	void Release();
 
 	///////////////////////////　キーボード　//////////////////////////////////
 	//キーが押されているか調べる
@@ -56,7 +58,6 @@ namespace Input
 	//引数：buttonCode	調べたいボタンの番号
 	//戻値：放した瞬間だったらtrue
 	bool IsMouseButtonUp(int buttonCode);
-
 
 	//マウスカーソルの位置を取得
 	//戻値：マウスカーソルの位置
@@ -97,18 +98,13 @@ namespace Input
 
 	//左トリガーの押し込み具合を取得
 	//戻値:押し込み具合（0～1）
-	float		GetPadTrrigerL(int padID = 0);
+	float GetPadTrrigerL(int padID = 0);
 
 	//右トリガーの押し込み具合を取得
 	//戻値:押し込み具合（0～1）
-	float		GetPadTrrigerR(int padID = 0);
+	float GetPadTrrigerR(int padID = 0);
 
 	//振動させる
 	void SetPadVibration(int l, int r, int padID = 0);
 
-
-
-
-	//開放
-	void Release();
 };

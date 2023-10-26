@@ -22,7 +22,6 @@
 #include "TextPrinter.h"
 #include "Circuit.h"
 
-
 using std::tuple;
 using std::sort;
 using std::vector;
@@ -31,7 +30,7 @@ using std::vector;
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
 	, pGround_(nullptr), pVehiclePlayer_(nullptr)
-	, universalTime_(0), standbyTime_(1), standbySeconds_(5)//5
+	, universalTime_(0), standbyTime_(1), standbySeconds_(1)//5
 	, startFlag_(false)
 {
 }
@@ -47,8 +46,7 @@ void PlayScene::Initialize()
 
 	//音楽
 	//Music::Initialize();
-
-	int population = 2;
+	int population = 1;
 	int playerNumber = 0;
 
 	//人数
@@ -258,7 +256,6 @@ void PlayScene::CountUniversalTime()
 	if(standbyTime_ > 0)
 	{
 		standbyTime_--;
-
 		for (auto& itr : vehicles_)
 		{
 			itr->SetStandbyTime(standbyTime_);
@@ -268,7 +265,6 @@ void PlayScene::CountUniversalTime()
 	{
 		//加算 オーバーフローは考えない
 		universalTime_++;
-
 		for (auto& itr : vehicles_)
 		{
 			itr->SetTime(universalTime_);
@@ -279,7 +275,6 @@ void PlayScene::CountUniversalTime()
 	if (standbyTime_ <= 0 && startFlag_ == false)
 	{
 		startFlag_ = true;
-
 		for (auto& i : vehicles_)
 		{
 			(*i).SetOperationInvalid(false);

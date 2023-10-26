@@ -372,7 +372,7 @@ namespace Direct3D
 		//”wŒi‚ÌF
 		//float clearColor[4] = { 0.1f, 0.2f, 0.2f, 1.0f };//R,G,B,A
 		//float clearColor[4] = { 0.1f, 0.6f, 1.0f, 1.0f };
-		float clearColor[4] = { 0.0f, 0.35f, 0.3f, 1.0f };
+		float clearColor[4] = { 0.1f, 0.6f, 1.0f, 1.0f };
 
 		//‰æ–Ê‚ðƒNƒŠƒA
 		pContext_->ClearRenderTargetView(pRenderTargetView_, clearColor);

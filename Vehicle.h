@@ -179,6 +179,8 @@ protected:
     bool isOperationInvalid_;       //操作を無効化する
     bool pauseFlag_;        //ポーズ中かどうか
 
+    XMFLOAT3 farLimitPosition_; //xyzそれぞれがこの値(絶対値)を超えると位置リセット
+
     //カメラ
     Viewer* pViewer_;
 
@@ -411,6 +413,9 @@ public:
 
     //エフェクト
     void VehicleParticle();
+    
+    //奈落に落下 / フィールド外に出た　時に位置と状態をリセット
+    void FallAbyss();
 
     //順位判定系セッター・ゲッター
         //チェックポイント通過数を取得

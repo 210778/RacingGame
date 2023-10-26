@@ -65,6 +65,11 @@ void VehiclePlayer::PlayerUI_Initialize()
 {
     standardTime_ = Global::GetStandardFPS();
 
+#ifdef _DEBUG
+    //デバッグ用
+    pSample_ = Instantiate<Sample>(GetParent());
+#endif
+
     //文字
     pTextSpeed_ = new Text;
     pTextSpeed_->Initialize();
@@ -81,16 +86,20 @@ void VehiclePlayer::PlayerUI_Initialize()
     pTextAcceleration_ = new Text;
     pTextAcceleration_->Initialize();
 
-    pSample_ = Instantiate<Sample>(GetParent());
 
     //スピードメーター
     hImageSpeedFrame_ = Image::Load("image\\mator6.png");
     hImageSpeedNeedle_ = Image::Load("image\\matorNeedle3.png");
     SpeedmeterTransform_.position_ = { -0.875f, -0.8f, 0.0f };
 
-    //画像
+    //ブースト
     imageBoostMax_ = Image::Load("image\\grayBar.png");
     imageBoost_    = Image::Load("image\\redBar.png");
+
+    boostMaxTrans_.position_ = { 0.0f,0.8f,1.0f };
+    boostMaxTrans_.scale_ = { 2.55,1.5,1.0f };
+    boostTrans_ = boostMaxTrans_;
+    boostTrans_.scale_ = { boostMaxTrans_.scale_.x * 0.95f , boostMaxTrans_.scale_.y * 0.8f, 1.0f, };
 
     //カウントダウン表
     Transform trans;
@@ -119,12 +128,12 @@ void VehiclePlayer::PlayerUI_Draw()
     //時速表示
     DrawKmH();
 
+    //点滅
     drawTime_ = time_;
     if (goalFlag_)
     {
         //ゴールしてるなら
         drawTime_ = goalTime_;
-
         //点滅させる
         if (time_ % flashIntervalUI_ == 0)
         {
@@ -133,35 +142,20 @@ void VehiclePlayer::PlayerUI_Draw()
     }
 
     //経過時間表示
-    DrawElapsedTime();
+    if(IsFlashUI_)
+        DrawElapsedTime();
 
     //周回数表示
     string lapStr = "Lap:";
     lapStr += to_string(lapCount_) + "/" + to_string(lapMax_);
     //点滅
     if (IsFlashUI_)
-    {
         pTextLap_->Draw(30, 70, lapStr.c_str());
-    }
 
     //順位表示
-    string rank = to_string(ranking_);
-
-    //人数は多くても２０人ぐらいだとする
-    switch (ranking_)
-    {
-    default:rank += "th"; break;
-    case 1: rank += "st"; break;
-    case 2: rank += "nd"; break;
-    case 3: rank += "rd"; break;
-    }
-
-    rank += "/" + to_string(population_);
-    //点滅
     if (IsFlashUI_)
-    {
-        pTextRanking_->Draw(30, 110, rank.c_str());
-    }
+        DrawRanking();
+
 #if 0
     //順位表示
     string rank;
@@ -192,41 +186,14 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 #endif
 
     //ブースト
-    //満タンなら表示しない
-    if (boostCapacity_ < boostCapacityMax_)
-    {
-        Transform boostMaxTrans, boostTrans;
-        boostMaxTrans.position_ = { 0.0f,0.8f,1.0f };
-        boostMaxTrans.scale_ = { 2.55,1.5,1.0f };
-
-        //
-        boostTrans = boostMaxTrans;
-        boostTrans.scale_ = { boostMaxTrans.scale_.x * 0.95f * (boostCapacity_ / boostCapacityMax_)
-                            , boostMaxTrans.scale_.y * 0.8f, 1.0f, };
-
-        Image::SetTransform(imageBoostMax_, boostMaxTrans);
-        Image::Draw(imageBoostMax_);
-        Image::SetTransform(imageBoost_, boostTrans);
-        Image::Draw(imageBoost_);
-    }
+    DrawBoostGauge();
 
 #ifdef _DEBUG
     //次のチェックポイント位置
     pSample_->SetPosition(*GetNextCheckPosition());
 
     //加速度表示
-    XMFLOAT3 floAcc;
-    //ベクトルY軸で回転用行列
-    XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
-    XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
-    string accStr = "X:" + to_string(floAcc.x) + " Y:" + to_string(floAcc.y) + " Z:" + to_string(floAcc.z);
-
-    pTextAcceleration_->Draw(280, 30, accStr.c_str());
-
-    accStr = "X:" + to_string(transform_.rotate_.x)
-          + " Y:" + to_string(transform_.rotate_.y)
-          + " Z:" + to_string(transform_.rotate_.z);
-    pTextAcceleration_->Draw(280, 60, accStr.c_str());
+    DrawAccelerationRotate();
 #endif
 
     //カウントダウン表示
@@ -241,11 +208,8 @@ void VehiclePlayer::PlayerUI_Update()
     {
         //表示しなくする
         if (itr.second.life_ >= itr.second.lifeTime_)
-        {
             itr.second.isPrint_ = false;
-        }
     }
-
 }
 
 //カメラの用意
@@ -382,11 +346,60 @@ void VehiclePlayer::DrawElapsedTime()
     if (mSec < 10)
         timeStr += "0";
     timeStr += to_string(mSec);
-    //点滅
-    if (IsFlashUI_)
-    {
-        pTextTime_->Draw(30, 30, timeStr.c_str());
+
+    pTextTime_->Draw(30, 30, timeStr.c_str());
+}
+
+void VehiclePlayer::DrawRanking()
+{
+    string rank = to_string(ranking_);
+
+    //人数は多くても２０人ぐらいだとする
+    switch (ranking_){
+    default:rank += "th"; break;
+    case 1: rank += "st"; break;
+    case 2: rank += "nd"; break;
+    case 3: rank += "rd"; break;
     }
+    rank += "/" + to_string(population_);
+
+    pTextRanking_->Draw(30, 110, rank.c_str());
+}
+
+void VehiclePlayer::DrawBoostGauge()
+{
+    //満タンなら表示しない
+    if (boostCapacity_ < boostCapacityMax_)
+    {
+        Transform boostValue = boostTrans_;
+
+        boostValue.scale_.x *= boostCapacity_ / boostCapacityMax_;
+
+        Image::SetTransform(imageBoostMax_, boostMaxTrans_);
+        Image::Draw(imageBoostMax_);
+        Image::SetTransform(imageBoost_, boostValue);
+        Image::Draw(imageBoost_);
+    }
+}
+
+void VehiclePlayer::DrawAccelerationRotate()
+{
+    XMFLOAT3 floAcc;
+    //ベクトルY軸で回転用行列
+    XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
+    XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
+    string accStr = "X:" + to_string(floAcc.x) + " Y:" + to_string(floAcc.y) + " Z:" + to_string(floAcc.z);
+    pTextAcceleration_->Draw(280, 30, accStr.c_str());
+
+    accStr = "X:" + to_string(transform_.position_.x)
+        + " Y:" + to_string(transform_.position_.y)
+        + " Z:" + to_string(transform_.position_.z);
+    pTextAcceleration_->Draw(280, 60, accStr.c_str());
+
+    accStr = "X:" + to_string(transform_.rotate_.x)
+        + " Y:" + to_string(transform_.rotate_.y)
+        + " Z:" + to_string(transform_.rotate_.z);
+    pTextAcceleration_->Draw(280, 90, accStr.c_str());
 }
 
 //カウントダウン描画
@@ -395,19 +408,19 @@ void VehiclePlayer::DrawStandbyCount()
     if (time_ <= 0)
     {
         if (((float)standbyTime_ / standardTime_) < 1
-            && imageMap_[ImageData::ImageNumber::one].isAlreadyPrint_ == false)
+            && !(imageMap_[ImageData::ImageNumber::one].isAlreadyPrint_))
         {
             DrawImage(ImageData::ImageNumber::one);
             Music::Play(Music::MusicName::se_count123);
         }
         if (((float)standbyTime_ / standardTime_) < 2
-            && imageMap_[ImageData::ImageNumber::two].isAlreadyPrint_ == false)
+            && !(imageMap_[ImageData::ImageNumber::two].isAlreadyPrint_))
         {
             DrawImage(ImageData::ImageNumber::two);
             Music::Play(Music::MusicName::se_count123);
         }
         if (((float)standbyTime_ / standardTime_) < 3
-            && imageMap_[ImageData::ImageNumber::three].isAlreadyPrint_ == false)
+            && !(imageMap_[ImageData::ImageNumber::three].isAlreadyPrint_))
         {
             DrawImage(ImageData::ImageNumber::three);
             Music::Play(Music::MusicName::se_count123);
@@ -415,14 +428,14 @@ void VehiclePlayer::DrawStandbyCount()
     }
     else
     {
-        if (imageMap_[ImageData::ImageNumber::start].isAlreadyPrint_ == false)
+        if (!(imageMap_[ImageData::ImageNumber::start].isAlreadyPrint_))
         {
             DrawImage(ImageData::ImageNumber::start);
             Music::Play(Music::MusicName::se_countStart);
         }
     }
 
-    if (goalFlag_ && imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_ == false)
+    if (goalFlag_ && !(imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_))
     {
         DrawImage(ImageData::ImageNumber::goal);
         Music::Play(Music::MusicName::se_goal);

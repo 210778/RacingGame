@@ -115,6 +115,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f), boostValue_(2.0f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(200.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
+    , farLimitPosition_(1000.f, 500.0f, 1000.f)
     , pViewer_(nullptr)
     , pPoryLine_(nullptr)
 {
@@ -177,19 +178,12 @@ void Vehicle::Initialize()
     MakeWheels(hWheelModel_);
 
     //当たり判定
-    SphereCollider* collision = new SphereCollider(Model::GetBonePosition(hModel_, "center")
-                                , Size.centerFrontToRear_);
+    SphereCollider* collision =
+        new SphereCollider(Model::GetBonePosition(hModel_, "center"), Size.centerFrontToRear_);
     AddCollider(collision);
 
     //エフェクトのポインタとそれのまとめ
     pParticle_ = Instantiate<Particle>(this);
-
-    //ステージオブジェクトを探す
-    //ちゃんとパーツが入っているか (これ以降はポインタがあってパーツがあることを前提にする)
-    //pGround_ = (Ground*)FindObject("Ground");
-    //assert(pGround_ != nullptr);
-    //assert(!(pGround_->GetCircuitUnion() == nullptr));
-    //assert(!(pGround_->GetCircuitUnion()->parts_.empty()));
 
     //再スタート地点
     restartTransform_ = startTransform_;
@@ -281,13 +275,15 @@ void Vehicle::Update()
         if (landingType_ == Circuit::circuitType::abyss)
         {
             //奈落に落下
-            acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
-            transform_.position_ = restartTransform_.position_;
-            transform_.rotate_   = restartTransform_.rotate_;
-            //今すぐカメラ移動
-            if (pViewer_ != nullptr)
-                pViewer_->WatchPresentPosition();
+            FallAbyss();
         }
+    }
+    //離れすぎたら強制リセット
+    if (abs(transform_.position_.x) > abs(farLimitPosition_.x) ||
+        abs(transform_.position_.y) > abs(farLimitPosition_.y) ||
+        abs(transform_.position_.z) > abs(farLimitPosition_.z))
+    {
+        FallAbyss();
     }
 
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
@@ -492,13 +488,10 @@ void Vehicle::VehicleCollide()
 void Vehicle::Landing(int hModel,int type)
 {
     //レイの発射位置
-    RayCastData data;
-    data.start = transform_.position_;
     XMFLOAT3 upF;
     XMStoreFloat3(&upF, vehicleVector_.y * Size.toBottom_);
-    data.start = Transform::Float3Add(data.start, upF);
+    RayCastData data(Transform::Float3Add(transform_.position_, upF), XMFLOAT3{ 0.0f, -1.0f, 0.0f });
 
-    data.dir = { 0.0f, -1.0f, 0.0f };   //レイの方向
     Model::RayCast(hModel, &data);      //レイを発射
 
     //レイが当たったら
@@ -509,7 +502,6 @@ void Vehicle::Landing(int hModel,int type)
 
         if (-data.dist > XMVectorGetY(acceleration_) - Size.toWheelBottom_)
         {
-            landingType_ = type;    //地面のタイプ
 
             //下方向の加速度が大きいなら　地面にワープ　落下速度を０
             if (!landingFlag_)
@@ -519,9 +511,12 @@ void Vehicle::Landing(int hModel,int type)
             }
 
             landingFlag_ = true;
+            landingType_ = type;    //地面のタイプ
         }
         else
+        {
             landingFlag_ = false;
+        }
 
         //角度を変える
         if (landingFlag_ || data.dist < Size.toWheelBottom_ + Size.wheelHeight_)
@@ -535,6 +530,7 @@ void Vehicle::Landing(int hModel,int type)
         }
     }
 
+#if 0
     //接地位置調整
     //あと坂道を移動してるときに坂道に張り付く　急すぎると効果なし
     RayCastData vehicleData;
@@ -542,21 +538,24 @@ void Vehicle::Landing(int hModel,int type)
     XMStoreFloat3(&vehicleData.dir, -vehicleVector_.y);
     Model::RayCast(hModel, &vehicleData);      //レイを発射
     //高低差がタイヤの直径ぐらいの時
-    if (vehicleData.hit && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
+    if (vehicleData.hit && vehicleData.dist > Size.toWheelBottom_
+        && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
     {
-        landingType_ = type;    //地面のタイプ
-
         XMFLOAT3 wheelFlo;
         XMStoreFloat3(&wheelFlo, -vehicleVector_.y * (vehicleData.dist - Size.toWheelBottom_));
         transform_.position_ = Transform::Float3Add(transform_.position_, wheelFlo);
+        
         landingFlag_ = true;
+        landingType_ = type;    //地面のタイプ
     }
+#endif
+
     //天井 ほんとは分割するべきだろうけど天井に当たることは珍しいし重そうだからここに置く
     XMStoreFloat3(&data.dir, vehicleVector_.y);
     Model::RayCast(hModel, &data);  //レイを発射
     //当たった
     if (data.hit)
-    {   
+    {
         //NPC用
         SetRayCastHit(RayCastHit::Number::up, data);
 
@@ -572,7 +571,9 @@ void Vehicle::Landing(int hModel,int type)
         }
         //天井にぶつかったとき
         else if (data.dist < XMVectorGetY(acceleration_) + Size.toTop_)
+        {
             acceleration_ *= {1.0f, 0.0f, 1.0f, 1.0f};  //止める
+        }
     }
 }
 
@@ -780,7 +781,6 @@ void Vehicle::CollideWall(int hModel, int type)
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
 
-                    //加速度を０にしたりはしない
                     //減速させる
                     acceleration_ *= wallReflectionForce_;
 
@@ -994,11 +994,6 @@ void Vehicle::CollideBoundingBox(Vehicle* pVehicle)
     //これでもそれっぽい
     acceleration_ += posToOpp * *XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32
                     * pVehicle->GetMass() * collideBoxValue_;
-
-    //acceleration_ += posToOpp * *XMVector3LengthEst(acceleration_).m128_f32;
-    //acceleration_ += pVehicle->GetAcceleration();
-    //acceleration_ += posToOpp * ((*XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32
-    //    + *XMVector3LengthEst(acceleration_).m128_f32) * 0.5f);
 }
 
 //操作入力の反映
@@ -1135,12 +1130,18 @@ void Vehicle::VehicleParticle()
             , Model::GetBonePosition(hModel_, "wheelRL"));
     }
     //ドリフトの火花
-    else if (landingFlag_ && accLength > sparkParticleLength_ && abs(handleRotate_) > sparkParticleHanlde_)
+    else if (landingFlag_ && accLength > sparkParticleLength_)
     {
-        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
-            , Model::GetBonePosition(hModel_, "wheelRR"), acceleration_);
-        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
-            , Model::GetBonePosition(hModel_, "wheelRL"), acceleration_);
+        if (handleRotate_ > sparkParticleHanlde_)
+        {
+            ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
+                , Model::GetBonePosition(hModel_, "wheelRL"), acceleration_);
+        }
+        else if (handleRotate_ < -sparkParticleHanlde_)
+        {
+            ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::spark
+                , Model::GetBonePosition(hModel_, "wheelRR"), acceleration_);
+        }
     }
 
     //走行中のそれぞれのエフェクト
@@ -1164,7 +1165,21 @@ void Vehicle::VehicleParticle()
             break;
         }
     }
+}
 
+//奈落に落下
+void Vehicle::FallAbyss()
+{
+    //リセット
+    acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
+    transform_.position_ = restartTransform_.position_;
+    transform_.rotate_ = restartTransform_.rotate_;
+    
+    //今すぐカメラ移動
+    if (pViewer_ != nullptr)
+    {
+        pViewer_->WatchPresentPosition();
+    }
 }
 
 

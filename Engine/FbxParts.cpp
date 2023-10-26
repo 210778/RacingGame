@@ -122,7 +122,6 @@ void FbxParts::InitVertex(fbxsdk::FbxMesh * mesh)
 //マテリアル準備
 void FbxParts::InitMaterial(fbxsdk::FbxNode * pNode)
 {
-
 	// マテリアルバッファの生成
 	materialCount_ = pNode->GetMaterialCount();
 	pMaterial_ = new MATERIAL[materialCount_];

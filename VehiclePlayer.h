@@ -23,6 +23,8 @@ class VehiclePlayer : public Vehicle
     //ブースト系
     int imageBoostMax_;
     int imageBoost_;
+    Transform boostMaxTrans_;
+    Transform boostTrans_;
 
     //スピードメーター
     int hImageSpeedFrame_;
@@ -122,6 +124,12 @@ public:
     void DrawKmH();
     //経過時間描画
     void DrawElapsedTime();
+    //順位表示
+    void DrawRanking();
+    //ブースト表示
+    void DrawBoostGauge();
+    //デバッグ：加速度と回転表示
+    void DrawAccelerationRotate();
     //カウントダウン描画
     void DrawStandbyCount();
 };

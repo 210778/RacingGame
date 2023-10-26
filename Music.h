@@ -17,6 +17,7 @@ namespace Music
 		se_carStop,
 		se_count123,
 		se_countStart,
+		se_lap,
 		se_goal,
 	};
 

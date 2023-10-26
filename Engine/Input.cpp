@@ -26,8 +26,6 @@ namespace Input
 	XINPUT_STATE prevControllerState_[MAX_PAD_NUM];
 
 
-
-
 	//初期化
 	void Initialize(HWND hWnd)
 	{
@@ -49,7 +47,6 @@ namespace Input
 		pMouseDevice_->SetCooperativeLevel(hWnd_, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 	}
 
-
 	//更新
 	void Update()
 	{
@@ -69,10 +66,7 @@ namespace Input
 			memcpy(&prevControllerState_[i], &controllerState_[i], sizeof(controllerState_[i]));
 			XInputGetState(i, &controllerState_[i]);
 		}
-
 	}
-
-
 
 	//開放
 	void Release()
@@ -81,8 +75,6 @@ namespace Input
 		SAFE_RELEASE(pKeyDevice_);
 		SAFE_RELEASE(pDInput_);
 	}
-
-
 
 	/////////////////////////////　キーボード情報取得　//////////////////////////////////
 
@@ -97,7 +89,6 @@ namespace Input
 		return false;
 	}
 
-
 	//キーを今押したか調べる（押しっぱなしは無効）
 	bool IsKeyDown(int keyCode)
 	{
@@ -109,7 +100,6 @@ namespace Input
 		return false;
 	}
 
-
 	//キーを今放したか調べる
 	bool IsKeyUp(int keyCode)
 	{
@@ -120,7 +110,6 @@ namespace Input
 		}
 		return false;
 	}
-
 
 	/////////////////////////////　マウス情報取得　//////////////////////////////////
 
@@ -171,14 +160,12 @@ namespace Input
 		mousePos_.y = y;
 	}
 
-
 	//そのフレームでのマウスの移動量を取得
 	XMFLOAT3 GetMouseMove()
 	{
 		XMFLOAT3 result = XMFLOAT3((float)mouseState_.lX, (float)mouseState_.lY, (float)mouseState_.lZ);
 		return result;
 	}
-
 
 	/////////////////////////////　コントローラー情報取得　//////////////////////////////////
 
@@ -214,7 +201,7 @@ namespace Input
 		return false;
 	}
 
-
+	//
 	float GetAnalogValue(int raw, int max, int deadZone)
 	{
 		float result = (float)raw;

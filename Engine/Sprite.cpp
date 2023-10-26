@@ -54,7 +54,6 @@ void Sprite::InitConstantBuffer()
 	Direct3D::pDevice_->CreateBuffer(&cb, NULL, &pConstantBuffer_);
 }
 
-
 void Sprite::InitVertex()
 {
 	// 頂点データ宣言
@@ -65,7 +64,6 @@ void Sprite::InitVertex()
 		{ XMFLOAT3(-1.0f, -1.0f, 0.0f),	XMFLOAT3(0.0f, 1.0f, 0.0f) },   // 四角形の頂点（左下）
 		{ XMFLOAT3( 1.0f, -1.0f, 0.0f),	XMFLOAT3(1.0f, 1.0f, 0.0f) },   // 四角形の頂点（右下）
 	};
-
 
 	// 頂点データ用バッファの設定
 	D3D11_BUFFER_DESC bd_vertex;
@@ -99,8 +97,6 @@ void Sprite::InitIndex()
 	Direct3D::pDevice_->CreateBuffer(&bd, &InitData, &pIndexBuffer_);
 }
 
-
-
 void Sprite::Draw(Transform& transform, RECT rect, float alpha)
 {
 	//いろいろ設定
@@ -122,7 +118,6 @@ void Sprite::Draw(Transform& transform, RECT rect, float alpha)
 	D3D11_MAPPED_SUBRESOURCE pdata;
 	CONSTANT_BUFFER cb;
 
-
 	//表示するサイズに合わせる
 	XMMATRIX cut = XMMatrixScaling((float)rect.right, (float)rect.bottom ,1.0f);
 
@@ -130,32 +125,30 @@ void Sprite::Draw(Transform& transform, RECT rect, float alpha)
 	XMMATRIX view = XMMatrixScaling(1.0f / Direct3D::screenWidth_, 1.0f / Direct3D::screenHeight_, 1.0f);
 
 	//最終的な行列
-	XMMATRIX world = cut * transform.matScale_ * transform.matRotate_ * view * transform.matTranslate_;
-	cb.world = XMMatrixTranspose(world);
+	cb.world = XMMatrixTranspose(cut * transform.matScale_ * transform.matRotate_ * view * transform.matTranslate_);
 
 	// テクスチャ座標変換行列を渡す
 	XMMATRIX mTexTrans = XMMatrixTranslation((float)rect.left / (float)pTexture_->GetSize().x,
 		(float)rect.top / (float)pTexture_->GetSize().y, 0.0f);
 	XMMATRIX mTexScale = XMMatrixScaling((float)rect.right / (float)pTexture_->GetSize().x,
 		(float)rect.bottom / (float)pTexture_->GetSize().y, 1.0f);
-	XMMATRIX mTexel = mTexScale * mTexTrans;
-	cb.uvTrans = XMMatrixTranspose(mTexel);
-	
+
+	cb.uvTrans = XMMatrixTranspose(mTexScale * mTexTrans);
 
 	// テクスチャ合成色情報を渡す
 	cb.color = XMFLOAT4(1.0f, 1.0f, 1.0f, alpha);
 
 	Direct3D::pContext_->Map(pConstantBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &pdata);	// GPUからのリソースアクセスを一時止める
-	memcpy_s(pdata.pData, pdata.RowPitch, (void*)(&cb), sizeof(cb));		// リソースへ値を送る
+	memcpy_s(pdata.pData, pdata.RowPitch, (void*)(&cb), sizeof(cb));	// リソースへ値を送る
 
 
-	ID3D11SamplerState*			pSampler = pTexture_->GetSampler();
+	ID3D11SamplerState* pSampler = pTexture_->GetSampler();
 	Direct3D::pContext_->PSSetSamplers(0, 1, &pSampler);
 
-	ID3D11ShaderResourceView*	pSRV = pTexture_->GetSRV();
+	ID3D11ShaderResourceView* pSRV = pTexture_->GetSRV();
 	Direct3D::pContext_->PSSetShaderResources(0, 1, &pSRV);
 
-	Direct3D::pContext_->Unmap(pConstantBuffer_, 0);									// GPUからのリソースアクセスを再開
+	Direct3D::pContext_->Unmap(pConstantBuffer_, 0);	// GPUからのリソースアクセスを再開
 
 	//ポリゴンメッシュを描画する
 	Direct3D::pContext_->DrawIndexed(6, 0, 0);
