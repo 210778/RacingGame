@@ -49,11 +49,11 @@ void StartScene::Update()
 	bool test = false;
 	if (Input::IsKeyDown(DIK_A))
 	{
-		test = circuitSelect_.DataAddition(1);
+		test = circuitSelect_.DataAddition(-1);
 	}
 	if (Input::IsKeyDown(DIK_D))
 	{
-		test = circuitSelect_.DataAddition(-1);
+		test = circuitSelect_.DataAddition(1);
 	}
 
 	if(Input::IsKey(DIK_P))

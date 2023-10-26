@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 #include "Engine/GameObject.h"
 
 class Text;
@@ -10,39 +11,39 @@ class StartScene : public GameObject
 
 	//文字
 	Text* pTextCircuit_;
-	int circuitIndex_;
-
-	int chosenCircuit_;	//選んだコースの番号
 
 	struct DataSelection
 	{
+		std::string title;
 		int index;
 		int minValue;
 		int maxValue;
-		DataSelection()
-		{
+		DataSelection(){
+			title = "";
 			index = 0;
 			minValue = 0;
 			maxValue = 0;
 		}
-		DataSelection(int ind,int minV,int maxV)
-		{
+		DataSelection(std::string name,int ind,int minV,int maxV){
+			title = name;
+			index = ind;
+			minValue = minV;
+			maxValue = maxV;
+		}
+		void SetDataSelection(std::string name, int ind, int minV, int maxV) {
+			title = name;
 			index = ind;
 			minValue = minV;
 			maxValue = maxV;
 		}
 		//index が最小値未満なら最小値に、最大値オーバーなら最大値にする
-		void DataClamp()
-		{
-			index = min(max(index, minValue), maxValue);//clamp
+		void DataClamp(){
+			index = min(max(index, minValue), maxValue);
 		}
 		//indexにvalueを加算する。最大値、最小値範囲に収まっていたらtrue。そうじゃないならfalse
-		bool DataAddition(int value)
-		{
+		bool DataAddition(int value){
 			index += value;
-
 			int check = index;
-
 			DataClamp();
 
 			if (check == index)
@@ -54,6 +55,17 @@ class StartScene : public GameObject
 
 	DataSelection circuitSelect_;
 
+	std::map<int,DataSelection> dataSelection_;	//選択するデータのまとめ
+	DataSelection selectIndex_;	//データの索引
+
+	enum DataName
+	{
+		circuit = 0,
+		population,
+		vehicle,
+		wheel,
+		NameMax
+	};
 
 public:
 	//コンストラクタ

@@ -60,9 +60,9 @@ namespace Circuit
         std::vector<CircuitParts> parts_;   //コースのパーツたち
         std::string  name_;                 //コースの名前
         int maxLap_;                        //必要周回数
-        std::vector<CheckPoint*> checkPoint_;   //チェックポイントのポインタ
-        std::vector<CircuitCheckPoint> check_;
-        std::vector<Transform> startTransform_;              //スタート地点のトランスフォーム(位置と回転)
+        //std::vector<CheckPoint*> checkPoint_;   //チェックポイントのポインタ
+        std::vector<CircuitCheckPoint> check_;  //チェックポイントの位置とポインタ
+        std::vector<Transform> startTransform_; //スタート地点のトランスフォーム(位置と回転)
 
         //引数なしコンストラクタ
         CircuitUnion() {
