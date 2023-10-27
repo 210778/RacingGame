@@ -21,6 +21,7 @@
 #include "Background.h"
 #include "TextPrinter.h"
 #include "Circuit.h"
+#include "VehicleGlobal.h"
 
 using std::tuple;
 using std::sort;
@@ -42,7 +43,6 @@ void PlayScene::Initialize()
 
 	Circuit::ResetCircuitModelHandle();
 	Circuit::CreateChosenCircuit(this);
-	//Circuit::SetChosenCircuit(0);
 
 	//音楽
 	//Music::Initialize();
@@ -86,9 +86,8 @@ void PlayScene::Initialize()
 
 	//プレイヤーは最後
 	VehiclePlayer* pVehiclePlayer = nullptr;
-	SetVehicle<VehiclePlayer>(pVehiclePlayer
-		, "model\\car_race_1_blue.fbx"
-		, "model\\wheel_race_1_white.fbx", playerNumber);
+	SetVehicle<VehiclePlayer>(pVehiclePlayer, VehicleGlobal::GetChosenVehicleName()
+							, VehicleGlobal::GetChosenWheelName(), playerNumber);
 	//ポインタを記憶
 	pVehiclePlayer_ = vehicles_[playerNumber];
 

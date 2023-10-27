@@ -15,7 +15,6 @@ namespace VehicleGlobal
 	//ファイルから車両とタイヤの名前読み込み
 	void LoadVehicleObject();
 
-
 	//セッターとゲッター
 	void SetChosenPopulation(int value);
 	int GetChosenPopulation();
@@ -23,8 +22,6 @@ namespace VehicleGlobal
 	std::string GetChosenVehicleName();
 	void SetChosenWheelName(std::string str);
 	std::string GetChosenWheelName();
-
-	std::map<PartName, std::map<std::string, std::string>>* GetVehicleObjectVector();
 
 	/// <summary>
 	/// パーツの名前とモデル名を格納したベクターへのポインタを返す

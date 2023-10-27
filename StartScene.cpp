@@ -55,12 +55,12 @@ void StartScene::Initialize()
 
 	//車両
 	dataSelection_[DataName::vehicle].SetDataSelection("Vehicle"
-		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->size());
+		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->size() - 1);
 	assert(dataSelection_[DataName::vehicle].maxValue >= 1);
 
 	//タイヤ
 	dataSelection_[DataName::wheel].SetDataSelection("Wheel"
-		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->size());
+		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->size() - 1);
 	assert(dataSelection_[DataName::wheel].maxValue >= 1);
 
 	//索引
@@ -126,60 +126,35 @@ void StartScene::Draw()
 {
 	pTextCircuit_->Draw(30, 30, "Select Menu");
 
+	int width = Global::GetScreenWidth() / 7;
 	int height = 150;
+	int upper = 50;
+	int count = 0;
 
-	{		
-		dataSelection_[DataName::circuit].DataClamp();
-		//選択
-		Circuit::SetChosenCircuit(dataSelection_[DataName::circuit].index);
+	//コース
+	PrintParagraph(DataName::circuit, Circuit::GetCircuitNameArray()->at(dataSelection_[DataName::circuit].index)
+		, width, height + upper * count++);
+	Circuit::SetChosenCircuit(dataSelection_[DataName::circuit].index);	//選択
 
-		string circuitName = Circuit::GetCircuitNameArray()->at(dataSelection_[DataName::circuit].index);
+	//人数
+	dataSelection_[DataName::population].maxValue = Circuit::GetChosenCircuit()->startTransform_.size();
+	PrintParagraph(DataName::population, to_string(dataSelection_[DataName::population].index), width, height + upper * count++);
+	VehicleGlobal::SetChosenPopulation(dataSelection_[DataName::population].index);	//選択
 
-		//矢印表示
-		dataSelection_[DataName::circuit].PrintArrowLR(&circuitName);
-
-		circuitName = dataSelection_[DataName::circuit].title + " : " + circuitName;
-
-		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height, circuitName.c_str());
-	}
-
-	{
-		dataSelection_[DataName::population].maxValue = Circuit::GetChosenCircuit()->startTransform_.size();
-		dataSelection_[DataName::population].DataClamp();
-		string popStr = to_string(dataSelection_[DataName::population].index);
-
-		//矢印表示
-		dataSelection_[DataName::population].PrintArrowLR(&popStr);
-
-		popStr = dataSelection_[DataName::population].title + " : " + popStr;
-
-		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height + 50, popStr.c_str());
-	}
 	//車両
-	{
-		dataSelection_[DataName::vehicle].DataClamp();
+	PrintParagraph(DataName::vehicle, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->
+		at(dataSelection_[DataName::vehicle].index).first, width, height + upper * count++);
+	VehicleGlobal::SetChosenVehicleName(VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->
+		at(dataSelection_[DataName::vehicle].index).second);	//選択
 
-		string nameStr = VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->
-			at(dataSelection_[DataName::vehicle].index).first;
-
-		//矢印表示
-		dataSelection_[DataName::vehicle].PrintArrowLR(&nameStr);
-		nameStr = dataSelection_[DataName::vehicle].title + " : " + nameStr;
-		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height + 100, nameStr.c_str());
-	}
 	//タイヤ
-	{
-		dataSelection_[DataName::wheel].DataClamp();
-		string nameStr = VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->
-			at(dataSelection_[DataName::wheel].index).first;
-		//矢印表示
-		dataSelection_[DataName::wheel].PrintArrowLR(&nameStr);
-		nameStr = dataSelection_[DataName::wheel].title + " : " + nameStr;
-		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height + 150, nameStr.c_str());
-	}
+	PrintParagraph(DataName::wheel, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->
+		at(dataSelection_[DataName::wheel].index).first, width, height + upper * count++);
+	VehicleGlobal::SetChosenWheelName(VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->
+		at(dataSelection_[DataName::wheel].index).second);	//選択
 
 	Transform arrowTrans;
-	arrowTrans.position_ = { -0.15f , (selectIndex_.index * -0.18f) + 0.58f, 0.0f };
+	arrowTrans.position_ = { -0.85f , (selectIndex_.index * -0.14f) + 0.58f, 0.0f };
 
 	Image::SetTransform(hImageArrow_, arrowTrans);
 	Image::Draw(hImageArrow_);
@@ -190,4 +165,18 @@ void StartScene::Release()
 {
 	pTextCircuit_->Release();
 	pTextCaption_->Release();
+}
+
+//項目の設定と表示
+void StartScene::PrintParagraph(DataName dn, std::string str, int width, int height)
+{
+	dataSelection_[dn].DataClamp();
+	string nameStr = str;
+
+	//矢印表示
+	dataSelection_[dn].PrintArrowLR(&nameStr);
+
+	nameStr = dataSelection_[dn].title + " : " + nameStr;
+
+	pTextCircuit_->Draw(width, height, nameStr.c_str());
 }

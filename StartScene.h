@@ -76,6 +76,9 @@ class StartScene : public GameObject
 	std::map<int,DataSelection> dataSelection_;	//選択するデータのまとめ
 	DataSelection selectIndex_;	//データの索引
 
+	//項目の設定と表示
+	void PrintParagraph(DataName dn, std::string str, int width, int height);
+
 public:
 	//コンストラクタ
 	//引数：parent  親オブジェクト（SceneManager）

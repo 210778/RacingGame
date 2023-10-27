@@ -1,5 +1,5 @@
+#include "Engine/Global.h"
 #include "VehicleGlobal.h"
-
 using std::string;
 using std::to_string;
 using std::stoi;
@@ -92,20 +92,17 @@ void VehicleGlobal::LoadVehicleObject()
 void VehicleGlobal::SetChosenPopulation(int value) { chosenPopulation_ = value; }
 int VehicleGlobal::GetChosenPopulation() { return chosenPopulation_; }
 
-void VehicleGlobal::SetChosenVehicleName(string str) { chosenVehicleName_ = str; }
+void VehicleGlobal::SetChosenVehicleName(string str) { chosenVehicleName_ = Global::GetModelFileName() + str; }
 string VehicleGlobal::GetChosenVehicleName() { return chosenVehicleName_; }
 
-void VehicleGlobal::SetChosenWheelName(string str) { chosenWheelName_ = str; }
+void VehicleGlobal::SetChosenWheelName(string str) { chosenWheelName_ = Global::GetModelFileName() + str; }
 string VehicleGlobal::GetChosenWheelName() { return chosenWheelName_; }
-
-map<VehicleGlobal::PartName, map<string, string>>* VehicleGlobal::GetVehicleObjectVector()
-{
-	return &vehicleObjectVector_;
-}
 
 //パーツの名前とモデル名を格納したベクターへのポインタを返す
 vector<pair<string, string>>* VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName pn)
 {
+	answerMap_.clear();//初期化
+
 	for (auto& itr : vehicleObjectVector_[pn])
 	{
 		answerMap_.push_back(make_pair(itr.first, itr.second));
