@@ -27,10 +27,10 @@ StartScene::StartScene(GameObject* parent)
 //初期化
 void StartScene::Initialize()
 {
-	//音楽
-	//Music::Initialize();
-
+	//コース初期化
 	Circuit::Initialize();
+	//車両パーツ読み込み初期化
+	VehicleGlobal::Initialize();
 
 	//文字
 	pTextCircuit_ = new Text;
@@ -43,25 +43,29 @@ void StartScene::Initialize()
 	assert(hImageArrow_ >= 0);
 
 	//項目
-	circuitSelect_.maxValue = Circuit::GetCircuitNameArray()->size() - 1;
-	circuitSelect_.minValue = 0;
-
-	
-	dataSelection_[DataName::circuit].SetDataSelection("circuit"
+	//コース
+	dataSelection_[DataName::circuit].SetDataSelection("Circuit"
 		, 0, 0, Circuit::GetCircuitNameArray()->size() - 1);
-	assert(Circuit::GetCircuitNameArray()->size() >= 1);
+	assert(dataSelection_[DataName::circuit].maxValue >= 1);
 
-	dataSelection_[DataName::population].SetDataSelection("population"
+	//参加人数
+	dataSelection_[DataName::population].SetDataSelection("Population"
 		, Circuit::GetChosenCircuit()->startTransform_.size(), 1, Circuit::GetChosenCircuit()->startTransform_.size());
-	assert(Circuit::GetChosenCircuit()->startTransform_.size() >= 1);
+	assert(dataSelection_[DataName::population].maxValue >= 1);
 
+	//車両
+	dataSelection_[DataName::vehicle].SetDataSelection("Vehicle"
+		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->size());
+	assert(dataSelection_[DataName::vehicle].maxValue >= 1);
 
+	//タイヤ
+	dataSelection_[DataName::wheel].SetDataSelection("Wheel"
+		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->size());
+	assert(dataSelection_[DataName::wheel].maxValue >= 1);
+
+	//索引
 	selectIndex_.SetDataSelection("index", 0, 0, dataSelection_.size() - 1);
-	assert(dataSelection_.size() >= 1);
-
-
-	VehicleGlobal::Initialize();
-
+	assert(selectIndex_.maxValue >= 1);
 
 }
 
@@ -150,6 +154,28 @@ void StartScene::Draw()
 		popStr = dataSelection_[DataName::population].title + " : " + popStr;
 
 		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height + 50, popStr.c_str());
+	}
+	//車両
+	{
+		dataSelection_[DataName::vehicle].DataClamp();
+
+		string nameStr = VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->
+			at(dataSelection_[DataName::vehicle].index).first;
+
+		//矢印表示
+		dataSelection_[DataName::vehicle].PrintArrowLR(&nameStr);
+		nameStr = dataSelection_[DataName::vehicle].title + " : " + nameStr;
+		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height + 100, nameStr.c_str());
+	}
+	//タイヤ
+	{
+		dataSelection_[DataName::wheel].DataClamp();
+		string nameStr = VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->
+			at(dataSelection_[DataName::wheel].index).first;
+		//矢印表示
+		dataSelection_[DataName::wheel].PrintArrowLR(&nameStr);
+		nameStr = dataSelection_[DataName::wheel].title + " : " + nameStr;
+		pTextCircuit_->Draw(Global::GetScreenWidth() / 2, height + 150, nameStr.c_str());
 	}
 
 	Transform arrowTrans;

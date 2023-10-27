@@ -12,6 +12,15 @@ class StartScene : public GameObject
 	Text* pTextCircuit_;
 	Text* pTextCaption_;
 
+	enum DataName
+	{
+		circuit = 0,
+		population,
+		vehicle,
+		wheel,
+		NameMax
+	};
+
 	struct DataSelection
 	{
 		std::string title;
@@ -66,15 +75,6 @@ class StartScene : public GameObject
 
 	std::map<int,DataSelection> dataSelection_;	//選択するデータのまとめ
 	DataSelection selectIndex_;	//データの索引
-
-	enum DataName
-	{
-		circuit = 0,
-		population,
-		vehicle,
-		wheel,
-		NameMax
-	};
 
 public:
 	//コンストラクタ

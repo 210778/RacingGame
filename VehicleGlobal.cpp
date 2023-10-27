@@ -3,17 +3,31 @@
 using std::string;
 using std::to_string;
 using std::stoi;
+using std::pair;
+using std::make_pair;
+using std::map;
+using std::vector;
 
 namespace VehicleGlobal
 {
+	int chosenPopulation_;
+	string chosenVehicleName_;
+	string chosenWheelName_;
+
+	vector<pair<string, string>> answerMap_;//返すmap
+
+	vector<pair<PartName,string>> partNameVector_;
+
+	map<PartName, map<string, string>> vehicleObjectVector_;
 };
 
 //初期化
 void VehicleGlobal::Initialize()
 {
-	nameVector_.push_back("vehicle");
-	nameVector_.push_back("wheel");
+	partNameVector_.push_back(make_pair(PartName::vehicle, "vehicle"));
+	partNameVector_.push_back(make_pair(PartName::wheel, "wheel"));
 
+	//ファイルから読み込み
 	LoadVehicleObject();
 }
 
@@ -21,15 +35,16 @@ void VehicleGlobal::Initialize()
 void VehicleGlobal::LoadVehicleObject()
 {
 	const int pathSize = MAX_PATH;
-	std::map<string, string> objectMap;    //探索キーと値を入れる
+	map<string, string> objectMap;    //探索キーと値を入れる
 	string fileName = ".\\gameObject.ini";
 	string circuitModelExtension = ".fbx";
 	string modelFilePath = Global::GetModelFileName();
 	int limit = 100;
 
-	for (auto& itr : nameVector_)
+	for (auto& itr : partNameVector_)
 	{
-		string app = itr;
+		string app = itr.second;
+		PartName appName = itr.first;
 
 		for (int number = 0; number < limit; number++)
 		{
@@ -66,12 +81,35 @@ void VehicleGlobal::LoadVehicleObject()
 				}
 				if (!(key.empty()) && !(name.empty()))
 				{
-					//objectMap[key] = name; //追加
-					objectVector_[app][key] = name;
+					vehicleObjectVector_[appName][key] = name;
 				}					
 			}
 		}
 	}
-	int a = 0;
-	limit = a;
+}
+
+//セッターとゲッター
+void VehicleGlobal::SetChosenPopulation(int value) { chosenPopulation_ = value; }
+int VehicleGlobal::GetChosenPopulation() { return chosenPopulation_; }
+
+void VehicleGlobal::SetChosenVehicleName(string str) { chosenVehicleName_ = str; }
+string VehicleGlobal::GetChosenVehicleName() { return chosenVehicleName_; }
+
+void VehicleGlobal::SetChosenWheelName(string str) { chosenWheelName_ = str; }
+string VehicleGlobal::GetChosenWheelName() { return chosenWheelName_; }
+
+map<VehicleGlobal::PartName, map<string, string>>* VehicleGlobal::GetVehicleObjectVector()
+{
+	return &vehicleObjectVector_;
+}
+
+//パーツの名前とモデル名を格納したベクターへのポインタを返す
+vector<pair<string, string>>* VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName pn)
+{
+	for (auto& itr : vehicleObjectVector_[pn])
+	{
+		answerMap_.push_back(make_pair(itr.first, itr.second));
+	}
+	
+	return &answerMap_;
 }
