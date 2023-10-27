@@ -14,6 +14,8 @@ namespace Circuit
     float defaultCheckpointSize_;   //チェックポイントの大きさ
     float defaultStartRotate_;      //スタート時の回転
     float checkPointLimit_;         //チェックポイントを探す限界
+    
+    
     std::vector<string> circuitNameArr_;
 
     std::vector<CircuitUnion> circuits_;    //コースすべてのまとめ
@@ -84,7 +86,7 @@ void Circuit::MakeCircuit()
     string circuitModelExtension = ".fbx";
     string modelFilePath = Global::GetModelFileName();
 
-    for (int number = 0; number < 100; number++)
+    for (int number = 0; number < checkPointLimit_; number++)
     {
         string app = appHead + to_string(number);
         char section[pathSize];

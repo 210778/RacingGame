@@ -182,6 +182,9 @@
     <ClCompile Include="Circuit.cpp">
       <Filter>04Play</Filter>
     </ClCompile>
+    <ClCompile Include="VehicleGlobal.cpp">
+      <Filter>04Play</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\BoxCollider.h">
@@ -323,6 +326,9 @@
       <Filter>03Scene</Filter>
     </ClInclude>
     <ClInclude Include="Circuit.h">
+      <Filter>04Play</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleGlobal.h">
       <Filter>04Play</Filter>
     </ClInclude>
   </ItemGroup>

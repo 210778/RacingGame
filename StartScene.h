@@ -1,5 +1,4 @@
 #pragma once
-#include <map>
 #include "Engine/GameObject.h"
 
 class Text;
@@ -11,6 +10,7 @@ class StartScene : public GameObject
 
 	//文字
 	Text* pTextCircuit_;
+	Text* pTextCaption_;
 
 	struct DataSelection
 	{
@@ -51,6 +51,15 @@ class StartScene : public GameObject
 			else
 				return false;
 		};
+		//最小値じゃないなら"<"を、最大値じゃないなら">"を追加してstringのポインタに返す
+		void PrintArrowLR(std::string* str)
+		{
+			if (str == nullptr)
+				return;
+
+			*str = (index > minValue) ? "< " + *str : "  " + *str;
+			*str = (index < maxValue) ? *str + " >" : *str + "  ";
+		}
 	};
 
 	DataSelection circuitSelect_;

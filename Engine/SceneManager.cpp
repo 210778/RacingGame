@@ -24,7 +24,7 @@ void SceneManager::Initialize()
 	Instantiate<StartScene>(this);
 
 	//‰¹Šy
-	//Music::Initialize();
+	Music::Initialize();
 }
 
 //XV

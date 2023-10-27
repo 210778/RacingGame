@@ -19,6 +19,9 @@ namespace Music
 		se_countStart,
 		se_lap,
 		se_goal,
+		se_select,
+		se_select2,
+		se_se_selectError,
 	};
 
 	/// <summary>
