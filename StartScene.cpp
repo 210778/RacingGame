@@ -7,6 +7,7 @@
 #include "Music.h"
 #include "Circuit.h"
 #include "VehicleGlobal.h"
+#include "VehicleInput.h"
 
 #include "Engine/Image.h"
 #include "Engine/Input.h"
@@ -21,6 +22,10 @@ StartScene::StartScene(GameObject* parent)
 	: GameObject(parent, "StartScene")
 	, pTextCircuit_(nullptr), pTextCaption_(nullptr)
 	, hImageArrow_(-1)
+	, captionWidthOperand_(0.142f), captionHeight_(150), captionUpperHeight_(50)
+	, sceneTitlePosition_({ 30.0f,30.0f })
+	, countSpeed_(0.1f), arrwoBace_(-0.85f), sinOperand_(0.02f)
+	, indexOperand_(-0.137f), indexUpper_(0.58f), indexLastUpper_(1.0f)
 {
 }
 
@@ -31,6 +36,9 @@ void StartScene::Initialize()
 	Circuit::Initialize();
 	//車両パーツ読み込み初期化
 	VehicleGlobal::Initialize();
+
+	//入力初期化
+	VehicleInput::Initialize();
 
 	//文字
 	pTextCircuit_ = new Text;
@@ -67,6 +75,8 @@ void StartScene::Initialize()
 	selectIndex_.SetDataSelection("index", 0, 0, dataSelection_.size() - 1);
 	assert(selectIndex_.maxValue >= 1);
 
+	//決定項目
+	selectIndex_.maxValue += 1;
 }
 
 //更新
@@ -75,8 +85,11 @@ void StartScene::Update()
 	//音楽
 	Music::Update();
 
+	XMFLOAT3  tes = Input::GetPadStickL();
+	tes = Input::GetPadStickR();
 
-	if (Input::IsKeyDown(DIK_A))
+	if (Input::IsKeyDown(DIK_A) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_LEFT) ||
+		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::left))
 	{
 		if (dataSelection_[selectIndex_.index].DataAddition(-1))
 		{
@@ -87,7 +100,8 @@ void StartScene::Update()
 			Music::Play(Music::MusicName::se_se_selectError);
 		}
 	}
-	if (Input::IsKeyDown(DIK_D))
+	if (Input::IsKeyDown(DIK_D) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_RIGHT) ||
+		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::right))
 	{
 		if (dataSelection_[selectIndex_.index].DataAddition(1))
 			Music::Play(Music::MusicName::se_select2);
@@ -95,14 +109,16 @@ void StartScene::Update()
 			Music::Play(Music::MusicName::se_se_selectError);
 	}
 
-	if (Input::IsKeyDown(DIK_W))
+	if (Input::IsKeyDown(DIK_W) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_UP) ||
+		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::up))
 	{
 		if(selectIndex_.DataAddition(-1))
 			Music::Play(Music::MusicName::se_select);
 		else
 			Music::Play(Music::MusicName::se_se_selectError);
 	}
-	if (Input::IsKeyDown(DIK_S))
+	if (Input::IsKeyDown(DIK_S) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_DOWN) ||
+		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::down))
 	{
 		if (selectIndex_.DataAddition(1))
 			Music::Play(Music::MusicName::se_select);
@@ -111,11 +127,8 @@ void StartScene::Update()
 	}
 
 
-	if(Input::IsKey(DIK_P))
+	if((selectIndex_.index >= selectIndex_.maxValue) && Input::IsKey(DIK_P))
 	{
-		//circuitSelect_.DataClamp();
-		//Circuit::SetChosenCircuit(circuitSelect_.index);
-
 		SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
 		pSceneManager->ChangeScene(SCENE_ID_PLAY);
 	}
@@ -124,40 +137,56 @@ void StartScene::Update()
 //描画
 void StartScene::Draw()
 {
-	pTextCircuit_->Draw(30, 30, "Select Menu");
+	pTextCircuit_->Draw(sceneTitlePosition_.x, sceneTitlePosition_.y, "[Select Menu]");
 
-	int width = Global::GetScreenWidth() / 7;
-	int height = 150;
-	int upper = 50;
+	int width = Global::GetScreenWidth() * captionWidthOperand_;
 	int count = 0;
 
 	//コース
 	PrintParagraph(DataName::circuit, Circuit::GetCircuitNameArray()->at(dataSelection_[DataName::circuit].index)
-		, width, height + upper * count++);
+		, width, captionHeight_ + captionUpperHeight_ * count++);
 	Circuit::SetChosenCircuit(dataSelection_[DataName::circuit].index);	//選択
 
 	//人数
 	dataSelection_[DataName::population].maxValue = Circuit::GetChosenCircuit()->startTransform_.size();
-	PrintParagraph(DataName::population, to_string(dataSelection_[DataName::population].index), width, height + upper * count++);
+	PrintParagraph(DataName::population, to_string(dataSelection_[DataName::population].index), width, captionHeight_ + captionUpperHeight_ * count++);
 	VehicleGlobal::SetChosenPopulation(dataSelection_[DataName::population].index);	//選択
 
 	//車両
 	PrintParagraph(DataName::vehicle, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->
-		at(dataSelection_[DataName::vehicle].index).first, width, height + upper * count++);
+		at(dataSelection_[DataName::vehicle].index).first, width, captionHeight_ + captionUpperHeight_ * count++);
 	VehicleGlobal::SetChosenVehicleName(VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->
 		at(dataSelection_[DataName::vehicle].index).second);	//選択
 
 	//タイヤ
 	PrintParagraph(DataName::wheel, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->
-		at(dataSelection_[DataName::wheel].index).first, width, height + upper * count++);
+		at(dataSelection_[DataName::wheel].index).first, width, captionHeight_ + captionUpperHeight_ * count++);
 	VehicleGlobal::SetChosenWheelName(VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->
 		at(dataSelection_[DataName::wheel].index).second);	//選択
 
-	Transform arrowTrans;
-	arrowTrans.position_ = { -0.85f , (selectIndex_.index * -0.14f) + 0.58f, 0.0f };
+	//決定
+	pTextCircuit_->Draw(width, captionHeight_ + captionUpperHeight_ * ++count, "[Start]");//ここだけ離れた位置
 
-	Image::SetTransform(hImageArrow_, arrowTrans);
-	Image::Draw(hImageArrow_);
+	{
+		//秒数カウント
+		static float count = 0.0f;
+		count += countSpeed_;
+
+		float bace = arrwoBace_;
+		float pos = (sin(count) * sinOperand_) + bace;
+
+		Transform arrowTrans;
+
+		//選択の索引が最後なら離れた位置にする
+		float height = (selectIndex_.index * indexOperand_);
+		if(selectIndex_.index >= selectIndex_.maxValue)
+			height = ((selectIndex_.index + indexLastUpper_) * indexOperand_);
+
+		arrowTrans.position_ = { pos , height + indexUpper_, 0.0f };
+
+		Image::SetTransform(hImageArrow_, arrowTrans);
+		Image::Draw(hImageArrow_);
+	}
 }
 
 //開放

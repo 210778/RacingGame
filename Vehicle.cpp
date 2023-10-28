@@ -230,8 +230,6 @@ void Vehicle::Update()
     XMVECTOR vecY = moveSPD_ * vehicleVector_.y;
     XMVECTOR vecZ = moveSPD_ * vehicleVector_.z;
 
-    //その都度加速度を回転させるんじゃなくて最後に回転したほうがいいかも
-
     Debug::TimerLogEnd("vehicle最初");
 
     //ゴール  
@@ -258,6 +256,7 @@ void Vehicle::Update()
     InputReceive(vecX, vecZ);
 
     Debug::TimerLogEnd("vehicle操作受けつけ");
+
 
     //地面の種類によって
     if (landingFlag_)
@@ -301,7 +300,6 @@ void Vehicle::Update()
     //タイヤの角度と減速
     //正面やタイヤの方向へは減速しないが、タイヤの方向と平行の方向へは減速する
     //タイヤの方向と平行なら何もしないが、垂直に近いほどタイヤの方向にベクトルを発生させる
-    //メモ：これのせいで重い可能性があるから変えるべきかもしれない
     Debug::TimerLogStart("vehicleタイヤ横押し");
     TurnWheel();
     Debug::TimerLogEnd("vehicleタイヤ横押し");

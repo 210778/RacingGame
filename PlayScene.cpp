@@ -32,7 +32,7 @@ using std::string;
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
 	, pGround_(nullptr), pVehiclePlayer_(nullptr)
-	, universalTime_(0), standbyTime_(1), standbySeconds_(1)//5
+	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
 	, startFlag_(false)
 {
 }

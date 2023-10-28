@@ -96,6 +96,29 @@ namespace Input
 	//戻値:傾き具合（-1～1）
 	XMFLOAT3 GetPadStickR(int padID = 0);
 
+
+	enum class StickLR
+	{
+		right = 0,
+		left
+	};
+
+	enum class StickDirection
+	{
+		up = 0,
+		down,
+		right,
+		left
+	};
+
+	//スティックを前は傾けてなくて、今傾けたかどうか
+	bool IsPadStickTilt(StickLR lr, StickDirection dir, int padID = 0);
+	//スティックを前は傾けてて、今傾てないかどうか
+	bool IsPadStickRestore(StickLR lr, StickDirection dir, int padID = 0);
+
+
+
+
 	//左トリガーの押し込み具合を取得
 	//戻値:押し込み具合（0～1）
 	float GetPadTrrigerL(int padID = 0);
@@ -104,7 +127,7 @@ namespace Input
 	//戻値:押し込み具合（0～1）
 	float GetPadTrrigerR(int padID = 0);
 
-	//振動させる
+	//振動させる (左の強さ、右の強さ)
 	void SetPadVibration(int l, int r, int padID = 0);
 
 };

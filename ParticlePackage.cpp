@@ -112,7 +112,7 @@ void ParticlePackage::ParticleInitialize()
     //•X
     SetParticle(ParticleName::ice, "image\\PaticleAssets\\flashC_W.png", { 0.f, 0.f, 0.f }
     , { 0.15f, 0.15f, 0.15f }, 0, 1, 20, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
-    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.05f,1.05f }, { 0.2f,1.f,1.f,0.7f }, { 0.05f,0.f,0.f,-0.03f });
+    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.05f,1.05f }, { 0.1f,1.f,1.f,0.8f }, { 0.05f,0.f,0.f,-0.03f });
 }
 
 

@@ -79,6 +79,18 @@ class StartScene : public GameObject
 	//項目の設定と表示
 	void PrintParagraph(DataName dn, std::string str, int width, int height);
 
+	//表示用
+	float captionWidthOperand_;
+	int captionHeight_;
+	int captionUpperHeight_;
+	XMFLOAT2 sceneTitlePosition_;
+	float countSpeed_;
+	float arrwoBace_;
+	float sinOperand_;
+	float indexOperand_;
+	float indexUpper_;
+	float indexLastUpper_;
+
 public:
 	//コンストラクタ
 	//引数：parent  親オブジェクト（SceneManager）

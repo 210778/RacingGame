@@ -24,6 +24,10 @@ namespace Input
 	const int MAX_PAD_NUM = 4;
 	XINPUT_STATE controllerState_[MAX_PAD_NUM];
 	XINPUT_STATE prevControllerState_[MAX_PAD_NUM];
+	
+	//最大値
+	const int maxStick = 32767;
+	const int maxTrriger = 255;
 
 
 	//初期化
@@ -201,7 +205,7 @@ namespace Input
 		return false;
 	}
 
-	//
+	//スティックの値
 	float GetAnalogValue(int raw, int max, int deadZone)
 	{
 		float result = (float)raw;
@@ -210,28 +214,18 @@ namespace Input
 		{
 			//デッドゾーン
 			if (result < deadZone)
-			{
 				result = 0;
-			}
 			else
-			{
 				result = (result - deadZone) / (max - deadZone);
-			}
 		}
-
 		else
 		{
 			//デッドゾーン
 			if (result > -deadZone)
-			{
 				result = 0;
-			}
 			else
-			{
 				result = (result + deadZone) / (max - deadZone);
-			}
 		}
-
 		return result;
 	}
 
@@ -239,29 +233,76 @@ namespace Input
 	//左スティックの傾きを取得
 	XMFLOAT3 GetPadStickL(int padID)
 	{
-		float x = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLX, 32767, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-		float y = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLY, 32767, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+		float x = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLX, maxStick, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+		float y = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLY, maxStick, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
 		return XMFLOAT3(x, y, 0);
 	}
 
 	//右スティックの傾きを取得
 	XMFLOAT3 GetPadStickR(int padID)
 	{
-		float x = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRX, 32767, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
-		float y = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRY, 32767, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+		float x = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+		float y = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
 		return XMFLOAT3(x, y, 0);
+	}
+
+	//スティックを前は傾けてなくて、今傾けたかどうか
+	bool IsPadStickTilt(StickLR lr, StickDirection dir, int padID)
+	{
+		float nowX = 0.0f, nowY = 0.0f, preX = 0.0f, preY = 0.0f;
+
+		switch (lr)
+		{
+		default:
+		case Input::StickLR::right:
+			nowX = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			nowY = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			preX = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbRX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			preY = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbRY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			break;
+		case Input::StickLR::left:
+			nowX = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLX, maxStick, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+			nowY = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLY, maxStick, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+			preX = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbLX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			preY = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbLY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			break;
+		}
+
+		switch (dir)
+		{
+		default:
+		case Input::StickDirection::up:
+			return (nowY > 0 && preY <= 0) ? true : false;
+			break;
+		case Input::StickDirection::down:
+			return (nowY < 0 && preY >= 0) ? true : false;
+			break;
+		case Input::StickDirection::right:
+			return (nowX > 0 && preX <= 0) ? true : false;
+			break;
+		case Input::StickDirection::left:
+			return (nowX < 0 && preX >= 0) ? true : false;
+			break;
+		}
+
+		return false;
+	}
+	//スティックを前は傾けてて、今傾てないかどうか
+	bool IsPadStickRestore(StickLR lr, StickDirection dir, int padID)
+	{
+		return false;
 	}
 
 	//左トリガーの押し込み具合を取得
 	float GetPadTrrigerL(int padID)
 	{
-		return GetAnalogValue(controllerState_[padID].Gamepad.bLeftTrigger, 255, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+		return GetAnalogValue(controllerState_[padID].Gamepad.bLeftTrigger, maxTrriger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
 	}
 
 	//右トリガーの押し込み具合を取得
 	float GetPadTrrigerR(int padID)
 	{
-		return GetAnalogValue(controllerState_[padID].Gamepad.bRightTrigger, 255, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+		return GetAnalogValue(controllerState_[padID].Gamepad.bRightTrigger, maxTrriger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
 	}
 
 	//振動させる
