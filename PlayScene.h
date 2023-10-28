@@ -70,4 +70,11 @@ public:
 
 	//NPCにプレイヤーまでの距離を教える
 	void SetNPCToPlayer();
+	
+	/// <summary>
+	/// プレイヤーとNPCをセット
+	/// </summary>
+	/// <param name="population">人数</param>
+	/// <param name="playerNumber">プレイヤーの位置</param>
+	void SetPlayerNPCVector(int population, int playerNumber);
 };

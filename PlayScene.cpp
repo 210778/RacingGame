@@ -26,6 +26,7 @@
 using std::tuple;
 using std::sort;
 using std::vector;
+using std::string;
 
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
@@ -39,58 +40,16 @@ PlayScene::PlayScene(GameObject* parent)
 //初期化
 void PlayScene::Initialize()
 {
-	Instantiate<Background>(this);
+	Instantiate<Background>(this);	//背景
 
-	Circuit::ResetCircuitModelHandle();
-	Circuit::CreateChosenCircuit(this);
+	Circuit::ResetCircuitModelHandle();	//コース初期化
+	Circuit::CreateChosenCircuit(this); //コース生成
 
-	//音楽
-	//Music::Initialize();
-	int population = 1;
-	int playerNumber = 0;
+	int population = VehicleGlobal::GetChosenPopulation();	//人数
+	int playerNumber = population - 1;	//プレイヤーは一番後ろ
 
-	//人数
-	if (population < 1)
-	{
-		population = 1;
-	}
-	if (population >= Circuit::GetChosenCircuit()->startTransform_.size())
-	{
-		population = Circuit::GetChosenCircuit()->startTransform_.size() - 1;
-	}
-	//順番
-	if (playerNumber < 0)
-	{
-		playerNumber = 0;
-	}
-	if (playerNumber > population - 1)
-	{
-		playerNumber = population - 1;
-	}
-
-	//配列
-	vehicles_.clear();
-	vehicles_.resize(population);
-
-	//車両をセット
-	for (int i = 0; i < population; i++)
-	{
-		if (i == playerNumber)
-			continue;	//プレイヤーでない
-
-		VehicleOpponent* pVehicleOpponent = nullptr;
-		SetVehicle<VehicleOpponent>(pVehicleOpponent
-			, "model\\car_race_1_red.fbx"
-			, "model\\wheel_industry_1_yellow.fbx", i);
-	}
-
-	//プレイヤーは最後
-	VehiclePlayer* pVehiclePlayer = nullptr;
-	SetVehicle<VehiclePlayer>(pVehiclePlayer, VehicleGlobal::GetChosenVehicleName()
-							, VehicleGlobal::GetChosenWheelName(), playerNumber);
-	//ポインタを記憶
-	pVehiclePlayer_ = vehicles_[playerNumber];
-
+	//プレイヤーとNPCをセット
+	SetPlayerNPCVector(population, playerNumber);
 
 	//参加人数をセット
 	for (auto& i : vehicles_)
@@ -107,7 +66,7 @@ void PlayScene::Initialize()
 	//待機時間
 	standbyTime_ = standbySeconds_ * Global::GetStandardFPS();
 
-	//エフェクト用
+	//エフェクト初期化
 	ParticlePackage::Initialize();
 }
 
@@ -152,7 +111,7 @@ void PlayScene::Release()
 
 //車両クラスのための初期化
 template <class V>
-V* PlayScene::VehicleInstantiate(GameObject* pParent, std::string vehicleName, std::string wheelName)
+V* PlayScene::VehicleInstantiate(GameObject* pParent, string vehicleName, string wheelName)
 {
 	V* pNewObject = new V(pParent, vehicleName, wheelName);
 
@@ -167,7 +126,7 @@ V* PlayScene::VehicleInstantiate(GameObject* pParent, std::string vehicleName, s
 
 //車両を初期化して必要な値をセット
 template <class V>
-void PlayScene::SetVehicle(Vehicle* pVehicle, std::string vehicleName, std::string wheelName, int number)
+void PlayScene::SetVehicle(Vehicle* pVehicle, string vehicleName, string wheelName, int number)
 {
 	auto* pCircuit = Circuit::GetChosenCircuit();
 
@@ -315,4 +274,74 @@ void PlayScene::SetNPCToPlayer()
 
 		itr->SetToPlayerVehicleLength(*XMVector3Length(XMLoadFloat3(&pPos) - XMLoadFloat3(&nPos)).m128_f32);
 	}
+}
+
+void PlayScene::SetPlayerNPCVector(int population, int playerNumber)
+{
+	//人数
+	int people = min(max(population, 1), Circuit::GetChosenCircuit()->startTransform_.size());
+	//順番
+	int pNum = min(max(playerNumber, 0), population - 1);
+
+	//配列
+	vehicles_.clear();
+	vehicles_.resize(population);
+
+	//プレイヤーのモデル
+	string playerVehicleModelName = VehicleGlobal::GetChosenVehicleName();
+
+	//モデル名が入ってる配列を作る
+	//車両
+	vector<string> vehicleModelVector;
+	for (auto& itr : *VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle))
+	{
+		vehicleModelVector.push_back(itr.second);
+	}
+	//タイヤ
+	vector<string> wheelModelVector;
+	for (auto& itr : *VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel))
+	{
+		wheelModelVector.push_back(itr.second);
+	}
+
+	//配列のサイズが１以上ならプレイヤーと被ってるモデル名は消す　タイヤは被っても問題ない
+	if (vehicleModelVector.size() >= 1)
+	{
+		// イテレート中に要素削除をするような場合には範囲for文は使用できない
+		for (auto itr = vehicleModelVector.begin(); itr != vehicleModelVector.end();)
+		{
+			// 条件一致した要素を削除する
+			if (*itr == playerVehicleModelName)
+				itr = vehicleModelVector.erase(itr);// 削除された要素の次を指すイテレータが返される。
+			else
+				++itr;// 要素削除をしない場合に、イテレータを進める
+		}
+	}
+
+	//車両をセット
+	for (int i = 0; i < people; i++)
+	{
+		if (i == pNum)
+			continue;	//プレイヤーでない
+
+		//ランダムに選ぶ
+		int vehicleIndex = rand() % vehicleModelVector.size();
+		int wheelIndex   = rand() % wheelModelVector.size();
+		//範囲内に収める
+		vehicleIndex = min(max(vehicleIndex, 0), vehicleModelVector.size() - 1);
+		wheelIndex   = min(max(wheelIndex  , 0), wheelModelVector.size() - 1);
+		
+		VehicleOpponent* pVehicleOpponent = nullptr;
+		SetVehicle<VehicleOpponent>(pVehicleOpponent
+			, vehicleModelVector[vehicleIndex].c_str()
+			, wheelModelVector[wheelIndex].c_str(), i);
+	}
+
+	//プレイヤーは最後
+	VehiclePlayer* pVehiclePlayer = nullptr;
+	SetVehicle<VehiclePlayer>(pVehiclePlayer, playerVehicleModelName
+		, VehicleGlobal::GetChosenWheelName(), pNum);
+
+	//ポインタを記憶
+	pVehiclePlayer_ = vehicles_[pNum];
 }

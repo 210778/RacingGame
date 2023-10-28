@@ -92,10 +92,10 @@ void VehicleGlobal::LoadVehicleObject()
 void VehicleGlobal::SetChosenPopulation(int value) { chosenPopulation_ = value; }
 int VehicleGlobal::GetChosenPopulation() { return chosenPopulation_; }
 
-void VehicleGlobal::SetChosenVehicleName(string str) { chosenVehicleName_ = Global::GetModelFileName() + str; }
+void VehicleGlobal::SetChosenVehicleName(string str) { chosenVehicleName_ = str; }
 string VehicleGlobal::GetChosenVehicleName() { return chosenVehicleName_; }
 
-void VehicleGlobal::SetChosenWheelName(string str) { chosenWheelName_ = Global::GetModelFileName() + str; }
+void VehicleGlobal::SetChosenWheelName(string str) { chosenWheelName_ = str; }
 string VehicleGlobal::GetChosenWheelName() { return chosenWheelName_; }
 
 //パーツの名前とモデル名を格納したベクターへのポインタを返す
@@ -105,7 +105,7 @@ vector<pair<string, string>>* VehicleGlobal::GetVehicleNameVector(VehicleGlobal:
 
 	for (auto& itr : vehicleObjectVector_[pn])
 	{
-		answerMap_.push_back(make_pair(itr.first, itr.second));
+		answerMap_.push_back(make_pair(itr.first, Global::GetModelFileName() + itr.second));
 	}
 	
 	return &answerMap_;

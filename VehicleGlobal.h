@@ -27,7 +27,7 @@ namespace VehicleGlobal
 	/// パーツの名前とモデル名を格納したベクターへのポインタを返す
 	/// </summary>
 	/// <param name="pn">車両→vehicle , タイヤ→wheel</param>
-	/// <returns>vector[pair[車両パーツの名前、ファイルの名前]] </returns>
+	/// <returns>vector[pair[車両パーツの名前、ファイル位置\\ファイルの名前]] </returns>
 	std::vector<std::pair<std::string, std::string>>* GetVehicleNameVector(PartName pn);
 };
 
