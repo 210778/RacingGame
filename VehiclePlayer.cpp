@@ -230,69 +230,22 @@ void VehiclePlayer::PlayerCamera_Update()
 void VehiclePlayer::InputOperate()
 {
     //ハンドル
-    operation_.inputNow[operation_.inputName::handleLeft] = VehicleInput::GetInput(VehicleInput::Value::handleRightLeft);
+    operation_.ValueMap[Operation::Value::handleRightLeft] = VehicleInput::GetInput(VehicleInput::Value::handleRightLeft);
+
     //前進後退
-    operation_.inputNow[operation_.inputName::handleLeft] = VehicleInput::GetInput(VehicleInput::Value::handleRightLeft);
-
-
-
-#if 0
-    //ハンドルの操作
-        if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
-        {
-            operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
-        }
-        if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT))
-        {
-            operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
-        }
-
-    //全身後退
-        if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP))
-        {
-            operation_.inputNow[operation_.inputName::moveFront] = 1.0f;
-        }
-        if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN))
-        {
-            operation_.inputNow[operation_.inputName::moveRear] = 1.0f;
-        }
-#endif
+    operation_.ValueMap[Operation::Value::moveFrontRear] = VehicleInput::GetInput(VehicleInput::Value::moveFrontRear);
 
     //ブースト
-        if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
-        {
-            operation_.inputNow[operation_.inputName::boost] = 1.0f;
-        }
-
+    operation_.ButtonMap[Operation::Button::boost] = VehicleInput::GetInput(VehicleInput::Button::useBooster);
 
     //左右回転
-        if (Input::IsKey(DIK_Z) || Input::IsKey(DIK_Q))
-        {
-            operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
-        }
-        if (Input::IsKey(DIK_X) || Input::IsKey(DIK_E))
-        {
-            operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
-        }
+    operation_.ValueMap[Operation::Value::turnRightLeft] = VehicleInput::GetInput(VehicleInput::Value::turnRightLeft);
 
     //ジャンプ
-        if (Input::IsKey(DIK_M))
-        {
-            operation_.inputNow[operation_.inputName::jump] = 1.0f;    
-        }
+    operation_.ButtonMap[Operation::Button::jump] = VehicleInput::GetInput(VehicleInput::Button::jumpUp);
 
     //左右移動
-        if (Input::IsKey(DIK_V))
-        {
-            operation_.inputNow[operation_.inputName::moveLeft] = 1.0f;
-        }
-        if (Input::IsKey(DIK_B))
-        {
-            operation_.inputNow[operation_.inputName::moveRight] = 1.0f;
-        }
-
-
-
+    operation_.ValueMap[Operation::Value::moveRightLeft] = VehicleInput::GetInput(VehicleInput::Value::moveRightLeft);
 }
 
 //画像をセット

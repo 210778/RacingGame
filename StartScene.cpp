@@ -88,8 +88,7 @@ void StartScene::Update()
 	XMFLOAT3  tes = Input::GetPadStickL();
 	tes = Input::GetPadStickR();
 
-	if (Input::IsKeyDown(DIK_A) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_LEFT) ||
-		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::left))
+	if (VehicleInput::GetInput(VehicleInput::Button::selectLeft))
 	{
 		if (dataSelection_[selectIndex_.index].DataAddition(-1))
 		{
@@ -100,8 +99,7 @@ void StartScene::Update()
 			Music::Play(Music::MusicName::se_se_selectError);
 		}
 	}
-	if (Input::IsKeyDown(DIK_D) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_RIGHT) ||
-		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::right))
+	if (VehicleInput::GetInput(VehicleInput::Button::selectRight))
 	{
 		if (dataSelection_[selectIndex_.index].DataAddition(1))
 			Music::Play(Music::MusicName::se_select2);
@@ -109,16 +107,14 @@ void StartScene::Update()
 			Music::Play(Music::MusicName::se_se_selectError);
 	}
 
-	if (Input::IsKeyDown(DIK_W) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_UP) ||
-		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::up))
+	if (VehicleInput::GetInput(VehicleInput::Button::selectUp))
 	{
 		if(selectIndex_.DataAddition(-1))
 			Music::Play(Music::MusicName::se_select);
 		else
 			Music::Play(Music::MusicName::se_se_selectError);
 	}
-	if (Input::IsKeyDown(DIK_S) || Input::IsPadButtonDown(XINPUT_GAMEPAD_DPAD_DOWN) ||
-		Input::IsPadStickTilt(Input::StickLR::right, Input::StickDirection::down))
+	if (VehicleInput::GetInput(VehicleInput::Button::selectDown))
 	{
 		if (selectIndex_.DataAddition(1))
 			Music::Play(Music::MusicName::se_select);
@@ -127,7 +123,7 @@ void StartScene::Update()
 	}
 
 
-	if((selectIndex_.index >= selectIndex_.maxValue) && Input::IsKey(DIK_P))
+	if(VehicleInput::GetInput(VehicleInput::Button::selectDecide))
 	{
 		SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
 		pSceneManager->ChangeScene(SCENE_ID_PLAY);

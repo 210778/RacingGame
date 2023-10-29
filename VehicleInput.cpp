@@ -2,7 +2,6 @@
 #include "VehicleInput.h"
 
 using std::vector;
-using std::array;
 using std::map;
 
 namespace VehicleInput
@@ -72,34 +71,71 @@ void VehicleInput::Update()
 
     //車両
     //前進、後退
-    //入力があるならスティックを優先
     if (!(Calculator::IsEqualFloat(abs(Input::GetPadStickL().y), valueNoInput_)))
     {
         inputValue_[Value::moveFrontRear] = Input::GetPadStickL().y;
     }
-    else if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_UP, number_))
+    if (Input::IsKey(DIK_W) || Input::IsKey(DIK_UP) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_UP, number_) ||
+        Input::IsPadButton(XINPUT_GAMEPAD_A, number_))
     {
         inputValue_[Value::moveFrontRear] = valueMax_;
     }
-    else if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_DOWN, number_))
+    if (Input::IsKey(DIK_S) || Input::IsKey(DIK_DOWN) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_DOWN, number_) ||
+        Input::IsPadButton(XINPUT_GAMEPAD_B, number_))
     {
         inputValue_[Value::moveFrontRear] = valueMin_;
     }
-
     //ハンドル左右
-    //入力があるならスティックを優先
     if (!(Calculator::IsEqualFloat(abs(Input::GetPadStickL().x), valueNoInput_)))
         inputValue_[Value::handleRightLeft] = Input::GetPadStickL().x;
-    else if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_RIGHT, number_))
+    if (Input::IsKey(DIK_D) || Input::IsKey(DIK_RIGHT) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_RIGHT, number_))
         inputValue_[Value::handleRightLeft] = valueMax_;
-    else if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_LEFT, number_))
+    if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT) || Input::IsPadButton(XINPUT_GAMEPAD_DPAD_LEFT, number_))
         inputValue_[Value::handleRightLeft] = valueMin_;
 
+    //ブースト
+    if (Input::IsKey(DIK_SPACE) || Input::IsKey(DIK_LSHIFT) ||
+        Input::IsPadButton(XINPUT_GAMEPAD_X, number_))
+        inputButton_[Button::useBooster] = true;
+    //ジャンプ
+    if (Input::IsKeyDown(DIK_Z) || Input::IsPadButtonDown(XINPUT_GAMEPAD_Y, number_))
+        inputButton_[Button::jumpUp] = true;
     //一時停止
     if (Input::IsKeyDown(DIK_ESCAPE) || Input::IsPadButtonDown(XINPUT_GAMEPAD_BACK, number_))
         inputButton_[Button::pause] = true;
 
-    
+    //左右移動
+    if (Input::IsKey(DIK_V) || Input::IsPadButton(XINPUT_GAMEPAD_LEFT_SHOULDER, number_))
+        inputValue_[Value::moveRightLeft] = valueMin_;
+    if (Input::IsKey(DIK_B) || Input::IsPadButton(XINPUT_GAMEPAD_RIGHT_SHOULDER, number_))
+        inputValue_[Value::moveRightLeft] = valueMax_;
+
+    //左右回転
+    if (!(Calculator::IsEqualFloat(abs(Input::GetPadTrrigerR()), valueNoInput_)))
+        inputValue_[Value::turnRightLeft] = Input::GetPadTrrigerR();
+    if (!(Calculator::IsEqualFloat(abs(Input::GetPadTrrigerL()), valueNoInput_)))
+        inputValue_[Value::turnRightLeft] = -(Input::GetPadTrrigerL());
+    if (Input::IsKey(DIK_Q))
+        inputValue_[Value::turnRightLeft] = valueMin_;
+    if (Input::IsKey(DIK_E))
+        inputValue_[Value::turnRightLeft] = valueMax_;
+
+    //カメラ回転
+    if (!(Calculator::IsEqualFloat(abs(Input::GetPadStickR().y), valueNoInput_)))
+        inputValue_[Value::cameraRotateUpDown] = Input::GetPadStickR().y;
+    if (Input::IsKey(DIK_R))
+        inputValue_[Value::cameraRotateUpDown] = valueMax_;
+    if (Input::IsKey(DIK_F))
+        inputValue_[Value::cameraRotateUpDown] = valueMin_;
+
+    //カメラズーム
+    if (!(Calculator::IsEqualFloat(abs(Input::GetPadStickR().x), valueNoInput_)))
+        inputValue_[Value::cameraZoomInOut] = Input::GetPadStickR().x;
+    if (Input::IsKey(DIK_T))
+        inputValue_[Value::cameraZoomInOut] = valueMax_;
+    if (Input::IsKey(DIK_G))
+        inputValue_[Value::cameraZoomInOut] = valueMin_;
+
 }
 
 //ボタン取得
@@ -119,5 +155,15 @@ bool VehicleInput::GetInput(Button b)
 float VehicleInput::GetInput(Value v)
 {
     return inputValue_[v];
+}
+
+float VehicleInput::GetMaxValue()
+{
+    return valueMax_;
+}
+
+float VehicleInput::GetMinValue()
+{
+    return valueMin_;
 }
 

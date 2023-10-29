@@ -4,6 +4,7 @@
 
 #include "Viewer.h"
 #include "Vehicle.h"
+#include "VehicleInput.h"
 
 //コンストラクタ
 Viewer::Viewer(GameObject* parent)
@@ -89,6 +90,9 @@ void Viewer::Update()
     }
 
     //上下回転
+    camX_ += rotateSPD_ * VehicleInput::GetInput(VehicleInput::Value::cameraRotateUpDown);
+
+#if 0
     if (Input::IsKey(DIK_F))
     {
         camX_ += rotateSPD_;
@@ -97,6 +101,7 @@ void Viewer::Update()
     {
         camX_ -= rotateSPD_;
     }
+#endif
 
     //制限
     if (camX_ >= upLim_)
@@ -111,7 +116,9 @@ void Viewer::Update()
     //ズーム調節
     float length = *XMVector3Length(vecCam).m128_f32;
 
-    if (Input::IsKey(DIK_T))
+    //調整
+    float value = VehicleInput::GetInput(VehicleInput::Value::cameraZoomInOut);
+    if (value > 0.0f)
     {
         if (length > nearLim_)
         {
@@ -120,7 +127,7 @@ void Viewer::Update()
             camFlo_.z *= zoomUp_;
         }
     }
-    if (Input::IsKey(DIK_G))
+    if (value < 0.0f)
     {
         if (length < farLim_)
         {
@@ -129,7 +136,6 @@ void Viewer::Update()
             camFlo_.z *= zoomOut_;
         }
     }
-
 }
 
 //描画

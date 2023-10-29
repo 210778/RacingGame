@@ -114,7 +114,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
     , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
-    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f), boostValue_(2.0f)
+    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f), boostValue_(1.5f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(200.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
     , farLimitPosition_(1000.f, 500.0f, 1000.f)
@@ -1013,10 +1013,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
         return;
 
     //ハンドルの操作
-    if (operation_.inputNow[operation_.inputName::handleLeft])
-        HandleTurnLR(handleLeft_);
-    if (operation_.inputNow[operation_.inputName::handleRight])
-        HandleTurnLR(handleRight_);
+    HandleTurnLR(operation_.ValueMap[Operation::Value::handleRightLeft]);
 
     //ハンドル角度制限
     //曲がりやすい
@@ -1025,21 +1022,15 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     else
         AngleLimit(handleRotate_, handleRotateMax_);
 
+    //前進,後退
     if (landingFlag_)
     {
-        //全身後退
-        if (operation_.inputNow[operation_.inputName::moveFront])
-            acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration;
-
-        if (operation_.inputNow[operation_.inputName::moveRear])
-            acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
-
-        float value = VehicleInput::GetInput(VehicleInput::Value::moveFrontRear);
-        acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration * VehicleInput::GetInput(VehicleInput::Value::moveFrontRear);
+        acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration *
+                         operation_.ValueMap[Operation::Value::moveFrontRear];
     }
 
     //ブースト
-    if (operation_.inputNow[operation_.inputName::boost])
+    if (operation_.ButtonMap[Operation::Button::boost])
     {
         //容量があるなら
         if (boostCapacity_ >= boostSpending_)
@@ -1064,25 +1055,19 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     }
 
 #ifdef _DEBUG
-    //左右回転
-    if (operation_.inputNow[operation_.inputName::turnLeft])
-        transform_.rotate_.y -= rotateSPD_;
 
-    if (operation_.inputNow[operation_.inputName::turnRight])
-        transform_.rotate_.y += rotateSPD_;
+    //左右回転
+    transform_.rotate_.y += rotateSPD_ * operation_.ValueMap[Operation::Value::turnRightLeft];
 
     //ジャンプ
-    if (operation_.IsDown(operation_.inputName::jump))
+    if (operation_.ButtonMap[Operation::Button::jump])
     {
         acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
         landingFlag_ = false;
     }
 
     //左右移動
-    if (operation_.inputNow[operation_.inputName::moveLeft])
-        acceleration_ -= vecX;
-    if (operation_.inputNow[operation_.inputName::moveRight])
-        acceleration_ += vecX;
+    acceleration_ += vecX * operation_.ValueMap[Operation::Value::moveRightLeft];
 #endif
 }
 

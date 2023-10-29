@@ -12,14 +12,10 @@ namespace VehicleInput
         selectDecide,
         selectReturn,
 
-        jumpUp,
         useBooster,
+        jumpUp,
         pause,
 
-        cameraZoomIn,
-        cameraZoomOut,
-        cameraRotateUp,
-        cameraRotateDown,
         ButtonMax
     };
 
@@ -29,6 +25,10 @@ namespace VehicleInput
         moveRightLeft,
         turnRightLeft,
         handleRightLeft,
+
+        cameraZoomInOut,
+        cameraRotateUpDown,
+
         ValueMax
     };
 
@@ -51,4 +51,9 @@ namespace VehicleInput
     /// <param name="v">取得したい値　Value::***</param>
     /// <returns>float -1.0 ~ 0.0 ~ 1.0</returns>
     float GetInput(Value v);
+
+    //入力の最大値を取得(今は1.0f)
+    float GetMaxValue();
+    //入力の最小値を取得(今は-1.0f)
+    float GetMinValue();
 };

@@ -1,4 +1,5 @@
 #include "VehicleOpponent.h"
+#include "VehicleInput.h"
 
 //コンストラクタ
 VehicleOpponent::VehicleOpponent(GameObject* parent)
@@ -31,9 +32,11 @@ void VehicleOpponent::InputOperate()
     float anleToCheck = Calculator::AngleBetweenVector(posToCheckVec, worldVector_.z);
     //自分の角度を引く
     anleToCheck = Calculator::AngleNormalize(anleToCheck - transform_.rotate_.y);
-
     //加速度長さ
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
+    //最大、最小値
+    float Max = VehicleInput::GetMaxValue();
+    float Min = VehicleInput::GetMinValue();
 
 
     //前が壁
@@ -41,54 +44,58 @@ void VehicleOpponent::InputOperate()
         && !rayCastHit_[RayCastHit::front].road)
     {
         //後退
-        operation_.inputNow[operation_.inputName::moveRear] = 1.0f;
+        operation_.ValueMap[Operation::Value::moveFrontRear] = Min;
 
         //ゴールの方向にカーブ
         if (anleToCheck > 180)
         {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = Max;
             //operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
             //operation_.inputNow[operation_.inputName::turnRight] = 0.0f;
-
-            operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
+            //operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
         }
         else
         {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = Min;
             //operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
             //operation_.inputNow[operation_.inputName::turnLeft] = 0.0f;
-
-            operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
+            //operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
         }
     }
     //何もないなら
     else
     {
         //前進
-        operation_.inputNow[operation_.inputName::moveFront] = 1.0f;
+        operation_.ValueMap[Operation::Value::moveFrontRear] = Max;
+
 
         if (anleToCheck > 180)
         {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = Min;
             //operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
-            operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
+            //operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
         }
         else
         {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = Max;
             //operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
-            operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
+            //operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
         }
 
         //ランダム性
         if (rand() % 5 == 0)
         {
-            operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
+            //operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
         }
         if (rand() % 5 == 0)
         {
-            operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
+            //operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
         }
         //ランダム性
         if (rand() % 20 == 0)
         {
-            operation_.inputNow[operation_.inputName::boost] = 1.0f;
+            operation_.ButtonMap[Operation::Button::boost] = true;
+            //operation_.inputNow[operation_.inputName::boost] = 1.0f;
         }
 
     }

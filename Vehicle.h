@@ -218,55 +218,43 @@ protected:
     }Size;
 
     //操作入力
-    struct
+    struct Operation
     {
-        enum inputName
+        enum class Button     //ボタン入力　false ~ true
         {
-            moveFront = 0,
-            moveRear,
-            handleRight,
-            handleLeft,
-            boost,
+            boost = 0,
 
             jump,
-            turnRight,
-            turnLeft,
-            moveRight,
-            moveLeft,
 
-            MAX
+            ButtonMax
+        };
+        enum class Value    //スティック系入力　-1.0 ~ 0.0 ~ 1.0
+        {
+            moveFrontRear = 0,
+            handleRightLeft,
+
+            turnRightLeft,
+            moveRightLeft,
+
+            ValueMax
         };
 
-        //現在の値、１つ過去の値 入る値は0.0f ~ 1.0f
-        std::map<int,float> inputNow,inputAgo;
+        std::map<Button, bool> ButtonMap;    //ボタン入力　false ~ true
+        std::map<Value, float> ValueMap;     //スティック系入力　-1.0 ~ 0.0 ~ 1.0
 
         //現在の値を過去に渡してゼロにする
         void Refresh()
         {
-            inputAgo = inputNow;
-
             //リセット
-            for (auto& itr : inputNow){
-                itr.second = 0.0f;
+            for (auto& itr1 : ButtonMap)
+            {
+                itr1.second = false;
+            }
+            for (auto& itr2 : ValueMap)
+            {
+                itr2.second = 0.0f;
             }
         }
-        //今は押していて、前では押してないか
-        float IsDown(inputName in)
-        {
-            if (inputAgo[in] == false)
-                return inputNow[in];
-
-            return 0.0f;
-        }
-        //今は押してなくて、前は押していたか
-        float IsUp(inputName in)
-        {
-            if (inputAgo[in] == false)
-                return 0.0f;
-
-            return inputNow[in];
-        }
-
     }operation_;
 
     //NPCのためのレイが当たったかどうかの情報まとめ
