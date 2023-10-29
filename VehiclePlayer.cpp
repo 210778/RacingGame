@@ -15,6 +15,7 @@
 #include "Music.h"
 #include "ImagePrinter.h"
 #include "Circuit.h"
+#include "VehicleInput.h"
 
 using std::string;
 using std::to_string;
@@ -228,6 +229,14 @@ void VehiclePlayer::PlayerCamera_Update()
 //操作
 void VehiclePlayer::InputOperate()
 {
+    //ハンドル
+    operation_.inputNow[operation_.inputName::handleLeft] = VehicleInput::GetInput(VehicleInput::Value::handleRightLeft);
+    //前進後退
+    operation_.inputNow[operation_.inputName::handleLeft] = VehicleInput::GetInput(VehicleInput::Value::handleRightLeft);
+
+
+
+#if 0
     //ハンドルの操作
         if (Input::IsKey(DIK_A) || Input::IsKey(DIK_LEFT))
         {
@@ -247,6 +256,7 @@ void VehiclePlayer::InputOperate()
         {
             operation_.inputNow[operation_.inputName::moveRear] = 1.0f;
         }
+#endif
 
     //ブースト
         if (Input::IsKey(DIK_LSHIFT) || Input::IsKey(DIK_SPACE))
@@ -280,6 +290,8 @@ void VehiclePlayer::InputOperate()
         {
             operation_.inputNow[operation_.inputName::moveRight] = 1.0f;
         }
+
+
 
 }
 

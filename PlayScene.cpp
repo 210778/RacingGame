@@ -22,6 +22,7 @@
 #include "TextPrinter.h"
 #include "Circuit.h"
 #include "VehicleGlobal.h"
+#include "VehicleInput.h"
 
 using std::tuple;
 using std::sort;
@@ -73,6 +74,9 @@ void PlayScene::Initialize()
 //更新
 void PlayScene::Update()
 {
+	//操作
+	VehicleInput::Update();
+
 	//ポーズ
 	PlayPause();
 
@@ -243,7 +247,7 @@ void PlayScene::CountUniversalTime()
 //ポーズ
 void PlayScene::PlayPause()
 {
-	if (Input::IsKeyDown(DIK_ESCAPE))
+	if (VehicleInput::GetInput(VehicleInput::Button::pause))
 	{
 		if (pauseFlag_)
 			pauseFlag_ = false;

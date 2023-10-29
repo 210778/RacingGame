@@ -37,9 +37,6 @@ void StartScene::Initialize()
 	//車両パーツ読み込み初期化
 	VehicleGlobal::Initialize();
 
-	//入力初期化
-	VehicleInput::Initialize();
-
 	//文字
 	pTextCircuit_ = new Text;
 	pTextCircuit_->Initialize();
@@ -82,6 +79,9 @@ void StartScene::Initialize()
 //更新
 void StartScene::Update()
 {
+	//操作
+	VehicleInput::Update();
+
 	//音楽
 	Music::Update();
 

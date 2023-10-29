@@ -32,6 +32,8 @@
 #include "PoryLine.h"
 #include "Circuit.h"
 
+#include "VehicleInput.h"/////
+
 using std::vector;
 using std::string;
 
@@ -1031,6 +1033,9 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
 
         if (operation_.inputNow[operation_.inputName::moveRear])
             acceleration_ -= vecZ * GroundTypeFriction_[landingType_].acceleration;
+
+        float value = VehicleInput::GetInput(VehicleInput::Value::moveFrontRear);
+        acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration * VehicleInput::GetInput(VehicleInput::Value::moveFrontRear);
     }
 
     //ブースト

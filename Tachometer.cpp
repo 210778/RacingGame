@@ -48,19 +48,6 @@ void Tachometer::Initialize()
 //更新
 void Tachometer::Update()
 {
-    /*
-    XMFLOAT3 → XMVECTOR
-
-    XMFLOAT3 f;	//何か入ってるとして
-    XMVECTOR v = XMLoadFloat3(&f);
-
-    XMFLOAT3 ← XMVECTOR
-
-    XMVECTOR v; 	//何か入ってるとして
-    XMFLOAT3 f;
-    XMStoreFloat3(&f, v);
-    */
-
     //最大HPに対する、現在HPの割合
     stopRatio_ = (float)nowHp_ / (float)maxHp_;
 
@@ -135,11 +122,6 @@ void Tachometer::Draw()
 
     Image::SetTransform(hPict_[PICT_FRAME], gaugeTrans);
     Image::Draw(hPict_[PICT_FRAME]);
-
-    if (Input::IsKey(DIK_1))
-        Damage(10);
-    if (Input::IsKey(DIK_2))
-        Recovery(10);
 }
 
 //開放
