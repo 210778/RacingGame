@@ -6,7 +6,6 @@ class Ground;
 class VehicleWheel;
 class RayCastData;
 class Viewer;
-class PoryLine;
 
 //車両を管理するクラス
 class Vehicle : public GameObject
@@ -127,6 +126,7 @@ protected:
         int ranking_;       //自分の順位
         int goalRanking_;   //ゴールした時の順位 ゴール前は0
         int population_;    //レースに参加している人数
+        bool lapCountFlag_; //周回数が増えた時のフラグ
         unsigned long long goalTime_;//ゴールした時の経過タイム
         unsigned long long standbyTime_;    //待機する時間
 
@@ -151,6 +151,7 @@ protected:
     float wheelParticleLengthMax_;  //タイヤのエフェクトが発生するベクトルの長さの上限
     float sparkParticleLength_;     //ドリフトのエフェクトが発生するベクトルの長さ
     float sparkParticleHanlde_;     //ドリフトのエフェクトが発生するハンドルの回転
+    int npcParticleRandom_;         //NPCがエフェクトを発生させない確率
 
     std::string vehicleModelName_;  //車両モデルの名前
     std::string wheelModelName_;    //タイヤモデルの名前
@@ -282,8 +283,21 @@ protected:
     };
     std::map<int, RayCastHit> rayCastHit_;
 
-    //
-    PoryLine* pPoryLine_;
+    //レイキャストの時用
+    enum Direction
+    {
+        front = 0,
+        right = 1,
+        rear = 2,
+        left = 3,
+    };
+    enum Oblique
+    {
+        frontLeft = 0,
+        frontRight,
+        rearLeft,
+        rearRight
+    };
 
     //壁や床との接触
     void VehicleCollide();
@@ -358,8 +372,13 @@ public:
     //車両の操作、入力の受付
     virtual void InputOperate();
 
+    //地面との作用 ,奈落や範囲外に落ちるとリセット
+    void LandingProcess();
+
     //ハンドルの操作
     void HandleTurnLR(int LR);
+    //ハンドルの値に合わせて回転
+    void HandleRotate();
 
     //スタートの位置
     void SetStartTransform(const Transform& value) { startTransform_ = value; }
@@ -369,6 +388,12 @@ public:
 
     //ベクトルを回転行列で"逆"回転 (ZXY順)
     void VectorRotateMatrixZXY_R(XMVECTOR& vec);
+
+    //ゴール判定
+    void GoalJudgement();
+
+    //周回数増加
+    void LapCountAdd(int value = 1);
 
     /// <summary>
     /// 坂道に応じて車両を回転(X、Z軸)

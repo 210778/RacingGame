@@ -4,7 +4,6 @@
 class Text;
 class Sample;
 class Viewer;
-class ImagePrinter;
 
 //ŸŸŸ‚ğŠÇ—‚·‚éƒNƒ‰ƒX
 class VehiclePlayer : public Vehicle

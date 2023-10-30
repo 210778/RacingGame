@@ -29,7 +29,6 @@
 #include "MeasurePole.h"
 #include "Music.h"
 #include "ImagePrinter.h"
-#include "PoryLine.h"
 #include "Circuit.h"
 
 #include "VehicleInput.h"/////
@@ -54,7 +53,7 @@ Vehicle::Vehicle(GameObject* parent)
     , handleFlag_(false), handleRotateMax_(/*70*/60)
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), population_(1), goalTime_(0)
+    , ranking_(0), population_(1), lapCountFlag_(false), goalTime_(0)
     , mass_(1.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Circuit::circuitType::road)
@@ -78,7 +77,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     //ベクトル
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
     //スピードなど
-    , moveSPD_(0.01f), rotateSPD_(1.0f), jumpForce_(1.0f)
+    , moveSPD_(0.01f), rotateSPD_(1.1f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
 
@@ -92,7 +91,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , landingFriction_(1.0f), sideFriction_(1.0f)
 
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
-    , slideHandleRotateAdd_(2.0f)
+    , slideHandleRotateAdd_(2.5f)
     , handleFlag_(false), handleRotateMax_(60.0f)
 
     , landingFlag_(true)
@@ -106,20 +105,19 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
-    , sparkParticleLength_(0.95), sparkParticleHanlde_(15)
+    , sparkParticleLength_(0.95), sparkParticleHanlde_(15), npcParticleRandom_(3)
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_(), restartTransform_()
 
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
-    , boostCapacityMax_(2000.0), boostCapacity_(boostCapacityMax_)
-    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.5f), boostValue_(1.5f)
-    , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(200.0f)
+    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
+    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
+    , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
     , farLimitPosition_(1000.f, 500.0f, 1000.f)
     , pViewer_(nullptr)
-    , pPoryLine_(nullptr)
 {
     matRotateX = XMMatrixIdentity();
     matRotateY = XMMatrixIdentity();
@@ -192,10 +190,6 @@ void Vehicle::Initialize()
 
     //UI初期化
     PlayerUI_Initialize();
-
-    //ポリライン初期化
-    pPoryLine_ = new PoryLine;
-    pPoryLine_->Load("image\\PaticleAssets\\tex.png");
 }
 
 //更新
@@ -234,18 +228,9 @@ void Vehicle::Update()
 
     Debug::TimerLogEnd("vehicle最初");
 
-    //ゴール  
-    if (lapCount_ >= lapMax_)
-    {
-        //ゴール順位が更新されてないならセットする
-        if (!goalFlag_)
-        {
-            goalRanking_ = ranking_;
-            goalTime_ = time_;
-        }
+    //ゴール判定
+    GoalJudgement();
 
-        goalFlag_ = true;
-    }
 
     //前向きに進んでるか後ろ向きか判定
     accZDirection_ = 1;
@@ -260,44 +245,12 @@ void Vehicle::Update()
     Debug::TimerLogEnd("vehicle操作受けつけ");
 
 
-    //地面の種類によって
-    if (landingFlag_)
-    {
-        acceleration_ *= { GroundTypeFriction_[landingType_].landing, 1.0f
-                         , GroundTypeFriction_[landingType_].landing, 1.0f };
-        
-        //復活地点更新
-        if (landingType_ == Circuit::circuitType::road)
-        {
-            restartTransform_.position_ = transform_.position_;
-            restartTransform_.rotate_ = transform_.rotate_;
-        }
+    //地面の種類によって摩擦など
+    LandingProcess();
 
-        if (landingType_ == Circuit::circuitType::abyss)
-        {
-            //奈落に落下
-            FallAbyss();
-        }
-    }
-    //離れすぎたら強制リセット
-    if (abs(transform_.position_.x) > abs(farLimitPosition_.x) ||
-        abs(transform_.position_.y) > abs(farLimitPosition_.y) ||
-        abs(transform_.position_.z) > abs(farLimitPosition_.z))
-    {
-        FallAbyss();
-    }
 
-    float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
-    //地上ならハンドルに合わせて回転
-    if (landingFlag_)
-    {
-        //前後に動いているなら
-        transform_.rotate_.y += handleRotate_ * accLength * turnAdjust_ * accZDirection_;
-        handleRotate_ *= (driveAdjust_ / (accLength + driveAdjust_));
-    }
-    //ハンドルを戻す
-    if (!handleFlag_)
-        handleRotate_ *= handleAdjust_;
+    //ハンドル回転
+    HandleRotate();
 
     //タイヤの角度と減速
     //正面やタイヤの方向へは減速しないが、タイヤの方向と平行の方向へは減速する
@@ -332,9 +285,6 @@ void Vehicle::Update()
     transform_.rotate_.x = Calculator::AngleNormalize(transform_.rotate_.x);
     transform_.rotate_.y = Calculator::AngleNormalize(transform_.rotate_.y);
     transform_.rotate_.z = Calculator::AngleNormalize(transform_.rotate_.z);
-
-    //ポリラインに現在の位置を伝える
-    pPoryLine_->AddPosition(transform_.position_);
 }
 
 //何かに当たった
@@ -357,7 +307,7 @@ void Vehicle::OnCollision(GameObject* pTarget)
         if (pCP->GetNumber() <= 0 && pointCount_ >= pointCountMax_)
         {
             pointCount_ = 0;
-            lapCount_++;
+            LapCountAdd(1);
         }
     }
 
@@ -374,17 +324,12 @@ void Vehicle::Draw()
 
     PlayerUI_Draw();
 
-    //ポリラインを描画
-    //pPoryLine_->Draw();
-
     Debug::TimerLogEnd("vehicle描画");
 }
 
 //開放
 void Vehicle::Release()
 {
-    //ポリライン解放
-    pPoryLine_->Release();
 }
 
 void Vehicle::SpeedLimit(XMVECTOR& speed, const float limit)
@@ -593,15 +538,6 @@ void Vehicle::CollideWall(int hModel, int type)
     {
         wallCollideVertical[i].start = startPos;
 
-        //レイキャストの時用
-        enum Direction
-        {
-            front = 0,
-            right = 1,
-            rear = 2,
-            left = 3,
-        };
-
         //90度ずつ回転行列
         XMMATRIX matRot = XMMatrixRotationY(XM_PIDIV2 * i);	//Ｙ軸で回転させる行列   
         //回転
@@ -703,14 +639,6 @@ void Vehicle::CollideWall(int hModel, int type)
     {
         wallCollideOblique[i].start = startPos;
 
-        enum Oblique
-        {
-            frontLeft = 0,
-            frontRight,
-            rearLeft,
-            rearRight
-        };
-
         //z軸からの角度 とサイズ
         float theta = 0.0f;
         float vehicleLen = 0.0f;
@@ -720,7 +648,7 @@ void Vehicle::CollideWall(int hModel, int type)
         VectorRotateMatrixZXY(accRotVec);
 
         float dirAccX = XMVectorGetX(accRotVec),
-            dirAccZ = XMVectorGetZ(accRotVec);
+              dirAccZ = XMVectorGetZ(accRotVec);
 
         int NPC_Number = 0; //NPC用
 
@@ -885,6 +813,54 @@ void Vehicle::HandleTurnLR(int LR)
         handleRotate_ += rotateSPD_ * LR;
 }
 
+//着地してるときに摩擦などの処理、奈落や範囲外だとリセット
+void Vehicle::LandingProcess()
+{
+    if (landingFlag_)
+    {
+        acceleration_ *= { GroundTypeFriction_[landingType_].landing, 1.0f
+            , GroundTypeFriction_[landingType_].landing, 1.0f };
+
+        //復活地点更新
+        if (landingType_ == Circuit::circuitType::road)
+        {
+            restartTransform_.position_ = transform_.position_;
+            restartTransform_.rotate_ = transform_.rotate_;
+        }
+
+        if (landingType_ == Circuit::circuitType::abyss)
+        {
+            //奈落に落下
+            FallAbyss();
+        }
+    }
+    //離れすぎたら強制リセット
+    if (abs(transform_.position_.x) > abs(farLimitPosition_.x) ||
+        abs(transform_.position_.y) > abs(farLimitPosition_.y) ||
+        abs(transform_.position_.z) > abs(farLimitPosition_.z))
+    {
+        FallAbyss();
+    }
+}
+
+void Vehicle::HandleRotate()
+{
+    //地上ならハンドルに合わせて回転
+    if (landingFlag_)
+    {
+        float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
+
+        //前後に動いているなら
+        transform_.rotate_.y += handleRotate_ * accLength * turnAdjust_ * accZDirection_;
+        handleRotate_ *= (driveAdjust_ / (accLength + driveAdjust_));
+    }
+    //ハンドルを戻す
+    if (!handleFlag_)
+    {
+        handleRotate_ *= handleAdjust_;
+    }
+}
+
 //次のチェックポイントの位置を取得
 XMFLOAT3* Vehicle::GetNextCheckPosition()
 {
@@ -910,6 +886,36 @@ void Vehicle::VectorRotateMatrixZXY_R(XMVECTOR& vec)
     vec = XMVector3TransformCoord(vec, matRotateY_R);
     vec = XMVector3TransformCoord(vec, matRotateX_R);
     vec = XMVector3TransformCoord(vec, matRotateZ_R);
+}
+
+//ゴール判定
+void Vehicle::GoalJudgement()
+{
+    if (lapCount_ >= lapMax_)
+    {
+        //ゴール順位が更新されてないならセットする
+        if (!goalFlag_)
+        {
+            goalRanking_ = ranking_;
+            goalTime_ = time_;
+        }
+
+        goalFlag_ = true;
+    }
+}
+
+//周回数増加
+void Vehicle::LapCountAdd(int value)
+{
+    lapCount_ += value;
+
+    if (lapCount_ > lapMax_)
+    {
+        lapCount_ = lapMax_;
+    }
+
+    //音声を鳴らすためのフラグ
+    lapCountFlag_ = true;
 }
 
 // 坂道に応じて車両を回転(X、Z軸)
@@ -1092,6 +1098,11 @@ void Vehicle::VehicleParticle()
     //遠くにいるNPCはエフェクト表示しない
     if (!isPlayer_ && toPlayerVehicleLength_ > particleLimitLength_)
         return;
+    
+    //NPCは確率でエフェクトを発生させない(重いし何かうるさくなる)
+    if (!isPlayer_ && rand() % npcParticleRandom_)
+        return;
+
 
     float accLength = *XMVector3Length(acceleration_).m128_f32;
 
@@ -1185,49 +1196,3 @@ void Vehicle::InputOperate() {};
     void Vehicle::PlayerCamera_Initialize() {};
     //カメラ更新
     void Vehicle::PlayerCamera_Update() {};
-
-#if 0
-物理演算に関するメモ
-
-・運動の法則
-加速度[a]は加えた力[F]に比例し、質量[m]に反比例する。[k]は比例定数
-a = k * (F / m)     そして、
-F = m * a
-・慣性によって発生する見かけの力は　 - a * m
-
-・遠心力
-たぶん慣性の一部。向心力と釣り合う力
-半径r[m]の円上を、質量m[kg]・速度v[m / s]で等速円運動している物体で考えると、[ω]は角速度
-向心力 = mrω2 = m * (v ^ 2 / r)
-
-・スリップ率
-タイヤと路面間の摩擦特性がなんとか
-スリップ率 = (車体速度 - 車輪の回転速度) / 車体速度
-
-
-運動考察
-・車の持つ値
-・エンジン回転数：タコメーターで表示　クラッチが繋がってるなら徐々に値をタイヤに移す　W, Sキーで操作
-・タイヤ回転数：接地してるなら前タイヤの方向へ回転数の分、加速度を加算する
-・タイヤ角度：↑の時に角度の分だけベクトルを回転させる。慣性(遠心力)のために角度が大きいと回転しきれないことにするか
-A, Dキーで操作
-
-/*
-XMFLOAT3 → XMVECTOR
-
-XMFLOAT3 f;	//何か入ってるとして
-XMVECTOR v = XMLoadFloat3(&f);
-
-XMFLOAT3 ← XMVECTOR
-
-XMVECTOR v; 	//何か入ってるとして
-XMFLOAT3 f;
-XMStoreFloat3(&f, v);
-
-std::string str;
-        str = std::to_string(transform_.position_.x);
-        str += "\n" + std::to_string(transform_.position_.y);
-        str += "\n" + std::to_string(transform_.position_.z);
-        MessageBox(NULL, (LPCWSTR)str.c_str(), L" puzzleList_.size() ", MB_OK);
-*/
-#endif

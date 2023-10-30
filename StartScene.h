@@ -8,6 +8,9 @@ class StartScene : public GameObject
 {
 	int hImageArrow_;
 
+	int hImageStart_;
+	int hImageLoad_;
+
 	//文字
 	Text* pTextCircuit_;
 	Text* pTextCaption_;
@@ -75,6 +78,18 @@ class StartScene : public GameObject
 
 	std::map<int,DataSelection> dataSelection_;	//選択するデータのまとめ
 	DataSelection selectIndex_;	//データの索引
+
+
+	DataSelection sceneIndex_;	//画面別の索引
+
+	enum SceneName
+	{
+		title = 0,
+		select,
+		load,
+		SceneMax
+	};
+
 
 	//項目の設定と表示
 	void PrintParagraph(DataName dn, std::string str, int width, int height);

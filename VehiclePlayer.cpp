@@ -3,17 +3,12 @@
 #include "Engine/Text.h"
 #include "Engine/Model.h"
 #include "Engine/Input.h"
-#include "Engine/SphereCollider.h"
-#include "Engine/BoxCollider.h"
 
 #include "Viewer.h"
-#include "Ground.h"
-#include "Bullet.h"
 #include "Speedometer.h"
 #include "ParticlePackage.h"
 #include "Sample.h"
 #include "Music.h"
-#include "ImagePrinter.h"
 #include "Circuit.h"
 #include "VehicleInput.h"
 
@@ -135,6 +130,7 @@ void VehiclePlayer::PlayerUI_Draw()
     {
         //ÉSÅ[ÉãÇµÇƒÇÈÇ»ÇÁ
         drawTime_ = goalTime_;
+
         //ì_ñ≈Ç≥ÇπÇÈ
         if (time_ % flashIntervalUI_ == 0)
         {
@@ -400,11 +396,17 @@ void VehiclePlayer::DrawStandbyCount()
         }
     }
 
-    if (goalFlag_ && !(imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_))
+    //é¸âÒÇµÇΩéû(îÒÉSÅ[Éã)ÇÃâπê∫
+    if (lapCountFlag_)
     {
-        DrawImage(ImageData::ImageNumber::goal);
-        Music::Play(Music::MusicName::se_goal);
+        lapCountFlag_ = false;
+        Music::Play(Music::MusicName::se_lap);
+
+        if (goalFlag_ && !(imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_))
+            DrawImage(ImageData::ImageNumber::goal);
     }
+
+
 
     for (auto& itr : imageMap_)
     {
