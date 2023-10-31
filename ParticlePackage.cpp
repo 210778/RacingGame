@@ -16,6 +16,12 @@ namespace ParticlePackage
 
 void ParticlePackage::Initialize()
 {
+    //初期化チェック
+    if (!(emitter_.empty()))
+    {
+        return;
+    }
+
     //初期化
     ParticleInitialize();
 }
@@ -73,26 +79,26 @@ void ParticlePackage::ParticleInitialize()
 {
     //ブースト炎
     SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }
-    , { 0.f,0.f,0.f }, 0, 5, 30.f, 0.f, {0.f,0.f,0.f}, {50.f,50.f,50.f}, 0.1f, 0.05f, 1.f
+    , { 0.f,0.f,0.f }, 0, 3, 15.f, 0.f, {0.f,0.f,0.f}, {50.f,50.f,50.f}, 0.1f, 0.05f, 1.f
     , {0.8f,0.8f}, {0.1f,0.1f}, {0.98f,0.98f}, {1.f,1.f,1.f,1.f}, { 0.f, -0.06f, -0.12f, -0.05f });
         //火花
     SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 40.f, 0.f, { 0.f,0.f,0.f }, { 90.f, 90.f, 90.f }, 0.1f, 0.05f, 1.f
+    , {0.5f,0.5f,0.5f}, 0, 1, 15.f, 0.f, { 0.f,0.f,0.f }, { 90.f, 90.f, 90.f }, 0.1f, 0.05f, 1.f
     , {0.1f,0.1f}, {0.1f,0.1f}, {1.f,1.f}, {1.f,1.f,1.f,1.f}, { -0.02f, -0.02f, -0.1f, -0.01f });
 
     //煙
     SetParticle(ParticleName::smoke, "image\\PaticleAssets\\cloudA.png", { 0.f,0.f,0.f }
-    , { 0.f,0.f,0.f }, 0, 1, 40, 0.f, { 0.f,0.f,0.f }, { 0.f,0.f,0.f }, 0.f, 0.f, 1.f
+    , { 0.f,0.f,0.f }, 0, 1, 20, 0.f, { 0.f,0.f,0.f }, { 0.f,0.f,0.f }, 0.f, 0.f, 1.f
     , { 0.5f,0.5f }, { 0.f,0.f }, { 1.f,1.f }, { 1.f,1.f,1.f,0.1f }, { 0.f,0.f,0.f,-0.005f });
 
     //草地
     SetParticle(ParticleName::grass, "image\\PaticleAssets\\flashA_W.png", { 0.f,0.f,0.f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
+    , { 0.5f,0.5f,0.5f }, 0, 1, 20, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
     , { 0.5f,0.5f }, { 0.5f,0.5f }, { 1.f,1.f }, { 0.1f,1.f,0.f,0.5f }, { 0.f,0.f,0.f,-0.01f });
 
     //砂地
     SetParticle(ParticleName::dirt, "image\\PaticleAssets\\flashA_W.png", { 0.f,0.f,0.f }
-    , { 0.5f,0.5f,0.5f }, 0, 1, 30, 0.005f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
+    , { 0.5f,0.5f,0.5f }, 0, 1, 20, 0.005f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
     , { 0.75f,0.75f },{ 0.5f,0.5f },{ 1.07f,1.07f },{ 0.5f,0.3f,0.f,0.5f },{ 0.01f,0.01f,0.f,-0.02f });
 
     //スパーク火花
@@ -101,7 +107,7 @@ void ParticlePackage::ParticleInitialize()
     , { 1.25f,1.25f }, { 0.5f,0.5f }, { 1.01f,1.01f }, { 1.f,1.f,0.f,0.8f }, { 0.f,-0.03f,0.f,-0.02f });
         //小スパーク
     SetParticle(ParticleName::spark, "image\\PaticleAssets\\flashB_R.png", { 0.f, 0.f, 0.f }
-    , { 0.1f, 0.1f, 0.1f }, 0, 1, 30, 0.f, { 0.f,0.f,0.f }, { 20.f,20.f,20.f }, 0.2f, 0.5f, 1.f
+    , { 0.1f, 0.1f, 0.1f }, 0, 1, 20, 0.f, { 0.f,0.f,0.f }, { 20.f,20.f,20.f }, 0.2f, 0.5f, 1.f
     , { 0.5f,0.5f }, { 0.1f,0.1f }, { 0.95f,0.95f }, { 1.f,1.f,0.f,0.8f }, { 0.f,-0.03f,0.f,-0.02f });
 
     //１位金
@@ -112,7 +118,12 @@ void ParticlePackage::ParticleInitialize()
     //氷
     SetParticle(ParticleName::ice, "image\\PaticleAssets\\flashC_W.png", { 0.f, 0.f, 0.f }
     , { 0.15f, 0.15f, 0.15f }, 0, 1, 20, 0.01f, { 0.f,1.f,0.f }, { 50.f,50.f,50.f }, 0.1f, 0.5f, 1.f
-    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.05f,1.05f }, { 0.1f,1.f,1.f,0.8f }, { 0.05f,0.f,0.f,-0.03f });
+    , { 0.5f,0.5f }, { 0.0f,0.0f }, { 1.05f,1.05f }, { 0.0f,0.5f,1.f,1.0f }, { 0.05f,0.05f,0.f,-0.03f });
+
+    //高速移動
+    SetParticle(ParticleName::speed, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }
+    , { 0.1f,0.1f,0.1f }, 0, 1, 20.f, 0.f, { 0.f,0.f,0.f }, { 50.f,50.f,50.f }, 0.2f, 0.1f, 0.98f
+    , { 0.3f,0.3f }, { 0.0f,0.0f }, { 0.95f,0.95f }, { 5.f,1.f,1.f,1.f }, { 0.12f, 0.f, 0.f, -0.07f });
 }
 
 

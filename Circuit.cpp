@@ -14,7 +14,7 @@ namespace Circuit
     float defaultCheckpointSize_;   //チェックポイントの大きさ
     float defaultStartRotate_;      //スタート時の回転
     float checkPointLimit_;         //チェックポイントを探す限界
-    
+   
     
     std::vector<string> circuitNameArr_;
 
@@ -38,6 +38,12 @@ namespace Circuit
 //初期化
 void Circuit::Initialize()
 {
+    //初期化してあるならやめる
+    if (!(circuits_.empty()))
+    {
+        return;
+    }
+
     chosenCircuit_ = 0;
     defaultCheckpointSize_ = 60.0f;
     defaultStartRotate_ = 0.0f;
@@ -349,12 +355,9 @@ void Circuit::CreateChosenCircuit(GameObject* pGO)
 
     for (int i = 0; i < circuits_[chosenCircuit_].check_.size(); i++)
     {
-        if (circuits_[chosenCircuit_].check_[i].pCP_ == nullptr)
-        {
-            circuits_[chosenCircuit_].check_[i].pCP_ = Instantiate<CheckPoint>(pGO);
-            circuits_[chosenCircuit_].check_[i].pCP_->MakeSphereCollider(&circuits_[chosenCircuit_].check_[i].CP_position_
-            , circuits_[chosenCircuit_].check_[i].CP_Radius_, i);
-        }
+        circuits_[chosenCircuit_].check_[i].pCP_ = Instantiate<CheckPoint>(pGO);
+        circuits_[chosenCircuit_].check_[i].pCP_->MakeSphereCollider(&circuits_[chosenCircuit_].check_[i].CP_position_
+        , circuits_[chosenCircuit_].check_[i].CP_Radius_, i);
     }
 }
 

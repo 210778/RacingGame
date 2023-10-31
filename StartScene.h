@@ -6,10 +6,12 @@ class Text;
 //スタート画面シーンを管理するクラス
 class StartScene : public GameObject
 {
-	int hImageArrow_;
+	int hImageArrow_;	//矢印
 
-	int hImageStart_;
-	int hImageLoad_;
+	int hImageStart_;	//スタート画面
+	int hImageLoad_;	//ロード画面
+
+	std::vector<int> CircuitImage_;	//コースのイメージ画像
 
 	//文字
 	Text* pTextCircuit_;

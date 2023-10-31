@@ -18,6 +18,7 @@ namespace ParticlePackage
         spark,
         gold,
         ice,
+        speed,
     };
 
     //エフェクト起動関数

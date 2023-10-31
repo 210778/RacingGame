@@ -50,34 +50,39 @@ void StartScene::Initialize()
 	hImageStart_ = Image::Load("image\\Racing game title.jpg");
 	assert(hImageStart_ >= 0);
 	//ロード
-	hImageLoad_ = Image::Load("image\\char5.png");
+	hImageLoad_ = Image::Load("image\\BackGround_K.jpg");
 	assert(hImageLoad_ >= 0);
 	//シーン別
 	sceneIndex_.SetDataSelection("scene", 0, 0, SceneName::SceneMax - 1);
 
+	//コース画像
+	CircuitImage_.push_back(Image::Load("image\\count_1.png"));
+	CircuitImage_.push_back(Image::Load("image\\count_2.png"));
+	CircuitImage_.push_back(Image::Load("image\\count_3.png"));
 
-//項目
-//コース
-dataSelection_[DataName::circuit].SetDataSelection("Circuit"
-	, 0, 0, Circuit::GetCircuitNameArray()->size() - 1);
 
-//参加人数
-dataSelection_[DataName::population].SetDataSelection("Population"
-	, Circuit::GetChosenCircuit()->startTransform_.size(), 1, Circuit::GetChosenCircuit()->startTransform_.size());
+	//項目
+	//コース
+	dataSelection_[DataName::circuit].SetDataSelection("Circuit"
+		, 0, 0, Circuit::GetCircuitNameArray()->size() - 1);
 
-//車両
-dataSelection_[DataName::vehicle].SetDataSelection("Vehicle"
-	, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->size() - 1);
+	//参加人数
+	dataSelection_[DataName::population].SetDataSelection("Population"
+		, Circuit::GetChosenCircuit()->startTransform_.size(), 1, Circuit::GetChosenCircuit()->startTransform_.size());
 
-//タイヤ
-dataSelection_[DataName::wheel].SetDataSelection("Wheel"
-	, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->size() - 1);
+	//車両
+	dataSelection_[DataName::vehicle].SetDataSelection("Vehicle"
+		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->size() - 1);
 
-//索引
-selectIndex_.SetDataSelection("index", 0, 0, dataSelection_.size() - 1);
+	//タイヤ
+	dataSelection_[DataName::wheel].SetDataSelection("Wheel"
+		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->size() - 1);
 
-//決定項目
-selectIndex_.maxValue += 1;
+	//索引
+	selectIndex_.SetDataSelection("index", 0, 0, dataSelection_.size() - 1);
+
+	//決定項目
+	selectIndex_.maxValue += 1;
 }
 
 //更新
@@ -161,6 +166,13 @@ void StartScene::Update()
 //描画
 void StartScene::Draw()
 {
+	//背景コース画像
+	if (dataSelection_[DataName::circuit].index >= 0 && dataSelection_[DataName::circuit].index < CircuitImage_.size())
+	{
+		Image::SetTransform(CircuitImage_[dataSelection_[DataName::circuit].index], transform_);
+		Image::Draw(CircuitImage_[dataSelection_[DataName::circuit].index]);
+	}
+
 	sceneIndex_.DataClamp();
 	if (sceneIndex_.index == SceneName::title)
 	{

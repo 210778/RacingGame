@@ -24,6 +24,12 @@ namespace VehicleGlobal
 //初期化
 void VehicleGlobal::Initialize()
 {
+	//初期化チェック
+	if (!(partNameVector_.empty()))
+	{
+		return;
+	}
+
 	partNameVector_.push_back(make_pair(PartName::vehicle, "vehicle"));
 	partNameVector_.push_back(make_pair(PartName::wheel, "wheel"));
 

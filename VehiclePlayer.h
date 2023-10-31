@@ -8,12 +8,9 @@ class Viewer;
 //◆◆◆を管理するクラス
 class VehiclePlayer : public Vehicle
 {
-    //文字シリーズ
-    Text* pTextSpeed_;  //時速
-    Text* pTextTime_;   //経過時間
-    Text* pTextLap_;    //周回数
-    Text* pTextRanking_;    //順位
-    Text* pTextAcceleration_; //加速度表示 デバッグ用
+    //文字
+    Text* pText_;    //文字
+
     float km_hAdd;  //時速表示加算
     int   flashIntervalUI_;   //表示が点滅する間隔
     bool  IsFlashUI_;         //UIを表示するかどうか

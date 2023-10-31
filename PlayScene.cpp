@@ -80,6 +80,13 @@ void PlayScene::Update()
 	//ポーズ
 	PlayPause();
 
+	//タイトル画面
+	if (pauseFlag_ && VehicleInput::GetInput(VehicleInput::Button::selectDecide))
+	{
+		SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
+		pSceneManager->ChangeScene(SCENE_ID_START);
+	}
+
 	//ポーズしてるなら停止
 	if (pauseFlag_)
 	{
