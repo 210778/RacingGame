@@ -79,7 +79,7 @@ void ParticlePackage::ParticleInitialize()
 {
     //ブースト炎
     SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }
-    , { 0.f,0.f,0.f }, 0, 3, 15.f, 0.f, {0.f,0.f,0.f}, {50.f,50.f,50.f}, 0.1f, 0.05f, 1.f
+    , { 0.2f,0.2f,0.2f }, 0, 3, 15.f, 0.f, {0.f,0.f,0.f}, {60.f,60.f,60.f}, 0.1f, 0.05f, 1.f
     , {0.8f,0.8f}, {0.1f,0.1f}, {0.98f,0.98f}, {1.f,1.f,1.f,1.f}, { 0.f, -0.06f, -0.12f, -0.05f });
         //火花
     SetParticle(ParticleName::boost, "image\\PaticleAssets\\circle_W.png", { 0.f,0.f,0.f }

@@ -272,16 +272,16 @@ namespace Input
 		{
 		default:
 		case Input::StickDirection::up:
-			return (nowY > 0 && preY <= 0) ? true : false;
+			return (nowY > 0.0f && preY <= 0.0f) ? true : false;
 			break;
 		case Input::StickDirection::down:
-			return (nowY < 0 && preY >= 0) ? true : false;
+			return (nowY < 0.0f && preY >= 0.0f) ? true : false;
 			break;
 		case Input::StickDirection::right:
-			return (nowX > 0 && preX <= 0) ? true : false;
+			return (nowX > 0.0f && preX <= 0.0f && !Calculator::IsEqualFloat(nowX, preX)) ? true : false;
 			break;
 		case Input::StickDirection::left:
-			return (nowX < 0 && preX >= 0) ? true : false;
+			return (nowX < 0.0f && preX >= 0.0f && !Calculator::IsEqualFloat(nowX, preX)) ? true : false;
 			break;
 		}
 
@@ -290,6 +290,42 @@ namespace Input
 	//スティックを前は傾けてて、今傾てないかどうか
 	bool IsPadStickRestore(StickLR lr, StickDirection dir, int padID)
 	{
+		float nowX = 0.0f, nowY = 0.0f, preX = 0.0f, preY = 0.0f;
+
+		switch (lr)
+		{
+		default:
+		case Input::StickLR::right:
+			nowX = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			nowY = GetAnalogValue(controllerState_[padID].Gamepad.sThumbRY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			preX = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbRX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			preY = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbRY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			break;
+		case Input::StickLR::left:
+			nowX = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLX, maxStick, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+			nowY = GetAnalogValue(controllerState_[padID].Gamepad.sThumbLY, maxStick, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+			preX = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbLX, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			preY = GetAnalogValue(prevControllerState_[padID].Gamepad.sThumbLY, maxStick, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+			break;
+		}
+
+		switch (dir)
+		{
+		default:
+		case Input::StickDirection::up:
+			return (preY > 0.0f && nowY <= 0.0f) ? true : false;
+			break;
+		case Input::StickDirection::down:
+			return (preY < 0.0f && nowY >= 0.0f) ? true : false;
+			break;
+		case Input::StickDirection::right:
+			return (preX > 0.0f && nowX <= 0.0f) ? true : false;
+			break;
+		case Input::StickDirection::left:
+			return (preX < 0.0f && nowX >= 0.0f) ? true : false;
+			break;
+		}
+
 		return false;
 	}
 

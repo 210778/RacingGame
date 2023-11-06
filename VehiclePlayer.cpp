@@ -27,7 +27,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent)
 //コンストラクタ
 VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::string wheelName)
     :Vehicle(parent, "VehiclePlayer")
-    , pText_(nullptr)
+    , pText_(nullptr), hImage_(-1)
     , km_hAdd(122.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
     , imageBoostMax_(-1), imageBoost_(-1)
@@ -64,6 +64,12 @@ void VehiclePlayer::PlayerUI_Initialize()
     pText_ = new Text;
     pText_->Initialize();
 
+    imageTrans_.position_ = { 0.0f,0.5f,0.0f };
+    imageTrans_.scale_ = { 0.3f,0.2f,1.0f };
+
+    //画像
+    hImage_ = Image::Load("image\\BackGround_K.jpg");
+    assert(hImage_ >= 0);
 
     //スピードメーター
     hImageSpeedFrame_ = Image::Load("image\\mator6.png");
@@ -94,7 +100,6 @@ void VehiclePlayer::PlayerUI_Initialize()
         , Global::GetStandardFPS(), change, 255, cAlpha);
     SetImage(ImageData::ImageNumber::goal, Image::Load("image\\count_goal.png"), trans
         , Global::GetStandardFPS(), change, 255, cAlpha);
-
 }
 
 //UIの表示
@@ -105,6 +110,16 @@ void VehiclePlayer::PlayerUI_Draw()
 
     //時速表示
     DrawKmH();
+
+    //ポーズ画面
+    if (pauseFlag_)
+    {
+        Image::SetTransform(hImage_, imageTrans_);
+        Image::Draw(hImage_);
+
+        pText_->Draw(450, 150, "[Pause]");
+        pText_->Draw(450, 200, "Return to the title?");
+    }
 
     //点滅
     drawTime_ = time_;
@@ -135,7 +150,7 @@ void VehiclePlayer::PlayerUI_Draw()
     if (IsFlashUI_)
         DrawRanking();
 
-    //ゴールあと表示
+    //ゴールの後に表示
     if (IsFlashUI_ && goalFlag_)
     {
         pText_->Draw(450, 700, "Pause to Title scene");
@@ -270,7 +285,7 @@ void VehiclePlayer::DrawKmH()
     XMVECTOR speedVec = acceleration_;
     string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
     speedStr += "km/h";
-    pText_->Draw(150, Global::GetScreenHeight() - 20, speedStr.c_str());
+    pText_->Draw(150, 700, speedStr.c_str());
 }
 
 void VehiclePlayer::DrawElapsedTime()
@@ -393,7 +408,6 @@ void VehiclePlayer::DrawStandbyCount()
         if (goalFlag_ && !(imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_))
             DrawImage(ImageData::ImageNumber::goal);
     }
-
 
 
     for (auto& itr : imageMap_)

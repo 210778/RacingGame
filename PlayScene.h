@@ -1,16 +1,12 @@
 #pragma once
 #include "Engine/GameObject.h"
 
-class Ground;
 class Vehicle;
 
 //■■シーンを管理するクラス
 class PlayScene : public GameObject
 {
-	int hImage_;
 	int hModel_;
-
-	Ground* pGround_;
 
 	std::vector<Vehicle*> vehicles_;
 	Vehicle* pVehiclePlayer_;

@@ -16,7 +16,6 @@
 #include "Engine/SceneManager.h"
 
 #include "Vehicle.h"
-#include "Ground.h"
 #include "Bullet.h"
 #include "Viewer.h"
 #include "Sample.h"
@@ -31,29 +30,37 @@
 #include "ImagePrinter.h"
 #include "Circuit.h"
 
-#include "VehicleInput.h"/////
-
 using std::vector;
 using std::string;
 
 //コンストラクタ
 Vehicle::Vehicle(GameObject* parent)
     :GameObject(parent, "Vehicle")
+    //モデル番号
     , hModel_(-1), hGroundModel_(-1), hWheelModel_(-1)
+    //ベクトル
     , acceleration_({ 0.0f, 0.0f, 0.0f, 0.0f })
-    , moveSPD_(0.01f/*0.05f*/), rotateSPD_(1.0f), jumpForce_(1.0f)
+    //スピードなど
+    , moveSPD_(0.01f), rotateSPD_(1.1f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
     , gravity_(0.03f), speedLimit_(10.0f)
+
+    //ハンドル関係
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
-    , wheelFriction_(0.99f), airFriction_(0.985f), turfFriction_(0.98f)
+    //摩擦
+    , wheelFriction_(0.99f), airFriction_(0.999f), turfFriction_(0.98f)
+    , iceFriction_(0.999f)
     , slideFlag_(false)
-    , sideWheelFriction_(0.2f), sideSlideFriction_(0.1f)
+    , sideWheelFriction_(0.2f), sideSlideFriction_(0.1f), sideIceFriction_(0.02f)
+    , landingFriction_(1.0f), sideFriction_(1.0f)
+
     , turnAdjust_(0.05f), driveAdjust_(20.0f), handleAdjust_(0.95f)
-    , slideHandleRotateAdd_(2.0f)
-    , handleFlag_(false), handleRotateMax_(/*70*/60)
+    , slideHandleRotateAdd_(2.5f)
+    , handleFlag_(false), handleRotateMax_(60.0f)
+
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), population_(1), lapCountFlag_(false), goalTime_(0)
+    , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
     , mass_(1.0f)
     , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Circuit::circuitType::road)
@@ -61,12 +68,54 @@ Vehicle::Vehicle(GameObject* parent)
     , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
-    , wheelParticleLength_(0.1f)
+    , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
+    , sparkParticleLength_(0.95), sparkParticleHanlde_(15), npcParticleRandom_(3)
     , vehicleModelName_(""), wheelModelName_("")
-    , startTransform_()
+    , startTransform_(), restartTransform_()
+
+    , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
+    //ブースト
+    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
+    , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
+    , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
+    , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
+    , farLimitPosition_(1000.f, 500.0f, 1000.f)
+    , pViewer_(nullptr)
 {
-    Size.wheelHeight_ = 0.1f;
+    matRotateX = XMMatrixIdentity();
+    matRotateY = XMMatrixIdentity();
+    matRotateZ = XMMatrixIdentity();
+    matRotateX_R = XMMatrixIdentity();
+    matRotateY_R = XMMatrixIdentity();
+    matRotateZ_R = XMMatrixIdentity();
+
+    worldVector_.Set({ 1.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f,0.0f });
+    vehicleVector_.Set({ 1.0f,0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f,0.0f }, { 0.0f,0.0f,1.0f,0.0f });
+
+    //地面のタイプ
+    //通常道路
+    GroundTypeFriction_[Circuit::circuitType::road].acceleration = 1.0f;
+    GroundTypeFriction_[Circuit::circuitType::road].landing = 0.99f;
+    GroundTypeFriction_[Circuit::circuitType::road].side = 0.2f;
+    //草地
+    GroundTypeFriction_[Circuit::circuitType::turf].acceleration = 0.98f;
+    GroundTypeFriction_[Circuit::circuitType::turf].landing = 0.98f;
+    GroundTypeFriction_[Circuit::circuitType::turf].side = 0.2f;
+    //砂地　草と同じ
+    GroundTypeFriction_[Circuit::circuitType::dirt].acceleration = GroundTypeFriction_[Circuit::circuitType::turf].acceleration;
+    GroundTypeFriction_[Circuit::circuitType::dirt].landing = GroundTypeFriction_[Circuit::circuitType::turf].landing;
+    GroundTypeFriction_[Circuit::circuitType::dirt].side = GroundTypeFriction_[Circuit::circuitType::turf].side;
+    //氷床
+    GroundTypeFriction_[Circuit::circuitType::ice].acceleration = 0.2f;
+    GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
+    GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
+    //加速床
+    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
+    GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
+    //奈落
+    GroundTypeFriction_[Circuit::circuitType::abyss]; //作るだけ
 }
 
 //継承用
@@ -112,7 +161,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
-    , boostCapacityMax_(8200.0), boostCapacity_(boostCapacityMax_)
+    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)

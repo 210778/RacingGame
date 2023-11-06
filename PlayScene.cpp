@@ -13,7 +13,6 @@
 #include "PlayScene.h"
 #include "Sample.h"
 #include "Vehicle.h"
-#include "Ground.h"
 #include "ParticlePackage.h"
 #include "VehiclePlayer.h"
 #include "VehicleOpponent.h"
@@ -31,10 +30,10 @@ using std::string;
 
 //コンストラクタ
 PlayScene::PlayScene(GameObject* parent)
-	: GameObject(parent, "PlayScene"), hImage_(-1), hModel_(-1)
-	, pGround_(nullptr), pVehiclePlayer_(nullptr)
+	: GameObject(parent, "PlayScene"), hModel_(-1)
+	, pVehiclePlayer_(nullptr)
 	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
-	, startFlag_(false)
+	, startFlag_(false), pauseFlag_(false)
 {
 }
 
@@ -74,6 +73,9 @@ void PlayScene::Initialize()
 //更新
 void PlayScene::Update()
 {
+	//音楽
+	Music::Update();
+
 	//操作
 	VehicleInput::Update();
 
@@ -92,9 +94,6 @@ void PlayScene::Update()
 	{
 		return;
 	}
-
-	//音楽
-	Music::Update();
 
 	//時間
 	CountUniversalTime();
@@ -256,6 +255,8 @@ void PlayScene::PlayPause()
 {
 	if (VehicleInput::GetInput(VehicleInput::Button::pause))
 	{
+		Music::Play(Music::MusicName::se_select2);	//音声
+
 		if (pauseFlag_)
 			pauseFlag_ = false;
 		else

@@ -3,6 +3,9 @@
 
 #include "Engine/Camera.h"
 #include "Engine/Input.h"
+#include "Engine/SceneManager.h"
+
+#include "Sample.h"
 
 //コンストラクタ
 TestScene::TestScene(GameObject * parent)
@@ -154,6 +157,7 @@ void TestScene::Initialize()
 		pParticle_->Start(data);
 	}
 
+	Instantiate<Sample>(this);
 }
 
 //更新
@@ -161,6 +165,9 @@ void TestScene::Update()
 {
 	if (Input::IsKeyDown(DIK_SPACE))
 	{
+		SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
+		pSceneManager->ChangeScene(SCENE_ID_START);
+
 		EmitterData data;
 		data.textureFileName = "image\\PaticleAssets\\CloudC.png";
 		data.position = XMFLOAT3(0,0.05,0);

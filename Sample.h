@@ -5,6 +5,8 @@
 class Sample : public GameObject
 {
     int hModel_;    //モデル番号
+    XMFLOAT3 modelScale_;
+
 public:
     //コンストラクタ
     Sample(GameObject* parent);

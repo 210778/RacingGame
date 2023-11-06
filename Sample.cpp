@@ -1,13 +1,12 @@
 #include "Engine/Model.h"
-#include "Engine/Input.h"
-#include "Engine/SphereCollider.h"
-#include "Engine/Camera.h"
+#include "Engine/Image.h"
 
 #include "Sample.h"
 
 //コンストラクタ
 Sample::Sample(GameObject* parent)
     :GameObject(parent, "Sample"), hModel_(-1)
+    , modelScale_({ 15.0f,15.0f,15.0f })
 
 {
 }
@@ -23,7 +22,7 @@ void Sample::Initialize()
     hModel_ = Model::Load("model\\Tri_Lines.fbx");
     assert(hModel_ >= 0);
 
-    transform_.scale_ = { 15,15,15 };
+    transform_.scale_ = modelScale_;
 }
 
 //更新

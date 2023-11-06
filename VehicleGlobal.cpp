@@ -24,7 +24,7 @@ namespace VehicleGlobal
 //初期化
 void VehicleGlobal::Initialize()
 {
-	//初期化チェック
+	//初期化
 	if (!(partNameVector_.empty()))
 	{
 		return;

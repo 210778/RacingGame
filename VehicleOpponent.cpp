@@ -38,7 +38,6 @@ void VehicleOpponent::InputOperate()
     float Max = VehicleInput::GetMaxValue();
     float Min = VehicleInput::GetMinValue();
 
-
     //‘O‚ª•Ç
     if (rayCastHit_[RayCastHit::front].dist < Size.frontToRear_ * frontHitLength_
         && !rayCastHit_[RayCastHit::front].road)
@@ -50,16 +49,10 @@ void VehicleOpponent::InputOperate()
         if (anleToCheck > 180)
         {
             operation_.ValueMap[Operation::Value::handleRightLeft] = Max;
-            //operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
-            //operation_.inputNow[operation_.inputName::turnRight] = 0.0f;
-            //operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
         }
         else
         {
             operation_.ValueMap[Operation::Value::handleRightLeft] = Min;
-            //operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
-            //operation_.inputNow[operation_.inputName::turnLeft] = 0.0f;
-            //operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
         }
     }
     //‰½‚à‚È‚¢‚È‚ç
@@ -72,14 +65,10 @@ void VehicleOpponent::InputOperate()
         if (anleToCheck > 180)
         {
             operation_.ValueMap[Operation::Value::handleRightLeft] = Min;
-            //operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
-            //operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
         }
         else
         {
             operation_.ValueMap[Operation::Value::handleRightLeft] = Max;
-            //operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
-            //operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
         }
 
         //ƒ‰ƒ“ƒ_ƒ€«

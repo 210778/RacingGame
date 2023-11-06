@@ -8,8 +8,10 @@ class Viewer;
 //◆◆◆を管理するクラス
 class VehiclePlayer : public Vehicle
 {
-    //文字
     Text* pText_;    //文字
+
+    int hImage_;    //画像
+    Transform imageTrans_;
 
     float km_hAdd;  //時速表示加算
     int   flashIntervalUI_;   //表示が点滅する間隔

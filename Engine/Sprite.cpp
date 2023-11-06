@@ -100,6 +100,7 @@ void Sprite::InitIndex()
 void Sprite::Draw(Transform& transform, RECT rect, float alpha)
 {
 	//Ç¢ÇÎÇ¢ÇÎê›íË
+	Direct3D::SetBlendMode(Direct3D::BLEND_DEFAULT);
 	Direct3D::SetShader(Direct3D::SHADER_2D);
 	UINT stride = sizeof(VERTEX);
 	UINT offset = 0;
