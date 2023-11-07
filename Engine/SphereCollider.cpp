@@ -15,7 +15,7 @@ SphereCollider::SphereCollider(XMFLOAT3 center, float radius)
 #ifdef _DEBUG
 	//テスト表示用判定枠
 	//hDebugModel_ = Model::Load("DebugCollision/sphereCollider.fbx");
-	hDebugModel_ = Model::Load("DebugCollision/SphereColliderFrame.fbx");
+	hDebugModel_ = Model::Load("DebugCollision/SphereCollider.fbx");
 	assert(hDebugModel_ >= 0);
 #endif
 }

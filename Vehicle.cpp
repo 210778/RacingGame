@@ -154,7 +154,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
-    , sparkParticleLength_(0.95), sparkParticleHanlde_(15), npcParticleRandom_(3)
+    , sparkParticleLength_(0.95), sparkParticleHanlde_(16), npcParticleRandom_(67)
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_(), restartTransform_()
 
@@ -1149,7 +1149,7 @@ void Vehicle::VehicleParticle()
         return;
     
     //NPCは確率でエフェクトを発生させない(重いし何かうるさくなる)
-    if (!isPlayer_ && rand() % npcParticleRandom_)
+    if (!isPlayer_ && Calculator::IsProbability(npcParticleRandom_))
         return;
 
 

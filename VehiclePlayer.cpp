@@ -33,6 +33,9 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     , imageBoostMax_(-1), imageBoost_(-1)
     , hImageSpeedFrame_(-1), hImageSpeedNeedle_(-1)
     , drawTime_(0), standardTime_(60)
+    , textCenter_(450), textPauseHeight_(150), textReturnHeight_(200), textLapHeight_(70)
+    , textToTitleWidth_(700), textKMH_(150, 700), textLeftEnd_(30), textUpEnd_(30), textRankWidth_(110)
+    , textDebugCenter_(280), textPosWidth_(60), textRotWidth_(90)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -117,8 +120,8 @@ void VehiclePlayer::PlayerUI_Draw()
         Image::SetTransform(hImage_, imageTrans_);
         Image::Draw(hImage_);
 
-        pText_->Draw(450, 150, "[Pause]");
-        pText_->Draw(450, 200, "Return to the title?");
+        pText_->Draw(textCenter_, textPauseHeight_, "[Pause]");
+        pText_->Draw(textCenter_, textReturnHeight_, "Return to the title?");
     }
 
     //点滅
@@ -144,7 +147,7 @@ void VehiclePlayer::PlayerUI_Draw()
     lapStr += to_string(lapCount_) + "/" + to_string(lapMax_);
     //点滅
     if (IsFlashUI_)
-        pText_->Draw(30, 70, lapStr.c_str());
+        pText_->Draw(textLeftEnd_, textLapHeight_, lapStr.c_str());
 
     //順位表示
     if (IsFlashUI_)
@@ -153,7 +156,7 @@ void VehiclePlayer::PlayerUI_Draw()
     //ゴールの後に表示
     if (IsFlashUI_ && goalFlag_)
     {
-        pText_->Draw(450, 700, "Pause to Title scene");
+        pText_->Draw(textCenter_, textToTitleWidth_, "[Pause to Title scene]");
     }
 
 #if 0
@@ -285,12 +288,12 @@ void VehiclePlayer::DrawKmH()
     XMVECTOR speedVec = acceleration_;
     string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
     speedStr += "km/h";
-    pText_->Draw(150, 700, speedStr.c_str());
+    pText_->Draw(textKMH_.x, textKMH_.y, speedStr.c_str());
 }
 
 void VehiclePlayer::DrawElapsedTime()
 {
-    int standard = 60;
+    const int standard = 60;
     int min = 0;
     int sec = 0;
     int mSec = 0;
@@ -311,7 +314,7 @@ void VehiclePlayer::DrawElapsedTime()
         timeStr += "0";
     timeStr += to_string(mSec);
 
-    pText_->Draw(30, 30, timeStr.c_str());
+    pText_->Draw(textLeftEnd_, textUpEnd_, timeStr.c_str());
 }
 
 void VehiclePlayer::DrawRanking()
@@ -327,7 +330,7 @@ void VehiclePlayer::DrawRanking()
     }
     rank += "/" + to_string(population_);
 
-    pText_->Draw(30, 110, rank.c_str());
+    pText_->Draw(textLeftEnd_, textRankWidth_, rank.c_str());
 }
 
 void VehiclePlayer::DrawBoostGauge()
@@ -353,17 +356,17 @@ void VehiclePlayer::DrawAccelerationRotate()
     XMMATRIX matRotateY_R = XMMatrixRotationY(XMConvertToRadians(-transform_.rotate_.y));
     XMStoreFloat3(&floAcc, XMVector3TransformCoord(acceleration_, matRotateY_R));
     string accStr = "X:" + to_string(floAcc.x) + " Y:" + to_string(floAcc.y) + " Z:" + to_string(floAcc.z);
-    pText_->Draw(280, 30, accStr.c_str());
+    pText_->Draw(textDebugCenter_, textUpEnd_, accStr.c_str());
 
     accStr = "X:" + to_string(transform_.position_.x)
         + " Y:" + to_string(transform_.position_.y)
         + " Z:" + to_string(transform_.position_.z);
-    pText_->Draw(280, 60, accStr.c_str());
+    pText_->Draw(textDebugCenter_, textPosWidth_, accStr.c_str());
 
     accStr = "X:" + to_string(transform_.rotate_.x)
         + " Y:" + to_string(transform_.rotate_.y)
         + " Z:" + to_string(transform_.rotate_.z);
-    pText_->Draw(280, 90, accStr.c_str());
+    pText_->Draw(textDebugCenter_, textRotWidth_, accStr.c_str());
 }
 
 //カウントダウン描画

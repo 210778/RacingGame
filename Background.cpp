@@ -1,5 +1,6 @@
 #include "Engine/Model.h"
 #include "Background.h"
+#include "Engine/Direct3D.h"
 
 //コンストラクタ
 Background::Background(GameObject* parent)
@@ -29,7 +30,7 @@ void Background::Update()
 void Background::Draw()
 {
     Model::SetTransform(hModel_, transform_);
-    Model::Draw(hModel_);
+    Model::Draw(hModel_, Direct3D::SHADER_SIMPLE3D);
 
     //Direct3D::SetShader(Direct3D::SHADER_BILLBOARD);
     //Direct3D::SetBlendMode(Direct3D::BLEND_ADD);

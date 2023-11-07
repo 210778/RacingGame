@@ -92,4 +92,6 @@ namespace Calculator
 	/// <returns>0 ~ 360に正規化した角度</returns>
 	float AngleNormalize(float angle);
 
+	//確率の計算（int 真が返される確率:0~100）
+	bool IsProbability(int percent);
 };

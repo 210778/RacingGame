@@ -3,7 +3,6 @@
 
 #include "Engine/SceneManager.h"
 #include "Engine/Image.h"
-#include "Engine/Model.h"
 #include "Engine/Text.h"
 
 #include "StartScene.h"
@@ -22,7 +21,7 @@ using std::stoi;
 StartScene::StartScene(GameObject* parent)
 	: GameObject(parent, "StartScene")
 	, pTextCircuit_(nullptr), pTextCaption_(nullptr)
-	, hImageArrow_(-1), hImageStart_(-1), hImageLoad_(-1), hModel_(-1)
+	, hImageArrow_(-1), hImageStart_(-1), hImageLoad_(-1)
 	, captionWidthOperand_(0.142f), captionHeight_(150), captionUpperHeight_(50)
 	, sceneTitlePosition_({ 30.0f,30.0f })
 	, countSpeed_(0.1f), arrwoBace_(-0.85f), sinOperand_(0.02f)
@@ -56,16 +55,10 @@ void StartScene::Initialize()
 	//シーン別
 	sceneIndex_.SetDataSelection("scene", 0, 0, SceneName::SceneMax - 1);
 
-	hModel_ = Model::Load("model\\Tri_Lines.fbx");
-	assert(hModel_ >= 0);
-
 	//コース画像
 	CircuitImage_.push_back(Image::Load("image\\count_1.png"));
 	CircuitImage_.push_back(Image::Load("image\\count_2.png"));
 	CircuitImage_.push_back(Image::Load("image\\count_3.png"));
-
-	//モデル（見える必要はないので小さくする）
-	modelTrans_.scale_ = { 0.0f,0.0f,0.0f };
 
 	//項目
 	//コース
@@ -247,9 +240,6 @@ void StartScene::Draw()
 		Image::Draw(hImageLoad_);
 	}
 
-	//なぜかこれがあると上手くいく。 ないとReleaseの時に画像がバグる
-	//Model::SetTransform(hModel_, modelTrans_);
-	//Model::Draw(hModel_);
 }
 
 //開放

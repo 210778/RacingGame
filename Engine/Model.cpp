@@ -82,6 +82,26 @@ namespace Model
 			_datas[handle]->pFbx->Draw(_datas[handle]->transform, (int)_datas[handle]->nowFrame);
 		}
 	}
+	//オーバーロードした描画
+	void Draw(int handle, Direct3D::SHADER_TYPE shader)
+	{
+		if (handle < 0 || handle >= _datas.size() || _datas[handle] == nullptr)
+		{
+			return;
+		}
+
+		//アニメーションを進める
+		_datas[handle]->nowFrame += _datas[handle]->animSpeed;
+
+		//最後までアニメーションしたら戻す
+		if (_datas[handle]->nowFrame > (float)_datas[handle]->endFrame)
+			_datas[handle]->nowFrame = (float)_datas[handle]->startFrame;
+
+		if (_datas[handle]->pFbx)
+		{
+			_datas[handle]->pFbx->Draw(_datas[handle]->transform, (int)_datas[handle]->nowFrame, shader);
+		}
+	}
 
 	//任意のモデルを開放
 	void Release(int handle)

@@ -88,6 +88,21 @@ class VehiclePlayer : public Vehicle
     //画像まとめ
     std::map<ImageData::ImageNumber, ImageData> imageMap_;
 
+    //画像表示
+    int textCenter_;
+    int textPauseHeight_;
+    int textReturnHeight_;
+    int textLapHeight_;
+    int textToTitleWidth_;
+    XMINT2 textKMH_;
+    int textLeftEnd_;
+    int textUpEnd_;
+    int textRankWidth_;
+    int textDebugCenter_;
+    int textAccWidth_;
+    int textPosWidth_;
+    int textRotWidth_;
+
 public:
     //コンストラクタ
     VehiclePlayer(GameObject* parent);

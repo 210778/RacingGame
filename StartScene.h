@@ -11,9 +11,6 @@ class StartScene : public GameObject
 	int hImageStart_;	//スタート画面
 	int hImageLoad_;	//ロード画面
 
-	int hModel_;
-	Transform modelTrans_;
-
 	std::vector<int> CircuitImage_;	//コースのイメージ画像
 
 	//文字

@@ -417,7 +417,7 @@ void FbxParts::Draw(Transform& transform)
 		cb.speculer = pMaterial_[i].specular;
 		cb.shininess = pMaterial_[i].shininess;
 		cb.cameraPosition = XMFLOAT4(Camera::GetPositionFloat().x, Camera::GetPositionFloat().y, Camera::GetPositionFloat().z, 0);
-		cb.lightDirection = XMFLOAT4(1, -1, 1, 0);//XMFLOAT4(1, -1, 1, 0);
+		cb.lightDirection = Camera::GetLightDirection();
 		cb.isTexture = pMaterial_[i].pTexture != nullptr;
 
 		Direct3D::pContext_->Map(pConstantBuffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &pdata);	// GPUからのリソースアクセスを一時止める

@@ -38,4 +38,11 @@ namespace Camera
 
 	//ビルボード用回転行列を取得
 	XMMATRIX GetBillboardMatrix();
+
+	//光の方向
+	void SetLightDirection(XMFLOAT4 vector);
+	void SetLightDirection(XMVECTOR vector);
+
+
+	XMFLOAT4 GetLightDirection();
 };

@@ -36,8 +36,6 @@ void Viewer::Initialize()
 void Viewer::Update()
 {
     //親のトランスフォームを取得
-    //XMFLOAT3 parentPos = pVehicle->GetPosition();
-    //XMFLOAT3 parentRot = pVehicle->GetRotate();
     XMFLOAT3 parentPos = viewTransform_.position_;
     XMFLOAT3 parentRot = viewTransform_.rotate_;
 
@@ -46,10 +44,7 @@ void Viewer::Update()
     XMStoreFloat3(&vehicleAcc, pVehicle->GetAcceleration());
 
     //transform_.rotate_.Xの値に合わせてX軸回転させる行列
-    //XMMATRIX matRotateZ = XMMatrixRotationZ(XMConvertToRadians(parentRot.z));
-    //XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(parentRot.x));
     XMMATRIX matRotateX = XMMatrixRotationX(XMConvertToRadians(camX_));     //カメラのぶん回転
-
     XMMATRIX matRotateY = XMMatrixRotationY(XMConvertToRadians(parentRot.y));    
 
     //現在位置をベクトルにしておく
@@ -92,17 +87,6 @@ void Viewer::Update()
     //上下回転
     camX_ += rotateSPD_ * VehicleInput::GetInput(VehicleInput::Value::cameraRotateUpDown);
 
-#if 0
-    if (Input::IsKey(DIK_F))
-    {
-        camX_ += rotateSPD_;
-    }
-    if (Input::IsKey(DIK_R))
-    {
-        camX_ -= rotateSPD_;
-    }
-#endif
-
     //制限
     if (camX_ >= upLim_)
     {
@@ -136,6 +120,7 @@ void Viewer::Update()
             camFlo_.z *= zoomOut_;
         }
     }
+
 }
 
 //描画

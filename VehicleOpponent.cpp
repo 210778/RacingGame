@@ -10,10 +10,18 @@ VehicleOpponent::VehicleOpponent(GameObject* parent)
 //コンストラクタ2
 VehicleOpponent::VehicleOpponent(GameObject* parent, std::string vehicleName, std::string wheelName)
     :Vehicle(parent, "VehicleOpponent")
-    , frontHitLength_(8.0f)
+    , frontHitLength_(5.0f), sideHitLength_(10.0)
+    , checkBackAngle_(45.0f), backFlag_(false), backTimeCount_(0), backTimeMax_(2)
+    , boostFlag_(false)
+    , backOdds_(90), randomTurnOdds_(10), wallTurnOdds_(90)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
+
+    max_ = VehicleInput::GetMaxValue();
+    min_ = VehicleInput::GetMinValue();
+
+    backTimeMax_ *= Global::GetStandardFPS();
 }
 
 //デストラクタ
@@ -34,79 +42,113 @@ void VehicleOpponent::InputOperate()
     anleToCheck = Calculator::AngleNormalize(anleToCheck - transform_.rotate_.y);
     //加速度長さ
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
-    //最大、最小値
-    float Max = VehicleInput::GetMaxValue();
-    float Min = VehicleInput::GetMinValue();
 
-    //前が壁
-    if (rayCastHit_[RayCastHit::front].dist < Size.frontToRear_ * frontHitLength_
-        && !rayCastHit_[RayCastHit::front].road)
+
+
+    //前が壁か目的地が真後ろ
+    if ((anleToCheck > (180.0f - checkBackAngle_) && anleToCheck < (180.0f + checkBackAngle_))
+        || (rayCastHit_[RayCastHit::front].dist < frontHitLength_ && !rayCastHit_[RayCastHit::front].road))
     {
+        backFlag_ = true;
+    }
+
+    //バックする
+    if (backFlag_)
+    {
+        //一定時間バックしたらやめる
+        backTimeCount_++;
+        if (backTimeCount_ >= backTimeMax_)
+        {
+            backFlag_ = false;
+            backTimeCount_ = 0;
+        }
+
         //後退
-        operation_.ValueMap[Operation::Value::moveFrontRear] = Min;
+        operation_.ValueMap[Operation::Value::moveFrontRear] = min_;
 
         //ゴールの方向にカーブ
-        if (anleToCheck > 180)
+        if (anleToCheck > 180.0f)
         {
-            operation_.ValueMap[Operation::Value::handleRightLeft] = Max;
+            operation_.ValueMap[Operation::Value::handleRightLeft] = max_;
         }
         else
         {
-            operation_.ValueMap[Operation::Value::handleRightLeft] = Min;
+            operation_.ValueMap[Operation::Value::handleRightLeft] = min_;
         }
     }
-    //何もないなら
     else
     {
-        //前進
-        operation_.ValueMap[Operation::Value::moveFrontRear] = Max;
+        bool frontFlag = false;
 
-
-        if (anleToCheck > 180)
+        //ゴールの方向に曲がる
+        if (anleToCheck > 180.0f)
         {
-            operation_.ValueMap[Operation::Value::handleRightLeft] = Min;
+            operation_.ValueMap[Operation::Value::handleRightLeft] = min_;
+            
+            if (handleRotate_ < 0.0f)
+            {
+                frontFlag = true;
+            }
         }
         else
         {
-            operation_.ValueMap[Operation::Value::handleRightLeft] = Max;
+            operation_.ValueMap[Operation::Value::handleRightLeft] = max_;
+
+            if (handleRotate_ > 0.0f)
+            {
+                frontFlag = true;
+            }
         }
 
-        //ランダム性
-        if (rand() % 5 == 0)
+        //ハンドルの向きが正しいなら進む
+        if (frontFlag)
         {
-            //operation_.inputNow[operation_.inputName::handleRight] = 1.0f;
+            //前進
+            operation_.ValueMap[Operation::Value::moveFrontRear] = max_;
         }
-        if (rand() % 5 == 0)
+
+        //ランダムで左右に動く
+        if (Calculator::IsProbability(randomTurnOdds_))
         {
-            //operation_.inputNow[operation_.inputName::handleLeft] = 1.0f;
+            operation_.ValueMap[Operation::Value::handleRightLeft] = min_;
         }
-        //ランダム性
-        if (rand() % 20 == 0)
+        else if (Calculator::IsProbability(randomTurnOdds_))
+        {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = max_;
+        }
+
+        //右が壁なら左へ
+        if (rayCastHit_[RayCastHit::frontRight].dist < sideHitLength_
+            || rayCastHit_[RayCastHit::right].dist < sideHitLength_
+            || rayCastHit_[RayCastHit::rearRight].dist < sideHitLength_)
+        {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = min_;
+        }
+        //左が壁なら右へ
+        else if (rayCastHit_[RayCastHit::frontLeft].dist < sideHitLength_
+            || rayCastHit_[RayCastHit::left].dist < sideHitLength_
+            || rayCastHit_[RayCastHit::rearLeft].dist < sideHitLength_)
+        {
+            operation_.ValueMap[Operation::Value::handleRightLeft] = max_;
+        }
+
+        //ブースト切り替え
+        if (Calculator::IsProbability(randomTurnOdds_))
+        {
+            boostFlag_ = boostFlag_ ? false : true;
+        }
+        //ブーストしたいのに出来てない
+        if (!(slideFlag_) && boostFlag_)
+        {
+            boostFlag_ = false;
+        }
+        //ブースト
+        if (boostFlag_)
         {
             operation_.ButtonMap[Operation::Button::boost] = true;
-            //operation_.inputNow[operation_.inputName::boost] = 1.0f;
         }
 
     }
 
-}
 
-#if 0
-//右が壁なら左へ
-if (rayCastHit_[RayCastHit::frontRight].dist < Size.toFrontRight_ * 5 ||
-    rayCastHit_[RayCastHit::right].dist < Size.rightToLeft_ * 5 ||
-    rayCastHit_[RayCastHit::rearRight].dist < Size.toRearRight_ * 5)
-{
-    operation_.inputNow[operation_.inputName::turnLeft] = 1.0f;
-    operation_.inputNow[operation_.inputName::turnRight] = 0.0f;
 }
-
-//左が壁なら右へ
-if (rayCastHit_[RayCastHit::frontLeft].dist < Size.toFrontLeft_ * 5 ||
-    rayCastHit_[RayCastHit::left].dist < Size.rightToLeft_ * 5 ||
-    rayCastHit_[RayCastHit::rearLeft].dist < Size.toRearLeft_ * 5)
-{
-    operation_.inputNow[operation_.inputName::turnRight] = 1.0f;
-    operation_.inputNow[operation_.inputName::turnLeft] = 0.0f;
-}
-#endif

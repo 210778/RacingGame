@@ -10,6 +10,7 @@ namespace Camera
 	XMMATRIX viewMatrix_;	//ビュー行列
 	XMMATRIX projMatrix_;	//プロジェクション行列
 	XMMATRIX billBoardMatrix_; //ビルボード行列
+	XMFLOAT4 lightDirection_;
 };
 
 //初期化（プロジェクション行列作成）
@@ -30,10 +31,12 @@ void Camera::Initialize()
 	/*
 	この関数の引数は前から順番に
 		1.画角（視野角）：XM_PIが3.14ラジアン＝180度。DIV4は÷4なのでXM_PIDIV4は45度を表す定数。
-		2.アスペクト比：ウィンドウの(横, 縦)の比率。今数字を直接書いちゃってダサいので、後で何とかした。
+		2.アスペクト比：ウィンドウの(横, 縦)の比率。
 		3.ニア（近）クリッピング面までの距離：カメラからこの値より近いものは映らない。
 		4.ファー（遠）クリッピング面までの距離：カメラからこの値より遠いものは映らない。
 	*/
+
+	lightDirection_ = { 1.0f, -1.0f, 1.0f, 0.0f };
 }
 
 //更新（ビュー行列作成）
@@ -106,3 +109,20 @@ XMMATRIX Camera::GetProjectionMatrix() { return projMatrix_; }
 
 //ビルボード用回転行列を取得
 XMMATRIX Camera::GetBillboardMatrix() { return billBoardMatrix_; }
+
+void Camera::SetLightDirection(XMFLOAT4 vector)
+{
+	lightDirection_ = vector;
+}
+
+void Camera::SetLightDirection(XMVECTOR vector)
+{
+	XMFLOAT4 vec;
+	XMStoreFloat4(&vec, vector);
+	SetLightDirection(vec);
+}
+
+XMFLOAT4 Camera::GetLightDirection()
+{
+	return lightDirection_;
+}
