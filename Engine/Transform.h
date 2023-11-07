@@ -35,22 +35,22 @@ public:
 	XMMATRIX GetWorldMatrix();
 
 	//float3 + float3
-	static XMFLOAT3 Float3Add(XMFLOAT3 a, XMFLOAT3 b)
+	static XMFLOAT3 Float3Add(const XMFLOAT3& a, const XMFLOAT3& b)
 	{
 		return XMFLOAT3(a.x + b.x, a.y + b.y, a.z + b.z);
 	}
 	//float3 * float3
-	static XMFLOAT3 Float3Times(XMFLOAT3 a, XMFLOAT3 b)
+	static XMFLOAT3 Float3Times(const XMFLOAT3& a, const XMFLOAT3& b)
 	{
 		return XMFLOAT3(a.x * b.x, a.y * b.y, a.z * b.z);
 	}
 	//float3 * float
-	static XMFLOAT3 Float3Times(XMFLOAT3 a, float b)
+	static XMFLOAT3 Float3Times(const XMFLOAT3& a, float b)
 	{
 		return XMFLOAT3(a.x * b, a.y * b, a.z * b);
 	}
 	//float * float3
-	static XMFLOAT3 Float3Times(float a, XMFLOAT3 b)
+	static XMFLOAT3 Float3Times(float a, const XMFLOAT3& b)
 	{
 		return XMFLOAT3(a * b.x, a * b.y, a * b.z);
 	}

@@ -161,7 +161,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
-    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
+    , boostCapacityMax_(8200.0), boostCapacity_(boostCapacityMax_)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
@@ -465,13 +465,14 @@ void Vehicle::VehicleCollide()
 
         if (landingFlag_)
             isLanding = true;
+
         landingFlag_ = isLanding;   //一度でもtrueなら接地してることにする
 
         //壁
         CollideWall(itr.model_, itr.type_);
     }
 
-    //落下 ここにあるとうまくいく
+    //落下
     if (!landingFlag_)
     {
         acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
@@ -1159,7 +1160,9 @@ void Vehicle::VehicleParticle()
     if (goalFlag_)
     {
         ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
-            , transform_.position_);
+            , Model::GetBonePosition(hModel_, "wheelRR"));
+        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
+            , Model::GetBonePosition(hModel_, "wheelRL"));
     }
 
     //ブースト

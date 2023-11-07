@@ -110,10 +110,10 @@ void ParticlePackage::ParticleInitialize()
     , { 0.1f, 0.1f, 0.1f }, 0, 1, 20, 0.f, { 0.f,0.f,0.f }, { 20.f,20.f,20.f }, 0.2f, 0.5f, 1.f
     , { 0.5f,0.5f }, { 0.1f,0.1f }, { 0.95f,0.95f }, { 1.f,1.f,0.f,0.8f }, { 0.f,-0.03f,0.f,-0.02f });
 
-    //ÇPà ã‡
+    //ã‡êF
     SetParticle(ParticleName::gold, "image\\PaticleAssets\\circle_W.png", { 0.f, 0.f, 0.f }
-    , { 0.15f, 0.15f, 0.15f }, 0, 1, 20, -0.01f, { 0.f,1.f,0.f }, { 60.f,60.f,60.f }, 0.2f, 0.05f, 1.f
-    , { 1.f,1.f }, { 0.0f,0.0f }, { 1.01f,1.01f }, { 1.f,1.f,0.f,1.f }, { 0.f,0.f,0.02f,-0.05f });
+    , { 0.15f, 0.15f, 0.15f }, 0, 1, 20, 0.01f, { 0.f,1.f,0.f }, { 20.f,20.f,20.f }, 0.2f, 0.05f, 1.f
+    , { 0.6f,0.6f }, { 0.0f,0.0f }, { 0.95f,0.95f }, { 1.f,1.f,0.f,1.f }, { 0.f,0.f,0.02f,-0.04f });
 
     //ïX
     SetParticle(ParticleName::ice, "image\\PaticleAssets\\flashC_W.png", { 0.f, 0.f, 0.f }

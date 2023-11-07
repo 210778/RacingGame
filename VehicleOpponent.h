@@ -16,10 +16,15 @@ class VehicleOpponent : public Vehicle
     unsigned int backTimeMax_;     //バックする必要がある時間 (単位：フレーム)
 
     bool boostFlag_;
+    unsigned int boostTimeCount_;   //ブーストしている時間 (単位：フレーム)
+    unsigned int boostTimeMax_;     //ブーストする必要がある時間 (単位：フレーム)
 
-    int backOdds_;  //前が壁の時にバックする確率
     int randomTurnOdds_;    //ランダムにハンドルを切る確率
-    int wallTurnOdds_;
+    int boostOdds_;         //ブーストする確率
+    int boostTurnOdds_;     //曲がっているときにブーストする確率
+    int booststraightOdds_; //曲がっていないときに　〃
+    float straightLimit_;   //ハンドルがこの値以下なら直線とみなす
+    float turnLimit_;       //この値以上なら曲がってる
 
 public:
     //コンストラクタ
