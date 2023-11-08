@@ -481,15 +481,10 @@ void FbxParts::DrawSkinAnime(Transform& transform, FbxTime time)
 		}
 
 		// 作成された関節行列を使って、頂点を変形する
-		XMStoreFloat3(&pVertexData_[i].position, XMVector3TransformCoord(XMLoadFloat3(&pWeightArray_[i].posOrigin), matrix));
-		XMStoreFloat3(&pVertexData_[i].normal, XMVector3TransformCoord(XMLoadFloat3(&pWeightArray_[i].normalOrigin), matrix));
-		
-#if 0
-		XMVECTOR Pos = XMLoadFloat3(&pWeightArray_[i].posOrigin);
-		XMVECTOR Normal = XMLoadFloat3(&pWeightArray_[i].normalOrigin);
-		XMStoreFloat3(&pVertexData_[i].position,XMVector3TransformCoord(Pos, matrix));
-		XMStoreFloat3(&pVertexData_[i].normal, XMVector3TransformCoord(Normal, matrix));
-#endif
+		XMStoreFloat3(&pVertexData_[i].position
+			, XMVector3TransformCoord(XMLoadFloat3(&pWeightArray_[i].posOrigin), matrix));
+		XMStoreFloat3(&pVertexData_[i].normal
+			, XMVector3TransformCoord(XMLoadFloat3(&pWeightArray_[i].normalOrigin), matrix));
 	}
 
 	// 頂点バッファをロックして、変形させた後の頂点情報で上書きする

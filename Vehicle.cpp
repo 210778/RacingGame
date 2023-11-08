@@ -5,29 +5,17 @@
 #include "Engine/Model.h"
 #include "Engine/Input.h"
 #include "Engine/SphereCollider.h"
-#include "Engine/BoxCollider.h"
 #include "Engine/Camera.h"
-#include "Engine/Text.h"
-#include "Engine/Image.h"
 #include "Engine/Debug.h"
 #include "Engine/Particle.h"
-#include "Engine/Audio.h"
 #include "Engine/Global.h"
-#include "Engine/SceneManager.h"
 
 #include "Vehicle.h"
-#include "Bullet.h"
 #include "Viewer.h"
-#include "Sample.h"
-#include "Tachometer.h"
-#include "Tracker.h"
 #include "Speedometer.h"
 #include "CheckPoint.h"
 #include "VehicleWheel.h"
 #include "ParticlePackage.h"
-#include "MeasurePole.h"
-#include "Music.h"
-#include "ImagePrinter.h"
 #include "Circuit.h"
 
 using std::vector;
@@ -43,7 +31,7 @@ Vehicle::Vehicle(GameObject* parent)
     //スピードなど
     , moveSPD_(0.01f), rotateSPD_(1.1f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
-    , gravity_(0.03f), speedLimit_(10.0f)
+    , gravity_(0.03f)
 
     //ハンドル関係
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
@@ -62,14 +50,12 @@ Vehicle::Vehicle(GameObject* parent)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
     , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
     , mass_(1.0f)
-    , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Circuit::circuitType::road)
     , pParticle_(nullptr)
-    , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
-    , sparkParticleLength_(0.95), sparkParticleHanlde_(15), npcParticleRandom_(3)
+    , sparkParticleLength_(0.95), sparkParticleHanlde_(16), npcParticleRandom_(67)
     , vehicleModelName_(""), wheelModelName_("")
     , startTransform_(), restartTransform_()
 
@@ -128,7 +114,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     //スピードなど
     , moveSPD_(0.01f), rotateSPD_(1.1f), jumpForce_(1.0f)
     , coolTime_(0), bulletPower_(0.5f), heatAdd_(10)
-    , gravity_(0.03f), speedLimit_(10.0f)
+    , gravity_(0.03f)
 
     //ハンドル関係
     , handleRotate_(0.0f), slideHandleAngleLimitAdd_(1.1f)
@@ -147,10 +133,8 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
     , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
     , mass_(1.0f)
-    , frontVec_({ 0.0f, 0.0f, 0.0f, 0.0f })
     , landingType_(Circuit::circuitType::road)
     , pParticle_(nullptr)
-    , pGround_(nullptr)
     , pWheels_(nullptr), wheelSpeedAdd_(20.0f)
     , accZDirection_(1)
     , wheelParticleLength_(0.1f), wheelParticleLengthMax_(0.5f)
@@ -161,7 +145,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , slopeLimitAngle_(45.0f), wallReflectionForce_(0.99f)
     , handleRight_(1), handleLeft_(-1)
     //ブースト
-    , boostCapacityMax_(8200.0), boostCapacity_(boostCapacityMax_)
+    , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
@@ -1160,9 +1144,7 @@ void Vehicle::VehicleParticle()
     if (goalFlag_)
     {
         ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
-            , Model::GetBonePosition(hModel_, "wheelRR"));
-        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
-            , Model::GetBonePosition(hModel_, "wheelRL"));
+            , Model::GetBonePosition(hModel_, "rear"));
     }
 
     //ブースト

@@ -2,7 +2,6 @@
 #include "Engine/GameObject.h"
 
 class Particle;
-class Ground;
 class VehicleWheel;
 class RayCastData;
 class Viewer;
@@ -60,7 +59,6 @@ protected:
     float jumpForce_;
 
     const float gravity_;  //重力 定数
-    float speedLimit_;  //加速度の制限
 
     //ハンドル関係
         float handleRotate_;    //ハンドルの回転（単位：度）90゜～ -90゜くらい？
@@ -131,16 +129,10 @@ protected:
         unsigned long long standbyTime_;    //待機する時間
 
     float mass_;            //車の重量
-    float engineRotate_;    //エンジン回転数
-
-    XMVECTOR frontVec_;//正面のベクトル
 
     int landingType_; //地面のタイプ
 
     Particle* pParticle_;//エフェクト用
-
-    Ground* pGround_;//地面のポインター
-
     VehicleWheel* pWheels_;//タイヤのポインター
 
     float wheelSpeedAdd_; //加速度に加算するタイヤの回転

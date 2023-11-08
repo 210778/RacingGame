@@ -36,6 +36,9 @@
     <Filter Include="04Play\Vehicle">
       <UniqueIdentifier>{8e827e7d-32a4-49b7-9270-265413370ccb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="04Play\Ground">
+      <UniqueIdentifier>{dcb1e9dd-99cc-4152-b68c-9d7484cade55}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\BoxCollider.cpp">
@@ -131,9 +134,6 @@
     <ClCompile Include="Tracker.cpp">
       <Filter>04Play\Others</Filter>
     </ClCompile>
-    <ClCompile Include="Ground.cpp">
-      <Filter>04Play</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Debug.cpp">
       <Filter>01Engine\ResourceManager</Filter>
     </ClCompile>
@@ -161,9 +161,6 @@
     <ClCompile Include="VehicleWheel.cpp">
       <Filter>04Play\Vehicle</Filter>
     </ClCompile>
-    <ClCompile Include="Background.cpp">
-      <Filter>04Play</Filter>
-    </ClCompile>
     <ClCompile Include="ImagePrinter.cpp">
       <Filter>04Play\Others</Filter>
     </ClCompile>
@@ -179,11 +176,17 @@
     <ClCompile Include="StartScene.cpp">
       <Filter>03Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Circuit.cpp">
-      <Filter>04Play</Filter>
-    </ClCompile>
     <ClCompile Include="VehicleGlobal.cpp">
       <Filter>04Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Background.cpp">
+      <Filter>04Play\Ground</Filter>
+    </ClCompile>
+    <ClCompile Include="Circuit.cpp">
+      <Filter>04Play\Ground</Filter>
+    </ClCompile>
+    <ClCompile Include="Ground.cpp">
+      <Filter>04Play\Ground</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,9 +283,6 @@
     <ClInclude Include="Tracker.h">
       <Filter>04Play\Others</Filter>
     </ClInclude>
-    <ClInclude Include="Ground.h">
-      <Filter>04Play</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Debug.h">
       <Filter>01Engine\ResourceManager</Filter>
     </ClInclude>
@@ -307,9 +307,6 @@
     <ClInclude Include="VehicleWheel.h">
       <Filter>04Play\Vehicle</Filter>
     </ClInclude>
-    <ClInclude Include="Background.h">
-      <Filter>04Play</Filter>
-    </ClInclude>
     <ClInclude Include="ImagePrinter.h">
       <Filter>04Play\Others</Filter>
     </ClInclude>
@@ -325,11 +322,17 @@
     <ClInclude Include="StartScene.h">
       <Filter>03Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Circuit.h">
-      <Filter>04Play</Filter>
-    </ClInclude>
     <ClInclude Include="VehicleGlobal.h">
       <Filter>04Play</Filter>
+    </ClInclude>
+    <ClInclude Include="Background.h">
+      <Filter>04Play\Ground</Filter>
+    </ClInclude>
+    <ClInclude Include="Circuit.h">
+      <Filter>04Play\Ground</Filter>
+    </ClInclude>
+    <ClInclude Include="Ground.h">
+      <Filter>04Play\Ground</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

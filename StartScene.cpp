@@ -1,6 +1,3 @@
-#include <algorithm>
-#include <iostream>
-
 #include "Engine/SceneManager.h"
 #include "Engine/Image.h"
 #include "Engine/Text.h"
@@ -10,8 +7,6 @@
 #include "Circuit.h"
 #include "VehicleGlobal.h"
 #include "VehicleInput.h"
-
-#include "Sample.h"
 
 using std::string;
 using std::to_string;

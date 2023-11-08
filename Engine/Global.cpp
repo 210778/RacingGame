@@ -136,4 +136,14 @@ bool Calculator::IsProbability(int percent)
 
 	return false;
 }
+//Šm—¦(float)
+bool Calculator::IsProbability(float percent)
+{
+	if (((float)rand() / RAND_MAX) <= (percent / 100.0f))
+	{
+		return true;
+	}
+
+	return false;
+}
 

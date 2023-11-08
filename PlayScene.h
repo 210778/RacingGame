@@ -3,7 +3,7 @@
 
 class Vehicle;
 
-//■■シーンを管理するクラス
+//プレイシーンを管理するクラス
 class PlayScene : public GameObject
 {
 	int hModel_;

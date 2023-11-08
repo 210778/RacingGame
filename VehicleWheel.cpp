@@ -2,7 +2,6 @@
 
 #include "VehicleWheel.h"
 #include "Vehicle.h"
-#include "Engine/Particle.h"
 
 //コンストラクタ
 VehicleWheel::VehicleWheel(GameObject* parent)
@@ -79,7 +78,6 @@ void VehicleWheel::Draw()
         Model::SetTransform(hModel_, wheelTrans);
         Model::Draw(hModel_);
     }
-
 }
 
 //開放
@@ -124,7 +122,7 @@ void VehicleWheel::calculateHeight()
     XMFLOAT3 wheelBottom = Model::GetBonePosition(hModel_, "bottom");
     Wheels.wheelHeight_ = *XMVector3Length(XMLoadFloat3(&wheelBottom)).m128_f32;
 
-    //一応拡大に対応
+    //拡大に対応
     pVehicle_->SetWheelHeight(Wheels.wheelHeight_ * transform_.scale_.y);
 }
 

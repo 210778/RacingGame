@@ -18,10 +18,19 @@ using std::to_string;
 //コンストラクタ
 VehiclePlayer::VehiclePlayer(GameObject* parent)
     :Vehicle(parent, "VehiclePlayer")
-    , pText_(nullptr)
-    , km_hAdd(120.0f)
+    , pText_(nullptr), hImage_(-1)
+    , km_hAdd(122.0f), flashIntervalUI_(15), IsFlashUI_(true)
     , pSample_(nullptr)
+    , imageBoostMax_(-1), imageBoost_(-1)
+    , hImageSpeedFrame_(-1), hImageSpeedNeedle_(-1)
+    , drawTime_(0), standardTime_(60)
+    , textCenter_(450), textPauseHeight_(150), textReturnHeight_(200), textLapHeight_(70)
+    , textToTitleWidth_(700), textKMH_(150, 700), textLeftEnd_(30), textUpEnd_(30), textRankWidth_(110)
+    , textDebugCenter_(280), textPosWidth_(60), textRotWidth_(90)
 {
+    vehicleModelName_ = "";
+    wheelModelName_ = "";
+    isPlayer_ = true;
 }
 
 //コンストラクタ
@@ -39,7 +48,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
-    isPlayer_ = true;/////////////////////////
+    isPlayer_ = true;
 }
 
 //デストラクタ
@@ -68,7 +77,7 @@ void VehiclePlayer::PlayerUI_Initialize()
     pText_->Initialize();
 
     imageTrans_.position_ = { 0.0f,0.5f,0.0f };
-    imageTrans_.scale_ = { 0.3f,0.2f,1.0f };
+    imageTrans_.scale_ = { 0.25f,0.18f,1.0f };
 
     //画像
     hImage_ = Image::Load("image\\BackGround_K.jpg");
@@ -137,6 +146,12 @@ void VehiclePlayer::PlayerUI_Draw()
             IsFlashUI_ = (IsFlashUI_) ? false : true;
         }
     }
+    //ポーズ中は表示
+    if (pauseFlag_)
+    {
+        IsFlashUI_ = true;
+    }
+
 
     //経過時間表示
     if(IsFlashUI_)
@@ -402,16 +417,15 @@ void VehiclePlayer::DrawStandbyCount()
         }
     }
 
-    //周回した時(非ゴール)の音声
+    //周回した時の音声
     if (lapCountFlag_)
     {
         lapCountFlag_ = false;
         Music::Play(Music::MusicName::se_lap);
-
-        if (goalFlag_ && !(imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_))
-            DrawImage(ImageData::ImageNumber::goal);
     }
-
+    //ゴール画像
+    if (goalFlag_ && !(imageMap_[ImageData::ImageNumber::goal].isAlreadyPrint_))
+        DrawImage(ImageData::ImageNumber::goal);
 
     for (auto& itr : imageMap_)
     {

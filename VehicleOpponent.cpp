@@ -4,7 +4,26 @@
 //コンストラクタ
 VehicleOpponent::VehicleOpponent(GameObject* parent)
     :Vehicle(parent, "VehicleOpponent")
+    , frontHitLength_(5.0f), sideHitLength_(15.0)
+    , checkBackAngle_(45.0f), backFlag_(false), backTimeCount_(0), backTimeMax_(2)
+    , boostFlag_(false), boostTimeCount_(0), boostTimeMax_(1)
+    , randomTurnOdds_(20), boostOdds_(1), boostTurnOdds_(10), booststraightOdds_(10)
+    , straightLimit_(1.0f), turnLimit_(15.0f)
 {
+    vehicleModelName_ = "";
+    wheelModelName_ = "";
+
+    max_ = VehicleInput::GetMaxValue();
+    min_ = VehicleInput::GetMinValue();
+
+    backTimeMax_ = 2 * Global::GetStandardFPS();
+    boostTimeMax_ = 2 * Global::GetStandardFPS();
+
+    //乱数で設定する
+    randomTurnOdds_ = rand() % 15;
+    boostOdds_ = rand() % 2;
+    boostTurnOdds_ = rand() % 2;
+    booststraightOdds_ = rand() % 2;
 }
 
 //コンストラクタ2
@@ -14,7 +33,7 @@ VehicleOpponent::VehicleOpponent(GameObject* parent, std::string vehicleName, st
     , checkBackAngle_(45.0f), backFlag_(false), backTimeCount_(0), backTimeMax_(2)
     , boostFlag_(false), boostTimeCount_(0), boostTimeMax_(1)
     , randomTurnOdds_(20), boostOdds_(1), boostTurnOdds_(10), booststraightOdds_(10)
-    , straightLimit_(5.0f), turnLimit_(15.0f)
+    , straightLimit_(1.0f), turnLimit_(15.0f)
 {
     vehicleModelName_ = vehicleName;
     wheelModelName_ = wheelName;
@@ -22,19 +41,14 @@ VehicleOpponent::VehicleOpponent(GameObject* parent, std::string vehicleName, st
     max_ = VehicleInput::GetMaxValue();
     min_ = VehicleInput::GetMinValue();
 
-    backTimeMax_ *= 2 * Global::GetStandardFPS();
-
-    boostTimeMax_ = Global::GetStandardFPS();
+    backTimeMax_ = 2 * Global::GetStandardFPS();
+    boostTimeMax_ = 2 * Global::GetStandardFPS();
 
     //乱数で設定する
     randomTurnOdds_     = rand() % 15;
-    boostOdds_          = rand() % 3;
-    boostTurnOdds_      = (rand() % 50);
-    booststraightOdds_  = (rand() % 50);
-
-    boostOdds_ = 0;
-    boostTurnOdds_ = 100;
-    booststraightOdds_ = 1;
+    boostOdds_          = rand() % 2;
+    boostTurnOdds_      = rand() % 2;
+    booststraightOdds_  = rand() % 2;
 }
 
 //デストラクタ
@@ -55,7 +69,6 @@ void VehicleOpponent::InputOperate()
     anleToCheck = Calculator::AngleNormalize(anleToCheck - transform_.rotate_.y);
     //加速度長さ
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
-
 
 
     //前が壁か目的地が真後ろ
@@ -132,31 +145,13 @@ void VehicleOpponent::InputOperate()
             operation_.ValueMap[Operation::Value::handleRightLeft] = max_;
         }
 
-        /*
-        //ブースト切り替え
-        if (Calculator::IsProbability(boostOdds_))
-        {
-            boostFlag_ = boostFlag_ ? false : true;
-        }
-        */
 
-        //現在の確率
-        int currentBoostOdds = boostOdds_;
-        //曲がってるなら
-        if (abs(handleRotate_) > turnLimit_)
-            currentBoostOdds = boostTurnOdds_;
-        //直線なら
-        if (abs(handleRotate_) < straightLimit_)
-            currentBoostOdds = booststraightOdds_;
-        //確率
-        boostFlag_ = Calculator::IsProbability(currentBoostOdds);
-
-        //ブースト出来ない
+        //容量が無くてブースト出来ない
         if (boostCapacity_ <= boostSpending_)
         {
             boostFlag_ = false;
         }
-        //ブースト
+        //ブーストする
         if (boostFlag_)
         {
             //一定時間ブーストしたらやめる
@@ -171,7 +166,20 @@ void VehicleOpponent::InputOperate()
             {
                 operation_.ButtonMap[Operation::Button::boost] = true;
             }
-
+        }
+        else
+        {
+            //ブーストしてないなら
+            //現在の確率
+            float currentBoostOdds = boostOdds_;
+            //曲がってるなら
+            if (abs(handleRotate_) > turnLimit_)
+                currentBoostOdds = boostTurnOdds_;
+            //直線なら
+            if (abs(handleRotate_) < straightLimit_)
+                currentBoostOdds = booststraightOdds_;
+            //確率
+            boostFlag_ = Calculator::IsProbability(currentBoostOdds);
         }
     }
 

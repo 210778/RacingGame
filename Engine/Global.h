@@ -94,4 +94,7 @@ namespace Calculator
 
 	//確率の計算（int 真が返される確率:0~100）
 	bool IsProbability(int percent);
+	//確率を出力 (float 真が返される確率 0.0f ~ 100.0f )
+	bool IsProbability(float percent);
+
 };

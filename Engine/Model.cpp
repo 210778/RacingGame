@@ -213,18 +213,5 @@ namespace Model
 			XMStoreFloat3(&data->dir, XMVector3TransformCoord(XMLoadFloat3(&target), matInv) - vecStart);
 
 			_datas[handle]->pFbx->RayCast(data);
-
-#if 0
-			XMFLOAT3 target = Transform::Float3Add(data->start, data->dir);
-			XMMATRIX matInv = XMMatrixInverse(nullptr, _datas[handle]->transform.GetWorldMatrix());
-			XMVECTOR vecStart = XMVector3TransformCoord(XMLoadFloat3(&data->start), matInv);
-			XMVECTOR vecTarget = XMVector3TransformCoord(XMLoadFloat3(&target), matInv);
-			XMVECTOR vecDir = vecTarget - vecStart;
-
-			XMStoreFloat3(&data->start, vecStart);
-			XMStoreFloat3(&data->dir, vecDir);
-
-			_datas[handle]->pFbx->RayCast(data); 
-#endif
 	}
 }
