@@ -75,8 +75,17 @@ void Circuit::Draw()
 
     for (int i = 0; i < circuits_[chosenCircuit_].parts_.size(); i++)
     {
-        Model::SetTransform(circuits_[chosenCircuit_].parts_[i].model_, circuitTransform_);
-        Model::Draw(circuits_[chosenCircuit_].parts_[i].model_);
+        if (circuits_[chosenCircuit_].parts_[i].type_ == circuitType::abyss)
+        {
+            //”wŒi‚Í‰e‚È‚µ
+            Model::SetTransform(circuits_[chosenCircuit_].parts_[i].model_, circuitTransform_);
+            Model::Draw(circuits_[chosenCircuit_].parts_[i].model_, Direct3D::SHADER_SIMPLE3D);
+        }
+        else
+        {
+            Model::SetTransform(circuits_[chosenCircuit_].parts_[i].model_, circuitTransform_);
+            Model::Draw(circuits_[chosenCircuit_].parts_[i].model_);
+        }
     }
 }
 

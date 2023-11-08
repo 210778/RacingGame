@@ -81,18 +81,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RootObject* pRootObject = new RootObject;
 	pRootObject->Initialize();
 
+
 	//メッセージループ（何か起きるのを待つ）
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
 	while (msg.message != WM_QUIT)
 	{
+		//終了する場合
+		if (Global::GetIsCloseWindow())
+		{
+			msg.message = WM_QUIT;	//ウィンドウメッセージ
+
+			//計測時間表示
+			Debug::TimerLogPrintAll();
+		}
+
 		//メッセージあり（こっちが優先）
 		if (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
 		//メッセージなし（ここでゲームの処理）
 		else
 		{

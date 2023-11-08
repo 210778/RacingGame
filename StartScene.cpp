@@ -17,6 +17,7 @@ StartScene::StartScene(GameObject* parent)
 	: GameObject(parent, "StartScene")
 	, pTextCircuit_(nullptr), pTextCaption_(nullptr)
 	, hImageArrow_(-1), hImageStart_(-1), hImageLoad_(-1)
+	, stringSelect_(""), stringStart_(""), stringLoad_("")
 	, captionWidthOperand_(0.142f), captionHeight_(150), captionUpperHeight_(50)
 	, sceneTitlePosition_({ 30.0f,30.0f })
 	, countSpeed_(0.1f), arrwoBace_(-0.85f), sinOperand_(0.02f)
@@ -55,6 +56,11 @@ void StartScene::Initialize()
 	CircuitImage_.push_back(Image::Load("image\\count_2.png"));
 	CircuitImage_.push_back(Image::Load("image\\count_3.png"));
 
+	stringSelect_	= "[Select menu]";
+	stringStart_	= "[Start]";
+	stringLoad_		= "Now loading...";
+
+
 	//項目
 	//コース
 	dataSelection_[DataName::circuit].SetDataSelection("Circuit"
@@ -77,8 +83,6 @@ void StartScene::Initialize()
 
 	//決定項目
 	selectIndex_.maxValue += 1;
-
-	//Instantiate<Sample>(this);
 }
 
 //更新
@@ -115,6 +119,12 @@ void StartScene::Update()
 	//戻る
 	if (VehicleInput::GetInput(VehicleInput::Button::selectReturn))
 	{
+		//タイトルか？
+		if (sceneIndex_.index == SceneName::title)
+		{
+			Global::SetIsCloseWindow(true);
+		}
+
 		if (sceneIndex_.DataAddition(-1))
 			Music::Play(Music::MusicName::se_select);
 	}
@@ -177,7 +187,7 @@ void StartScene::Draw()
 			Image::Draw(CircuitImage_[dataSelection_[DataName::circuit].index]);
 		}
 
-		pTextCircuit_->Draw(sceneTitlePosition_.x, sceneTitlePosition_.y, "[Select Menu]");
+		pTextCircuit_->Draw(sceneTitlePosition_.x, sceneTitlePosition_.y, stringSelect_.c_str());
 
 		int width = Global::GetScreenWidth() * captionWidthOperand_;
 		int count = 0;
@@ -205,7 +215,8 @@ void StartScene::Draw()
 			at(dataSelection_[DataName::wheel].index).second);	//選択
 
 		//決定
-		pTextCircuit_->Draw(width, captionHeight_ + captionUpperHeight_ * ++count, "[Start]");//ここだけ離れた位置
+		//ここだけ離れた位置
+		pTextCircuit_->Draw(width, captionHeight_ + captionUpperHeight_ * ++count, stringStart_.c_str());
 
 		{
 			//秒数カウント
@@ -233,6 +244,8 @@ void StartScene::Draw()
 	{
 		Image::SetTransform(hImageArrow_, transform_);
 		Image::Draw(hImageLoad_);
+
+		pTextCircuit_->Draw(sceneTitlePosition_.x, sceneTitlePosition_.y, stringLoad_.c_str());
 	}
 
 }

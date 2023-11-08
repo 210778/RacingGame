@@ -9,7 +9,9 @@ namespace Global
 	int isDrawFps_;			//キャプションに現在のFPSを表示するかどうか
 
 	int currentFPS_;	//現在のFPS
-	int standardFPS_ = 60;	//FPSの設定に関係なくつかうフレームの値
+	int standardFPS_ = 60;	//FPSの設定に関係なく使うフレームの値
+
+	bool closeWindowFlag_ = false;	//プログラムを終了したいときはこれを真にする
 };
 
 //スクリーンの幅
@@ -66,6 +68,17 @@ int Global::GetCurrentFPS()
 int Global::GetStandardFPS()
 {
 	return standardFPS_;
+}
+
+//プログラムを終了するかどうかをセット (真なら終了)
+void Global::SetIsCloseWindow(bool flag)
+{
+	closeWindowFlag_ = flag;
+}
+//プログラムを終了するかどうかを取得 (真なら終了)
+bool Global::GetIsCloseWindow()
+{
+	return closeWindowFlag_;
 }
 
 std::string Global::GetModelFileName()

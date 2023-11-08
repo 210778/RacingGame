@@ -17,7 +17,7 @@ Background::~Background()
 //‰Šú‰»
 void Background::Initialize()
 {
-    hModel_ = Model::Load("model\\SkyFieldSphere.fbx");
+    hModel_ = Model::Load("model\\SkyFieldCylinder_2.fbx");
     assert(hModel_ >= 0);
 }
 
@@ -29,11 +29,9 @@ void Background::Update()
 //•`‰æ
 void Background::Draw()
 {
+    //‰e‚È‚µ
     Model::SetTransform(hModel_, transform_);
     Model::Draw(hModel_, Direct3D::SHADER_SIMPLE3D);
-
-    //Direct3D::SetShader(Direct3D::SHADER_BILLBOARD);
-    //Direct3D::SetBlendMode(Direct3D::BLEND_ADD);
 }
 
 //ŠJ•ú

@@ -37,6 +37,12 @@ namespace Global
 	//FPSの設定に関係なくつかうフレームの値
 	int GetStandardFPS();
 
+	//プログラムを終了するかどうかをセット (真なら終了)
+	void SetIsCloseWindow(bool flag);
+	//プログラムを終了するかどうかを取得 (真なら終了)
+	bool GetIsCloseWindow();
+
+
 	//モデルが入ってるファイルのパスを出力 今は"model\\"
 	std::string GetModelFileName();
 };

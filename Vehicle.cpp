@@ -148,7 +148,8 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , boostCapacityMax_(200.0), boostCapacity_(boostCapacityMax_)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
-    , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
+    , collideBoxValue_(0.5f), isOperationInvalid_(false)
+    , pauseFlag_(false)
     , farLimitPosition_(1000.f, 500.0f, 1000.f)
     , pViewer_(nullptr)
 {
@@ -311,7 +312,6 @@ void Vehicle::Update()
     PlayerUI_Update();
 
     //エフェクト
-    //PlayerParticle();
     VehicleParticle();
 
     //角度正規化

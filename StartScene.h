@@ -13,7 +13,13 @@ class StartScene : public GameObject
 
 	std::vector<int> CircuitImage_;	//コースのイメージ画像
 
-	//文字
+	//文字列
+	std::string stringSelect_;
+	std::string stringStart_;
+	std::string stringLoad_;
+
+
+	//文字ポインタ
 	Text* pTextCircuit_;
 	Text* pTextCaption_;
 
