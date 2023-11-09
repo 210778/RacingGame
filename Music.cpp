@@ -59,12 +59,13 @@ void Music::Initialize()
 
 	SetMusic(MusicName::bgm_1, "music\\loop100201.wav", true);
 	SetMusic(MusicName::bgm_2, "music\\loop100209.wav", true);
+	SetMusic(MusicName::bgm_menu, "music\\loop100905.wav", true);
 
 	//SetMusic(MusicName::se_carStop, "music\\carstop.wav", false);
 	SetMusic(MusicName::se_count123, "music\\se_amb04.wav", false);
 	SetMusic(MusicName::se_countStart, "music\\se_ymb04.wav", false);
-	SetMusic(MusicName::se_goal, "music\\se_ymb04.wav", false);
-	SetMusic(MusicName::se_lap, "music\\se_ymb04.wav", false);
+	SetMusic(MusicName::se_goal, "music\\se_ymb06.wav", false);
+	SetMusic(MusicName::se_lap, "music\\se_ymb02.wav", false);
 	SetMusic(MusicName::se_select, "music\\se_sac02.wav", false);
 	SetMusic(MusicName::se_select2, "music\\se_sac03.wav", false);
 	SetMusic(MusicName::se_se_selectError, "music\\se_moa05.wav", false);

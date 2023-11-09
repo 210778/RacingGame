@@ -71,22 +71,17 @@ void StartScene::Initialize()
 	//コース
 	dataSelection_[DataName::circuit].SetDataSelection("Circuit"
 		, 0, 0, Circuit::GetCircuitNameArray()->size() - 1);
-
 	//参加人数
 	dataSelection_[DataName::population].SetDataSelection("Population"
 		, Circuit::GetChosenCircuit()->startTransform_.size(), 1, Circuit::GetChosenCircuit()->startTransform_.size());
-
 	//車両
 	dataSelection_[DataName::vehicle].SetDataSelection("Vehicle"
 		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::vehicle)->size() - 1);
-
 	//タイヤ
 	dataSelection_[DataName::wheel].SetDataSelection("Wheel"
 		, 0, 0, VehicleGlobal::GetVehicleNameVector(VehicleGlobal::PartName::wheel)->size() - 1);
-
 	//索引
 	selectIndex_.SetDataSelection("index", 0, 0, dataSelection_.size() - 1);
-
 	//決定項目
 	selectIndex_.maxValue += 1;
 }
@@ -98,6 +93,7 @@ void StartScene::Update()
 	VehicleInput::Update();
 
 	//音楽
+	Music::Play(Music::MusicName::bgm_menu);
 	Music::Update();
 
 

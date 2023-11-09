@@ -13,6 +13,7 @@ namespace Music
 	{
 		bgm_1,
 		bgm_2,
+		bgm_menu,
 
 		se_carStop,
 		se_count123,

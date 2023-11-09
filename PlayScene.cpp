@@ -25,7 +25,7 @@ using std::string;
 PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hModel_(-1)
 	, pVehiclePlayer_(nullptr)
-	, universalTime_(0), standbyTime_(1), standbySeconds_(5)
+	, universalTime_(0), standbyTime_(1), standbySeconds_(6)
 	, startFlag_(false), pauseFlag_(false)
 {
 }
@@ -65,6 +65,10 @@ void PlayScene::Initialize()
 void PlayScene::Update()
 {
 	//âπäy
+	if (startFlag_)
+	{
+		Music::Play(Music::MusicName::bgm_1);
+	}
 	Music::Update();
 
 	//ëÄçÏ
