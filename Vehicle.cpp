@@ -48,7 +48,7 @@ Vehicle::Vehicle(GameObject* parent)
 
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
+    , ranking_(0), goalRanking_(0), population_(1), lapCountFlag_(false), goalTime_(0), standbyTime_(0)
     , mass_(1.0f)
     , landingType_(Circuit::circuitType::road)
     , pParticle_(nullptr)
@@ -131,7 +131,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
 
     , landingFlag_(true)
     , time_(0), goalFlag_(false), pointCount_(0), pointCountMax_(1), lapCount_(0), lapMax_(1)
-    , ranking_(0), goalRanking_(0), population_(1), goalTime_(0), standbyTime_(0)
+    , ranking_(0), goalRanking_(0), population_(1), lapCountFlag_(false), goalTime_(0), standbyTime_(0)
     , mass_(1.0f)
     , landingType_(Circuit::circuitType::road)
     , pParticle_(nullptr)
@@ -233,8 +233,6 @@ void Vehicle::Update()
     if (pauseFlag_)
         return;
 
-    Debug::TimerLogStart("vehicle最初");
-
     //行列を用意
     //それぞれの値に合わせて軸回転させる行列
     matRotateX = XMMatrixRotationX(XMConvertToRadians(transform_.rotate_.x));
@@ -260,8 +258,6 @@ void Vehicle::Update()
     XMVECTOR vecY = moveSPD_ * vehicleVector_.y;
     XMVECTOR vecZ = moveSPD_ * vehicleVector_.z;
 
-    Debug::TimerLogEnd("vehicle最初");
-
     //ゴール判定
     GoalJudgement();
 
@@ -272,11 +268,8 @@ void Vehicle::Update()
         XMConvertToRadians(-transform_.rotate_.y)))))
         accZDirection_ = -1;
 
-    Debug::TimerLogStart("vehicle操作受けつけ");
-
+    //操作
     InputReceive(vecX, vecZ);
-
-    Debug::TimerLogEnd("vehicle操作受けつけ");
 
 
     //地面の種類によって摩擦など
@@ -289,17 +282,13 @@ void Vehicle::Update()
     //タイヤの角度と減速
     //正面やタイヤの方向へは減速しないが、タイヤの方向と平行の方向へは減速する
     //タイヤの方向と平行なら何もしないが、垂直に近いほどタイヤの方向にベクトルを発生させる
-    Debug::TimerLogStart("vehicleタイヤ横押し");
     TurnWheel();
-    Debug::TimerLogEnd("vehicleタイヤ横押し");
 
     //位置　＋　ベクトル
     XMStoreFloat3(&transform_.position_, acceleration_ + XMLoadFloat3(&transform_.position_));
 
-    Debug::TimerLogStart("vehicle壁床衝突");
     //接地、壁衝突
     VehicleCollide();
-    Debug::TimerLogEnd("vehicle壁床衝突");
 
     //タイヤの値セット
     pWheels_->SetWheelSpeedRotate(*XMVector3LengthEst(acceleration_).m128_f32
@@ -327,8 +316,6 @@ void Vehicle::OnCollision(GameObject* pTarget)
     if (pauseFlag_)
         return;
 
-    Debug::TimerLogStart("vehicleチェックポイント");
-
     //当たったときの処理
     if (pTarget->GetObjectName() == "CheckPoint")
     {
@@ -343,21 +330,15 @@ void Vehicle::OnCollision(GameObject* pTarget)
             LapCountAdd(1);
         }
     }
-
-    Debug::TimerLogEnd("vehicleチェックポイント");
 }
 
 //描画
 void Vehicle::Draw()
 {
-    Debug::TimerLogStart("vehicle描画");
-
     Model::SetTransform(hModel_, transform_);
     Model::Draw(hModel_);
 
     PlayerUI_Draw();
-
-    Debug::TimerLogEnd("vehicle描画");
 }
 
 //開放

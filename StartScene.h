@@ -17,6 +17,7 @@ class StartScene : public GameObject
 	std::string stringSelect_;
 	std::string stringStart_;
 	std::string stringLoad_;
+	std::string stringQuit_;
 
 	bool quitFlag_;	//èIóπÇ∑ÇÈÇ©Ç«Ç§Ç©
 

@@ -32,6 +32,14 @@ class VehiclePlayer : public Vehicle
     unsigned long long drawTime_;//描画に使う時間の値
     int standardTime_;  //描画に使うFPSの値
 
+    //文字
+    std::string strPause_;
+    std::string strReturn_;
+    std::string strLap_;
+    std::string strTitle_;
+    std::string strSpeedUnit_;
+    std::string strTime_;
+
     //カウントダウン表示
     struct ImageData
     {

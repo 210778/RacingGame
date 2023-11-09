@@ -17,7 +17,7 @@ StartScene::StartScene(GameObject* parent)
 	: GameObject(parent, "StartScene")
 	, pTextCircuit_(nullptr), pTextCaption_(nullptr)
 	, hImageArrow_(-1), hImageStart_(-1), hImageLoad_(-1)
-	, stringSelect_(""), stringStart_(""), stringLoad_("")
+	, stringSelect_(""), stringStart_(""), stringLoad_(""), stringQuit_("")
 	, quitFlag_(false)
 	, captionWidthOperand_(0.142f), captionHeight_(150), captionUpperHeight_(50)
 	, sceneTitlePosition_({ 30.0f,30.0f })
@@ -44,7 +44,7 @@ void StartScene::Initialize()
 	hImageArrow_ = Image::Load("image\\arrow.png");
 	assert(hImageArrow_ >= 0);
 	//タイトル
-	hImageStart_ = Image::Load("image\\Racing game title.jpg");
+	hImageStart_ = Image::Load("image\\TitleRacingGame.jpg");
 	assert(hImageStart_ >= 0);
 	//ロード
 	hImageLoad_ = Image::Load("image\\BackGround_K.jpg");
@@ -60,7 +60,7 @@ void StartScene::Initialize()
 	stringSelect_	= "[Select menu]";
 	stringStart_	= "[Start]";
 	stringLoad_		= "Now loading...";
-
+	stringQuit_		= "Quit the game ?";
 
 	//項目
 	//コース
@@ -95,47 +95,18 @@ void StartScene::Update()
 	//音楽
 	Music::Update();
 
-	//選択
-	if (VehicleInput::GetInput(VehicleInput::Button::selectDecide))
-	{
-		//選択画面か？
-		if (sceneIndex_.index == SceneName::select)
-		{
-			//シーン遷移
-			if(selectIndex_.index >= selectIndex_.maxValue)
-			{
-				if (sceneIndex_.DataAddition(1))
-					Music::Play(Music::MusicName::se_select);
 
-				SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
-				pSceneManager->ChangeScene(SCENE_ID_PLAY);
-			}
-		}
-		else
+	//タイトル画面
+	if (sceneIndex_.index == SceneName::title)
+	{
+		if (VehicleInput::GetInput(VehicleInput::Button::selectReturn))
 		{
-			if (sceneIndex_.DataAddition(1))
-				Music::Play(Music::MusicName::se_select);
+			//メッセージ表示
+			quitFlag_ = quitFlag_ ? false : true;
 		}
 	}
-	//戻る
-	if (VehicleInput::GetInput(VehicleInput::Button::selectReturn))
-	{
-		//タイトルか？
-		if (sceneIndex_.index == SceneName::title)
-		{
-			if (quitFlag_)
-			{
-				quitFlag_ = false;	//メッセージ表示
-				//Global::SetIsCloseWindow(true);	//終了
-			}
-		}
-
-		if (sceneIndex_.DataAddition(-1))
-			Music::Play(Music::MusicName::se_select);
-	}
-
 	//選択画面なら
-	if (sceneIndex_.index == SceneName::select)
+	else if (sceneIndex_.index == SceneName::select)
 	{
 		if (VehicleInput::GetInput(VehicleInput::Button::selectLeft))
 		{
@@ -172,6 +143,40 @@ void StartScene::Update()
 		}
 	}
 
+
+	//選択画面の移動
+	if (VehicleInput::GetInput(VehicleInput::Button::selectDecide))
+	{
+		//タイトル画面
+		if (sceneIndex_.index == SceneName::title && quitFlag_)
+		{
+			Global::SetIsCloseWindow(true);	//終了
+		}
+		//選択画面
+		else if (sceneIndex_.index == SceneName::select
+			&& selectIndex_.index >= selectIndex_.maxValue)
+		{
+			//シーン遷移
+			if (sceneIndex_.DataAddition(1))
+				Music::Play(Music::MusicName::se_select);
+
+			SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
+			pSceneManager->ChangeScene(SCENE_ID_PLAY);
+		}
+		else
+		{
+			//画面移動
+			if (sceneIndex_.DataAddition(1))
+				Music::Play(Music::MusicName::se_select);
+		}
+	}
+	//戻る
+	else if (VehicleInput::GetInput(VehicleInput::Button::selectReturn))
+	{
+		if (sceneIndex_.DataAddition(-1))
+			Music::Play(Music::MusicName::se_select);
+	}
+
 }
 
 //描画
@@ -182,11 +187,18 @@ void StartScene::Draw()
 	{
 		Image::SetTransform(hImageArrow_, transform_);
 		Image::Draw(hImageStart_);
+
+		//終了するかどうか聞く
+		if (quitFlag_)
+		{
+			pTextCircuit_->Draw(sceneTitlePosition_.x, sceneTitlePosition_.y, stringQuit_.c_str());
+		}
 	}
 	else if (sceneIndex_.index == SceneName::select)
 	{
 		//背景コース画像
-		if (dataSelection_[DataName::circuit].index >= 0 && dataSelection_[DataName::circuit].index < CircuitImage_.size())
+		if (dataSelection_[DataName::circuit].index >= 0 
+			&& dataSelection_[DataName::circuit].index < CircuitImage_.size())
 		{
 			Image::SetTransform(CircuitImage_[dataSelection_[DataName::circuit].index], transform_);
 			Image::Draw(CircuitImage_[dataSelection_[DataName::circuit].index]);

@@ -24,6 +24,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent)
     , imageBoostMax_(-1), imageBoost_(-1)
     , hImageSpeedFrame_(-1), hImageSpeedNeedle_(-1)
     , drawTime_(0), standardTime_(60)
+    , strPause_(""), strReturn_(""), strLap_(""), strTitle_(""), strSpeedUnit_(""), strTime_("")
     , textCenter_(450), textPauseHeight_(150), textReturnHeight_(200), textLapHeight_(70)
     , textToTitleWidth_(700), textKMH_(150, 700), textLeftEnd_(30), textUpEnd_(30), textRankWidth_(110)
     , textDebugCenter_(280), textPosWidth_(60), textRotWidth_(90)
@@ -42,6 +43,7 @@ VehiclePlayer::VehiclePlayer(GameObject* parent, std::string vehicleName, std::s
     , imageBoostMax_(-1), imageBoost_(-1)
     , hImageSpeedFrame_(-1), hImageSpeedNeedle_(-1)
     , drawTime_(0), standardTime_(60)
+    , strPause_(""), strReturn_(""), strLap_(""), strTitle_(""), strSpeedUnit_(""), strTime_("")
     , textCenter_(450), textPauseHeight_(150), textReturnHeight_(200), textLapHeight_(70)
     , textToTitleWidth_(700), textKMH_(150, 700), textLeftEnd_(30), textUpEnd_(30), textRankWidth_(110)
     , textDebugCenter_(280), textPosWidth_(60), textRotWidth_(90)
@@ -95,6 +97,14 @@ void VehiclePlayer::PlayerUI_Initialize()
     boostMaxTrans_.position_ = { 0.0f,-0.84f,1.0f };
     boostTrans_ = boostMaxTrans_;
 
+    //文字
+    strPause_   = "[Pause]";
+    strReturn_  = "Return to the title ?";
+    strLap_     = "Lap";
+    strTitle_   = "[Pause to Title scene]";
+    strSpeedUnit_ = "km/h";
+    strTime_    = "Time";
+
     //カウントダウン表
     Transform trans;
     Transform change;
@@ -127,8 +137,8 @@ void VehiclePlayer::PlayerUI_Draw()
         Image::SetTransform(hImage_, imageTrans_);
         Image::Draw(hImage_);
 
-        pText_->Draw(textCenter_, textPauseHeight_, "[Pause]");
-        pText_->Draw(textCenter_, textReturnHeight_, "Return to the title?");
+        pText_->Draw(textCenter_, textPauseHeight_, strPause_.c_str());
+        pText_->Draw(textCenter_, textReturnHeight_, strReturn_.c_str());
     }
 
     //点滅
@@ -156,8 +166,8 @@ void VehiclePlayer::PlayerUI_Draw()
         DrawElapsedTime();
 
     //周回数表示
-    string lapStr = "Lap:";
-    lapStr += to_string(lapCount_) + "/" + to_string(lapMax_);
+    string lapStr = strLap_;
+    lapStr += ":" + to_string(lapCount_) + "/" + to_string(lapMax_);
     //点滅
     if (IsFlashUI_)
         pText_->Draw(textLeftEnd_, textLapHeight_, lapStr.c_str());
@@ -169,7 +179,7 @@ void VehiclePlayer::PlayerUI_Draw()
     //ゴールの後に表示
     if (IsFlashUI_ && goalFlag_)
     {
-        pText_->Draw(textCenter_, textToTitleWidth_, "[Pause to Title scene]");
+        pText_->Draw(textCenter_, textToTitleWidth_, strTitle_.c_str());
     }
 
 #if 0
@@ -300,7 +310,7 @@ void VehiclePlayer::DrawKmH()
     //平面のベクトルの長さ
     XMVECTOR speedVec = acceleration_;
     string speedStr = to_string((int)(*XMVector3LengthEst(speedVec).m128_f32 * km_hAdd));
-    speedStr += "km/h";
+    speedStr += strSpeedUnit_;
     pText_->Draw(textKMH_.x, textKMH_.y, speedStr.c_str());
 }
 
@@ -316,7 +326,8 @@ void VehiclePlayer::DrawElapsedTime()
     sec = rest / standard;
     rest = rest % standard;
     mSec = rest;
-    string timeStr = "Time:";
+    string timeStr = strTime_;
+    timeStr += ":";
     if (min < 10)
         timeStr += "0";
     timeStr += to_string(min) + ":";
