@@ -1137,15 +1137,7 @@ void Vehicle::VehicleParticle()
     if (!isPlayer_ && Calculator::IsProbability(npcParticleRandom_))
         return;
 
-
     float accLength = *XMVector3Length(acceleration_).m128_f32;
-
-    //ゴールしたら
-    if (goalFlag_)
-    {
-        ParticlePackage::ActParticle(pParticle_, ParticlePackage::ParticleName::gold
-            , Model::GetBonePosition(hModel_, "rear"));
-    }
 
     //ブースト
     if (slideFlag_)

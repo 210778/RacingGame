@@ -18,6 +18,7 @@ class StartScene : public GameObject
 	std::string stringStart_;
 	std::string stringLoad_;
 
+	bool quitFlag_;	//終了するかどうか
 
 	//文字ポインタ
 	Text* pTextCircuit_;

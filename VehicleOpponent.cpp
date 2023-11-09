@@ -167,7 +167,7 @@ void VehicleOpponent::InputOperate()
                 operation_.ButtonMap[Operation::Button::boost] = true;
             }
         }
-        else
+        else if(!(goalFlag_))//ゴールしたらブーストしない
         {
             //ブーストしてないなら
             //現在の確率

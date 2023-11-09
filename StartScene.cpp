@@ -18,6 +18,7 @@ StartScene::StartScene(GameObject* parent)
 	, pTextCircuit_(nullptr), pTextCaption_(nullptr)
 	, hImageArrow_(-1), hImageStart_(-1), hImageLoad_(-1)
 	, stringSelect_(""), stringStart_(""), stringLoad_("")
+	, quitFlag_(false)
 	, captionWidthOperand_(0.142f), captionHeight_(150), captionUpperHeight_(50)
 	, sceneTitlePosition_({ 30.0f,30.0f })
 	, countSpeed_(0.1f), arrwoBace_(-0.85f), sinOperand_(0.02f)
@@ -122,7 +123,11 @@ void StartScene::Update()
 		//タイトルか？
 		if (sceneIndex_.index == SceneName::title)
 		{
-			Global::SetIsCloseWindow(true);
+			if (quitFlag_)
+			{
+				quitFlag_ = false;	//メッセージ表示
+				//Global::SetIsCloseWindow(true);	//終了
+			}
 		}
 
 		if (sceneIndex_.DataAddition(-1))

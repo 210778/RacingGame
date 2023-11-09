@@ -1,8 +1,6 @@
 #include <tuple>
 #include <algorithm>
 #include <directxcollision.h>
-#include <directxmath.h>
-#include <directxpackedvector.h>
 
 #include "Engine/SceneManager.h"
 #include "Engine/Model.h"
@@ -14,7 +12,6 @@
 #include "VehicleOpponent.h"
 #include "ParticlePackage.h"
 #include "Music.h"
-//#include "Background.h"
 #include "Circuit.h"
 #include "VehicleGlobal.h"
 #include "VehicleInput.h"
@@ -36,8 +33,6 @@ PlayScene::PlayScene(GameObject* parent)
 //初期化
 void PlayScene::Initialize()
 {
-	//Instantiate<Background>(this);	//背景
-
 	Circuit::ResetCircuitModelHandle();	//コース初期化
 	Circuit::CreateChosenCircuit(this); //コース生成
 

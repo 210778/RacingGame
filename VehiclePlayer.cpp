@@ -89,13 +89,11 @@ void VehiclePlayer::PlayerUI_Initialize()
     SpeedmeterTransform_.position_ = { -0.875f, -0.8f, 0.0f };
 
     //ブースト
-    imageBoostMax_ = Image::Load("image\\grayBar.png");
-    imageBoost_    = Image::Load("image\\redBar.png");
+    imageBoostMax_ = Image::Load("image\\grayBar_3.png");
+    imageBoost_    = Image::Load("image\\redBar_3.png");
 
-    boostMaxTrans_.position_ = { 0.0f,0.8f,1.0f };
-    boostMaxTrans_.scale_ = { 2.55,1.5,1.0f };
+    boostMaxTrans_.position_ = { 0.0f,-0.84f,1.0f };
     boostTrans_ = boostMaxTrans_;
-    boostTrans_.scale_ = { boostMaxTrans_.scale_.x * 0.95f , boostMaxTrans_.scale_.y * 0.8f, 1.0f, };
 
     //カウントダウン表
     Transform trans;
@@ -359,6 +357,7 @@ void VehiclePlayer::DrawBoostGauge()
 
         Image::SetTransform(imageBoostMax_, boostMaxTrans_);
         Image::Draw(imageBoostMax_);
+
         Image::SetTransform(imageBoost_, boostValue);
         Image::Draw(imageBoost_);
     }
