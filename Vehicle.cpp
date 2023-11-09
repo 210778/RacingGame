@@ -66,7 +66,7 @@ Vehicle::Vehicle(GameObject* parent)
     , boostSpending_(1.0f), boostIncrease_(boostSpending_ * 0.25f), boostValue_(1.5f)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false), pauseFlag_(false)
-    , farLimitPosition_(1000.f, 500.0f, 1000.f)
+    , farLimitPosition_({ 1000.f, 500.0f, 1000.f })
     , pViewer_(nullptr)
 {
     matRotateX = XMMatrixIdentity();
@@ -150,7 +150,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     , isPlayer_(false), toPlayerVehicleLength_(0.0f), particleLimitLength_(150.0f)
     , collideBoxValue_(0.5f), isOperationInvalid_(false)
     , pauseFlag_(false)
-    , farLimitPosition_(1000.f, 500.0f, 1000.f)
+    , farLimitPosition_({ 1000.f, 500.0f, 1000.f })
     , pViewer_(nullptr)
 {
     matRotateX = XMMatrixIdentity();
@@ -440,7 +440,7 @@ void Vehicle::VehicleCollide()
     //落下
     if (!landingFlag_)
     {
-        acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
+       acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};/////////////////////////////////
     }
 }
 
@@ -930,7 +930,10 @@ void Vehicle::LapCountAdd(int value)
     }
 
     //音声を鳴らすためのフラグ
-    lapCountFlag_ = true;
+    if (!goalFlag_)
+    {
+        lapCountFlag_ = true;
+    }
 }
 
 // 坂道に応じて車両を回転(X、Z軸)
@@ -1044,7 +1047,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
         AngleLimit(handleRotate_, handleRotateMax_);
 
     //前進,後退
-    if (landingFlag_)
+    if (true/*landingFlag_*/)//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     {
         acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration *
                          operation_.ValueMap[Operation::Value::moveFrontRear];
@@ -1053,6 +1056,8 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     //ブースト
     if (operation_.ButtonMap[Operation::Button::boost])
     {
+        //transform_.position_.y += 0.5;
+
         //容量があるなら
         if (boostCapacity_ >= boostSpending_)
         {
@@ -1083,6 +1088,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     //ジャンプ
     if (operation_.ButtonMap[Operation::Button::jump])
     {
+        //transform_.position_.y -= 0.5;
         acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
         landingFlag_ = false;
     }

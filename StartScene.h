@@ -18,6 +18,7 @@ class StartScene : public GameObject
 	std::string stringStart_;
 	std::string stringLoad_;
 	std::string stringQuit_;
+	std::string stringPress_;
 
 	bool quitFlag_;	//終了するかどうか
 
@@ -115,6 +116,9 @@ class StartScene : public GameObject
 	float indexOperand_;
 	float indexUpper_;
 	float indexLastUpper_;
+	Transform titleImageTrans_;
+	Transform circuitImageTrans_;
+	XMFLOAT2 strPressPos_;
 
 public:
 	//コンストラクタ

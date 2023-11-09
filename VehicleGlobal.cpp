@@ -44,7 +44,6 @@ void VehicleGlobal::LoadVehicleObject()
 	map<string, string> objectMap;    //íTçıÉLÅ[Ç∆ílÇì¸ÇÍÇÈ
 	string fileName = ".\\gameObject.ini";
 	string circuitModelExtension = ".fbx";
-	string modelFilePath = Global::GetModelFileName();
 	int limit = 100;
 
 	for (auto& itr : partNameVector_)
@@ -111,7 +110,7 @@ vector<pair<string, string>>* VehicleGlobal::GetVehicleNameVector(VehicleGlobal:
 
 	for (auto& itr : vehicleObjectVector_[pn])
 	{
-		answerMap_.push_back(make_pair(itr.first, Global::GetModelFileName() + itr.second));
+		answerMap_.push_back(make_pair(itr.first, itr.second));
 	}
 	
 	return &answerMap_;

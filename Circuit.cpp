@@ -99,7 +99,6 @@ void Circuit::MakeCircuit()
     string nameKey = "name";
     string lapKey = "lap";
     string circuitModelExtension = ".fbx";
-    string modelFilePath = Global::GetModelFileName();
 
     for (int number = 0; number < checkPointLimit_; number++)
     {
@@ -157,7 +156,7 @@ void Circuit::MakeCircuit()
             //コースの種類があって、fbxファイルか？
             if (circuitMap.count(i.second) && circuitMap[i.second].find(circuitModelExtension) != std::string::npos)
             {
-                string model = modelFilePath + circuitMap[i.second];
+                string model = circuitMap[i.second];
                 SetCircuitParts(&circuit, model, i.first);
             }
         }

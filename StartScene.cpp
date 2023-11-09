@@ -17,12 +17,13 @@ StartScene::StartScene(GameObject* parent)
 	: GameObject(parent, "StartScene")
 	, pTextCircuit_(nullptr), pTextCaption_(nullptr)
 	, hImageArrow_(-1), hImageStart_(-1), hImageLoad_(-1)
-	, stringSelect_(""), stringStart_(""), stringLoad_(""), stringQuit_("")
+	, stringSelect_(""), stringStart_(""), stringLoad_(""), stringQuit_(""), stringPress_("")
 	, quitFlag_(false)
 	, captionWidthOperand_(0.142f), captionHeight_(150), captionUpperHeight_(50)
 	, sceneTitlePosition_({ 30.0f,30.0f })
 	, countSpeed_(0.1f), arrwoBace_(-0.85f), sinOperand_(0.02f)
 	, indexOperand_(-0.137f), indexUpper_(0.58f), indexLastUpper_(1.0f)
+	, strPressPos_({ 380.0f,570.0f })
 {
 }
 
@@ -52,15 +53,19 @@ void StartScene::Initialize()
 	//シーン別
 	sceneIndex_.SetDataSelection("scene", 0, 0, SceneName::SceneMax - 1);
 
+	titleImageTrans_.scale_ = { 0.63f,0.71f,1.0f };
+	circuitImageTrans_.scale_ = { 1.25f,1.5f,1.0f };
+
 	//コース画像
-	CircuitImage_.push_back(Image::Load("image\\count_1.png"));
-	CircuitImage_.push_back(Image::Load("image\\count_2.png"));
-	CircuitImage_.push_back(Image::Load("image\\count_3.png"));
+	CircuitImage_.push_back(Image::Load("image\\circuit_1_image.png"));
+	CircuitImage_.push_back(Image::Load("image\\circuit_2_image.png"));
+	CircuitImage_.push_back(Image::Load("image\\circuit_1_image.png"));
 
 	stringSelect_	= "[Select menu]";
 	stringStart_	= "[Start]";
 	stringLoad_		= "Now loading...";
-	stringQuit_		= "Quit the game ?";
+	stringQuit_		= "Quit the game?";
+	stringPress_	= "[Press Enter key or START button]";
 
 	//項目
 	//コース
@@ -103,6 +108,7 @@ void StartScene::Update()
 		{
 			//メッセージ表示
 			quitFlag_ = quitFlag_ ? false : true;
+			Music::Play(Music::MusicName::se_select);
 		}
 	}
 	//選択画面なら
@@ -185,8 +191,10 @@ void StartScene::Draw()
 	sceneIndex_.DataClamp();
 	if (sceneIndex_.index == SceneName::title)
 	{
-		Image::SetTransform(hImageArrow_, transform_);
+		Image::SetTransform(hImageStart_, titleImageTrans_);
 		Image::Draw(hImageStart_);
+
+		pTextCircuit_->Draw(strPressPos_.x, strPressPos_.y, stringPress_.c_str());
 
 		//終了するかどうか聞く
 		if (quitFlag_)
@@ -200,7 +208,7 @@ void StartScene::Draw()
 		if (dataSelection_[DataName::circuit].index >= 0 
 			&& dataSelection_[DataName::circuit].index < CircuitImage_.size())
 		{
-			Image::SetTransform(CircuitImage_[dataSelection_[DataName::circuit].index], transform_);
+			Image::SetTransform(CircuitImage_[dataSelection_[DataName::circuit].index], circuitImageTrans_);
 			Image::Draw(CircuitImage_[dataSelection_[DataName::circuit].index]);
 		}
 

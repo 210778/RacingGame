@@ -99,7 +99,7 @@ void VehiclePlayer::PlayerUI_Initialize()
 
     //•¶Žš
     strPause_   = "[Pause]";
-    strReturn_  = "Return to the title ?";
+    strReturn_  = "Return to the title?";
     strLap_     = "Lap";
     strTitle_   = "[Pause to Title scene]";
     strSpeedUnit_ = "km/h";
