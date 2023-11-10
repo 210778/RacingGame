@@ -98,7 +98,7 @@ Vehicle::Vehicle(GameObject* parent)
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //â¡ë¨è∞
     GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
-    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.03f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //ìﬁóé
     GroundTypeFriction_[Circuit::circuitType::abyss]; //çÏÇÈÇæÇØ
@@ -182,7 +182,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //â¡ë¨è∞
     GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
-    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.03f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //ìﬁóé
     GroundTypeFriction_[Circuit::circuitType::abyss]; //çÏÇÈÇæÇØ
