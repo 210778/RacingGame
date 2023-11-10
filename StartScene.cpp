@@ -54,12 +54,12 @@ void StartScene::Initialize()
 	sceneIndex_.SetDataSelection("scene", 0, 0, SceneName::SceneMax - 1);
 
 	titleImageTrans_.scale_ = { 0.63f,0.71f,1.0f };
-	circuitImageTrans_.scale_ = { 1.25f,1.5f,1.0f };
+	circuitImageTrans_.scale_ = { 1.25f,1.41f,1.0f };
 
 	//ÉRÅ[ÉXâÊëú
 	CircuitImage_.push_back(Image::Load("image\\circuit_1_image.png"));
 	CircuitImage_.push_back(Image::Load("image\\circuit_2_image.png"));
-	CircuitImage_.push_back(Image::Load("image\\circuit_1_image.png"));
+	CircuitImage_.push_back(Image::Load("image\\circuit_3_image.png"));
 
 	stringSelect_	= "[Select menu]";
 	stringStart_	= "[Start]";

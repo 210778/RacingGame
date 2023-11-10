@@ -181,8 +181,8 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
-    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
-    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.03f;
+    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.2f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //奈落
     GroundTypeFriction_[Circuit::circuitType::abyss]; //作るだけ
@@ -440,7 +440,7 @@ void Vehicle::VehicleCollide()
     //落下
     if (!landingFlag_)
     {
-       acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};/////////////////////////////////
+        acceleration_ -= {0.0f, gravity_, 0.0f, 0.0f};
     }
 }
 
@@ -1047,7 +1047,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
         AngleLimit(handleRotate_, handleRotateMax_);
 
     //前進,後退
-    if (true/*landingFlag_*/)//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    if (landingFlag_)
     {
         acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration *
                          operation_.ValueMap[Operation::Value::moveFrontRear];
@@ -1056,8 +1056,6 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     //ブースト
     if (operation_.ButtonMap[Operation::Button::boost])
     {
-        //transform_.position_.y += 0.5;
-
         //容量があるなら
         if (boostCapacity_ >= boostSpending_)
         {
@@ -1072,6 +1070,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     else
     {
         slideFlag_ = false;
+
         //増える
         if (landingFlag_)
             boostCapacity_ += boostIncrease_;
@@ -1088,7 +1087,6 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     //ジャンプ
     if (operation_.ButtonMap[Operation::Button::jump])
     {
-        //transform_.position_.y -= 0.5;
         acceleration_ += {0.0f, jumpForce_, 0.0f, 0.0f};
         landingFlag_ = false;
     }
