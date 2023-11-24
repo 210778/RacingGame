@@ -181,7 +181,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
-    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.2f;
+    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.1f;
     GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //奈落
@@ -490,7 +490,7 @@ void Vehicle::Landing(int hModel,int type)
         }
     }
 
-#if 0
+#if 1
     //接地位置調整
     //あと坂道を移動してるときに坂道に張り付く　急すぎると効果なし
     RayCastData vehicleData;
@@ -498,6 +498,8 @@ void Vehicle::Landing(int hModel,int type)
     XMStoreFloat3(&vehicleData.dir, -vehicleVector_.y);
     Model::RayCast(hModel, &vehicleData);      //レイを発射
     //高低差がタイヤの直径ぐらいの時
+    //if (vehicleData.hit && vehicleData.dist > Size.toWheelBottom_
+    //    && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
     if (vehicleData.hit && vehicleData.dist > Size.toWheelBottom_
         && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
     {

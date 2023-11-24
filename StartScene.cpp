@@ -67,6 +67,9 @@ void StartScene::Initialize()
 	stringQuit_		= "Quit the game?";
 	stringPress_	= "[Press Enter key or START button]";
 
+	//コース選択
+	Circuit::SetChosenCircuit(0);
+
 	//項目
 	//コース
 	dataSelection_[DataName::circuit].SetDataSelection("Circuit"
@@ -165,7 +168,7 @@ void StartScene::Update()
 			SceneManager* pSceneManager = (SceneManager*)FindObject("SceneManager");
 			pSceneManager->ChangeScene(SCENE_ID_PLAY);
 		}
-		else
+		else if (sceneIndex_.index != SceneName::select)
 		{
 			//画面移動
 			if (sceneIndex_.DataAddition(1))
