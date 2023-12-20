@@ -182,7 +182,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
     GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.1f;
-    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.05f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //奈落
     GroundTypeFriction_[Circuit::circuitType::abyss]; //作るだけ
@@ -490,7 +490,6 @@ void Vehicle::Landing(int hModel,int type)
         }
     }
 
-#if 1
     //接地位置調整
     //あと坂道を移動してるときに坂道に張り付く　急すぎると効果なし
     RayCastData vehicleData;
@@ -498,19 +497,22 @@ void Vehicle::Landing(int hModel,int type)
     XMStoreFloat3(&vehicleData.dir, -vehicleVector_.y);
     Model::RayCast(hModel, &vehicleData);      //レイを発射
     //高低差がタイヤの直径ぐらいの時
-    //if (vehicleData.hit && vehicleData.dist > Size.toWheelBottom_
-    //    && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
     if (vehicleData.hit && vehicleData.dist > Size.toWheelBottom_
-        && vehicleData.dist < Size.toWheelBottom_ + Size.wheelRemainder_)
+        && vehicleData.dist < Size.toWheelBottom_ + Size.wheelHeight_)
     {
         XMFLOAT3 wheelFlo;
         XMStoreFloat3(&wheelFlo, -vehicleVector_.y * (vehicleData.dist - Size.toWheelBottom_));
         transform_.position_ = Transform::Float3Add(transform_.position_, wheelFlo);
-        
+
+        //下り坂の時にY軸を無くす
+        float plus = XMVectorGetY(acceleration_);
+        XMVECTOR plusVec = {0.0f, -plus, 0.0f, 0.0f};
+        VectorRotateMatrixZXY(plusVec);
+        acceleration_ += plusVec;
+
         landingFlag_ = true;
         landingType_ = type;    //地面のタイプ
     }
-#endif
 
     //天井 ほんとは分割するべきだろうけど天井に当たることは珍しいし重そうだからここに置く
     XMStoreFloat3(&data.dir, vehicleVector_.y);
