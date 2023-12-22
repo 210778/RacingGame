@@ -1,5 +1,6 @@
 #include "VehicleOpponent.h"
 #include "VehicleInput.h"
+#include "Circuit.h"
 
 //コンストラクタ
 VehicleOpponent::VehicleOpponent(GameObject* parent)
@@ -45,10 +46,10 @@ VehicleOpponent::VehicleOpponent(GameObject* parent, std::string vehicleName, st
     boostTimeMax_ = 2 * Global::GetStandardFPS();
 
     //乱数で設定する
-    randomTurnOdds_     = rand() % 15;
-    boostOdds_          = rand() % 2;
-    boostTurnOdds_      = rand() % 2;
-    booststraightOdds_  = rand() % 2;
+    randomTurnOdds_ = rand() % 15;
+    boostOdds_ = rand() % 2;
+    boostTurnOdds_ = rand() % 2;
+    booststraightOdds_ = rand() % 2;
 }
 
 //デストラクタ
@@ -70,13 +71,18 @@ void VehicleOpponent::InputOperate()
     //加速度長さ
     float accLength = *XMVector3LengthEst(acceleration_).m128_f32;
 
-
-    //前が壁か目的地が真後ろ
+    //加速床ではない かつ 前が壁か目的地が真後ろ///////
     if ((anleToCheck > (180.0f - checkBackAngle_) && anleToCheck < (180.0f + checkBackAngle_))
         || (rayCastHit_[RayCastHit::front].dist < frontHitLength_ && !rayCastHit_[RayCastHit::front].road))
     {
         backFlag_ = true;
     }
+    //加速床ならバックしない
+    if (landingType_ == Circuit::circuitType::boost)
+    {
+        backFlag_ = false;
+    }
+
 
     //バックする
     if (backFlag_)
@@ -167,7 +173,7 @@ void VehicleOpponent::InputOperate()
                 operation_.ButtonMap[Operation::Button::boost] = true;
             }
         }
-        else if(!(goalFlag_))//ゴールしたらブーストしない
+        else if (!(goalFlag_))//ゴールしたらブーストしない
         {
             //ブーストしてないなら
             //現在の確率

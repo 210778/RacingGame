@@ -97,8 +97,8 @@ Vehicle::Vehicle(GameObject* parent)
     GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
-    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.0f;
-    GroundTypeFriction_[Circuit::circuitType::boost].landing = 1.03f;
+    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 8.0f;
+    GroundTypeFriction_[Circuit::circuitType::boost].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //奈落
     GroundTypeFriction_[Circuit::circuitType::abyss]; //作るだけ
@@ -181,7 +181,7 @@ Vehicle::Vehicle(GameObject* parent, const std::string& name)
     GroundTypeFriction_[Circuit::circuitType::ice].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::ice].side = 0.02f;
     //加速床
-    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 1.1f;
+    GroundTypeFriction_[Circuit::circuitType::boost].acceleration = 8.0f;
     GroundTypeFriction_[Circuit::circuitType::boost].landing = 0.999f;
     GroundTypeFriction_[Circuit::circuitType::boost].side = 0.1f;
     //奈落
@@ -391,12 +391,12 @@ void Vehicle::TurnWheel()
     //加速度を正規化
     //左だとy軸が上向き+、右だと下向き-
     //回転して加速度に足す
-    acceleration_ +=  *XMVector3LengthEst(acceleration_).m128_f32
-                      * XMVector3TransformCoord(XMVector3Cross(vehicleVector_.z
-                      , XMVector3Normalize(acceleration_))
-                      , XMMatrixRotationNormal(vehicleVector_.z
-                      , XMConvertToRadians(transform_.rotate_.z) + XM_PIDIV2))
-                      * GroundTypeFriction_[landingType_].side;
+    acceleration_ += *XMVector3LengthEst(acceleration_).m128_f32
+        * XMVector3TransformCoord(XMVector3Cross(vehicleVector_.z
+            , XMVector3Normalize(acceleration_))
+            , XMMatrixRotationNormal(vehicleVector_.z
+                , XMConvertToRadians(transform_.rotate_.z) + XM_PIDIV2))
+        * GroundTypeFriction_[landingType_].side;
 
     //読みやすいコード
 #if 0
@@ -421,7 +421,7 @@ void Vehicle::VehicleCollide()
     bool isLanding = false;
 
     //種類の分だけ
-    for(auto& itr : Circuit::GetChosenCircuit()->parts_)
+    for (auto& itr : Circuit::GetChosenCircuit()->parts_)
     {
         landingFlag_ = false;   //接地フラグリセット
 
@@ -445,7 +445,7 @@ void Vehicle::VehicleCollide()
 }
 
 //接地 
-void Vehicle::Landing(int hModel,int type)
+void Vehicle::Landing(int hModel, int type)
 {
     //レイの発射位置
     XMFLOAT3 upF;
@@ -506,7 +506,7 @@ void Vehicle::Landing(int hModel,int type)
 
         //下り坂の時にY軸を無くす
         float plus = XMVectorGetY(acceleration_);
-        XMVECTOR plusVec = {0.0f, -plus, 0.0f, 0.0f};
+        XMVECTOR plusVec = { 0.0f, -plus, 0.0f, 0.0f };
         VectorRotateMatrixZXY(plusVec);
         acceleration_ += plusVec;
 
@@ -569,7 +569,7 @@ void Vehicle::CollideWall(int hModel, int type)
 
         //当たったら
         if (wallCollideVertical[i].hit)
-        { 
+        {
             //NPC用
             int NPC_Number = 0;
 
@@ -584,22 +584,22 @@ void Vehicle::CollideWall(int hModel, int type)
 
             //方向ごとに代入　なんか頭わるいことしてそうな気がする
             switch (i)
-            {             
+            {
             default://前方、その他
             case Direction::front:
                 dirAcc = XMVectorGetZ(accRotVec);
                 dirSize = Size.toFront_;
-                NPC_Number = RayCastHit::Number::front; 
+                NPC_Number = RayCastHit::Number::front;
                 break;
             case Direction::right://右
                 dirAcc = XMVectorGetX(accRotVec);
                 dirSize = Size.toRight_;
-                NPC_Number = RayCastHit::Number::right; 
+                NPC_Number = RayCastHit::Number::right;
                 break;
             case Direction::rear://後ろ
                 dirAcc = XMVectorGetZ(accRotVec);
                 dirSize = Size.toRear_;
-                NPC_Number = RayCastHit::Number::rear; 
+                NPC_Number = RayCastHit::Number::rear;
                 break;
             case Direction::left://左
                 dirAcc = XMVectorGetX(accRotVec);
@@ -623,13 +623,13 @@ void Vehicle::CollideWall(int hModel, int type)
 
                     //回転
                     VectorRotateMatrixZXY(ajustVec);
-                    
+
                     //移動
                     transform_.position_.x += XMVectorGetX(ajustVec);
                     transform_.position_.y += XMVectorGetY(ajustVec);
                     transform_.position_.z += XMVectorGetZ(ajustVec);
 
-                    switch (i){
+                    switch (i) {
                     default://前方、その他
                     case Direction::front:
                         accRotVec *= {1.0f, 1.0f, 0.0f, 1.0f}; break;
@@ -667,7 +667,7 @@ void Vehicle::CollideWall(int hModel, int type)
         VectorRotateMatrixZXY(accRotVec);
 
         float dirAccX = XMVectorGetX(accRotVec),
-              dirAccZ = XMVectorGetZ(accRotVec);
+            dirAccZ = XMVectorGetZ(accRotVec);
 
         int NPC_Number = 0; //NPC用
 
@@ -792,37 +792,37 @@ void Vehicle::SetVehicleSize(int hModel)
     }
 
     //車両の大きさ計算
-    Size.toRight_ = *XMVector3Length(XMLoadFloat3(&vehicleRight)    - XMLoadFloat3(&vehicleCenter)).m128_f32;
-    Size.toLeft_    = *XMVector3Length(XMLoadFloat3(&vehicleRight)  - XMLoadFloat3(&vehicleCenter)).m128_f32;
-    Size.toFront_   = *XMVector3Length(XMLoadFloat3(&vehicleFront)  - XMLoadFloat3(&vehicleCenter)).m128_f32;
-    Size.toRear_    = *XMVector3Length(XMLoadFloat3(&vehicleRear)   - XMLoadFloat3(&vehicleCenter)).m128_f32;
-    Size.toTop_     = *XMVector3Length(XMLoadFloat3(&vehicleTop)    - XMLoadFloat3(&vehicleCenter)).m128_f32;
-    Size.toBottom_  = *XMVector3Length(XMLoadFloat3(&vehicleBottom) - XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toRight_ = *XMVector3Length(XMLoadFloat3(&vehicleRight) - XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toLeft_ = *XMVector3Length(XMLoadFloat3(&vehicleRight) - XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toFront_ = *XMVector3Length(XMLoadFloat3(&vehicleFront) - XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toRear_ = *XMVector3Length(XMLoadFloat3(&vehicleRear) - XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toTop_ = *XMVector3Length(XMLoadFloat3(&vehicleTop) - XMLoadFloat3(&vehicleCenter)).m128_f32;
+    Size.toBottom_ = *XMVector3Length(XMLoadFloat3(&vehicleBottom) - XMLoadFloat3(&vehicleCenter)).m128_f32;
 
-    Size.rightToLeft_   = Size.toRight_ + Size.toLeft_;
-    Size.topToBottom_   = Size.toBottom_ + Size.toTop_;
-    Size.frontToRear_   = Size.toFront_ + Size.toRear_;
-    Size.toFrontRight_  = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toRight_ * Size.toRight_));
-    Size.toFrontLeft_   = sqrt((Size.toFront_ * Size.toFront_)  + (Size.toLeft_ * Size.toLeft_));
-    Size.toRearRight_   = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toRight_ * Size.toRight_));
-    Size.toRearLeft_    = sqrt((Size.toRear_ * Size.toRear_)    + (Size.toLeft_ * Size.toLeft_));
+    Size.rightToLeft_ = Size.toRight_ + Size.toLeft_;
+    Size.topToBottom_ = Size.toBottom_ + Size.toTop_;
+    Size.frontToRear_ = Size.toFront_ + Size.toRear_;
+    Size.toFrontRight_ = sqrt((Size.toFront_ * Size.toFront_) + (Size.toRight_ * Size.toRight_));
+    Size.toFrontLeft_ = sqrt((Size.toFront_ * Size.toFront_) + (Size.toLeft_ * Size.toLeft_));
+    Size.toRearRight_ = sqrt((Size.toRear_ * Size.toRear_) + (Size.toRight_ * Size.toRight_));
+    Size.toRearLeft_ = sqrt((Size.toRear_ * Size.toRear_) + (Size.toLeft_ * Size.toLeft_));
 
     Size.centerRightToLeft_ = Size.rightToLeft_ * 0.5f;
     //Size.centerTopToBottom_ = (Size.topToBottom_ + Size.wheelRemainder_) * 0.5f;
     Size.centerFrontToRear_ = Size.frontToRear_ * 0.5f;
 
     //角度
-    Size.angleFrontLeft_    = XMConvertToDegrees(        acos(Size.toFront_ / Size.toFrontLeft_));
-    Size.angleFrontRight_   = XMConvertToDegrees(XM_PI - acos(Size.toFront_ / Size.toFrontRight_));
-    Size.angleRearLeft_     = XMConvertToDegrees(         acos(Size.toRear_  / Size.toFrontLeft_) + XM_PI);
-    Size.angleRearRight_    = XMConvertToDegrees(XM_2PI - acos(Size.toRear_  / Size.toFrontRight_));
+    Size.angleFrontLeft_ = XMConvertToDegrees(acos(Size.toFront_ / Size.toFrontLeft_));
+    Size.angleFrontRight_ = XMConvertToDegrees(XM_PI - acos(Size.toFront_ / Size.toFrontRight_));
+    Size.angleRearLeft_ = XMConvertToDegrees(acos(Size.toRear_ / Size.toFrontLeft_) + XM_PI);
+    Size.angleRearRight_ = XMConvertToDegrees(XM_2PI - acos(Size.toRear_ / Size.toFrontRight_));
 }
 
 //ハンドルの操作
 void Vehicle::HandleTurnLR(int LR)
 {
     //ややこしいがハンドル回転のためにこうしておく
-    if((LR < 0 && handleRotate_ < 0) || (LR > 0 && handleRotate_ > 0))
+    if ((LR < 0 && handleRotate_ < 0) || (LR > 0 && handleRotate_ > 0))
         handleFlag_ = true;
 
     //滑ってると曲がりやすい
@@ -1021,7 +1021,7 @@ void Vehicle::CollideBoundingBox(Vehicle* pVehicle)
 
     //これでもそれっぽい
     acceleration_ += posToOpp * *XMVector3LengthEst(pVehicle->GetAcceleration()).m128_f32
-                    * pVehicle->GetMass() * collideBoxValue_;
+        * pVehicle->GetMass() * collideBoxValue_;
 }
 
 //操作入力の反映
@@ -1054,7 +1054,7 @@ void Vehicle::InputReceive(const XMVECTOR& vecX, const XMVECTOR& vecZ)
     if (landingFlag_)
     {
         acceleration_ += vecZ * GroundTypeFriction_[landingType_].acceleration *
-                         operation_.ValueMap[Operation::Value::moveFrontRear];
+            operation_.ValueMap[Operation::Value::moveFrontRear];
     }
 
     //ブースト
@@ -1121,7 +1121,7 @@ void Vehicle::VehicleParticle()
     //遠くにいるNPCはエフェクト表示しない
     if (!isPlayer_ && toPlayerVehicleLength_ > particleLimitLength_)
         return;
-    
+
     //NPCは確率でエフェクトを発生させない(重いし何かうるさくなる)
     if (!isPlayer_ && Calculator::IsProbability(npcParticleRandom_))
         return;
@@ -1188,7 +1188,7 @@ void Vehicle::FallAbyss()
     acceleration_ *= {0.0f, 0.0f, 0.0f, 0.0f};
     transform_.position_ = restartTransform_.position_;
     transform_.rotate_ = restartTransform_.rotate_;
-    
+
     //今すぐカメラ移動
     if (pViewer_ != nullptr)
     {
@@ -1202,12 +1202,12 @@ void Vehicle::InputOperate() {};
 
 //UIの関数群　プレイヤー限定で作用する
     //UIの初期化
-    void Vehicle::PlayerUI_Initialize() {};
-    //UIの表示
-    void Vehicle::PlayerUI_Draw() {};
-    //UIの情報更新
-    void Vehicle::PlayerUI_Update() {};
-    //カメラの用意
-    void Vehicle::PlayerCamera_Initialize() {};
-    //カメラ更新
-    void Vehicle::PlayerCamera_Update() {};
+void Vehicle::PlayerUI_Initialize() {};
+//UIの表示
+void Vehicle::PlayerUI_Draw() {};
+//UIの情報更新
+void Vehicle::PlayerUI_Update() {};
+//カメラの用意
+void Vehicle::PlayerCamera_Initialize() {};
+//カメラ更新
+void Vehicle::PlayerCamera_Update() {};
