@@ -26,7 +26,8 @@ PlayScene::PlayScene(GameObject* parent)
 	: GameObject(parent, "PlayScene"), hModel_(-1)
 	, pVehiclePlayer_(nullptr)
 	, universalTime_(0), standbyTime_(1), standbySeconds_(6)
-	, startFlag_(false), pauseFlag_(false)
+	, startFlag_(false), pauseFlag_(false), playerGoalFlag_(false)
+	, playMusic_(Music::MusicName::se_se_selectError)
 {
 }
 
@@ -65,10 +66,37 @@ void PlayScene::Initialize()
 void PlayScene::Update()
 {
 	//音楽
-	if (startFlag_)
+	//スタート後の曲
+	if (startFlag_ && !playerGoalFlag_)
 	{
-		Music::Play(Music::MusicName::bgm_1);
+		switch (Circuit::GetChosenCircuitIndex())
+		{
+		default:
+		case 0:
+			playMusic_ = Music::MusicName::bgm_1;
+			break;
+		case 1:
+			playMusic_ = Music::MusicName::bgm_2;
+			break;
+		case 2:
+			playMusic_ = Music::MusicName::bgm_3;
+			break;
+		}
+
+		Music::Play(playMusic_);
 	}
+	//ゴールしたら
+	if (!playerGoalFlag_ && pVehiclePlayer_->GetGoalFlag())
+	{
+		Music::Stop(playMusic_);
+		playerGoalFlag_ = true;
+	}
+	//ゴール曲
+	if (playerGoalFlag_)
+	{
+		Music::Play(Music::MusicName::bgm_goal);
+	}
+
 	Music::Update();
 
 	//操作

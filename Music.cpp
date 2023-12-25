@@ -56,7 +56,9 @@ void Music::Initialize()
 {
 	SetMusic(MusicName::bgm_1, "music\\loop100201.wav", true);
 	SetMusic(MusicName::bgm_2, "music\\loop100209.wav", true);
+	SetMusic(MusicName::bgm_3, "music\\loop100206.wav", true);
 	SetMusic(MusicName::bgm_menu, "music\\loop100905.wav", true);
+	SetMusic(MusicName::bgm_goal, "music\\loop100217.wav", true);
 
 	SetMusic(MusicName::se_count123, "music\\se_amb04.wav", false);
 	SetMusic(MusicName::se_countStart, "music\\se_ymb04.wav", false);

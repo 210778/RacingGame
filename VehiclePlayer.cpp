@@ -182,35 +182,6 @@ void VehiclePlayer::PlayerUI_Draw()
         pText_->Draw(textCenter_, textToTitleWidth_, strTitle_.c_str());
     }
 
-#if 0
-    //順位表示
-    string rank;
-    //ゴールしてるか否か
-    if (goalFlag_)
-        rank = to_string(goalRanking_);
-    else
-        rank = to_string(ranking_);
-
-
-    //pTextLap_->Draw(30, 150, rank.c_str());
-    string all = "!\"#$%&\'()*+,-./0123456789:;<=>?@\
-ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-
-    string one      = " ! \" # $ % & \' ( ) * + , - . / 0 ";
-    string two      = " 1 2 3 4 5 6 7 8 9 : ; < = > ? @ ";
-    string three    = " A B C D E F G H I J K L M N O P ";
-    string four     = " Q R S T U V W X Y Z [ \\ ] ^ _ ` ";
-    string five     = " a b c d e f g h i j k l m n o p ";
-    string six      = " q r s t u v w x y z { | } ~ ";
-
-    pTextLap_->Draw(10, 150, one.c_str());
-    pTextLap_->Draw(10, 185, two.c_str());
-    pTextLap_->Draw(10, 220, three.c_str());
-    pTextLap_->Draw(10, 255, four.c_str());
-    pTextLap_->Draw(10, 290, five.c_str());
-    pTextLap_->Draw(10, 325, six.c_str());
-#endif
-
     //ブースト
     DrawBoostGauge();
 

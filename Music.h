@@ -13,7 +13,9 @@ namespace Music
 	{
 		bgm_1,
 		bgm_2,
+		bgm_3,
 		bgm_menu,
+		bgm_goal,
 
 		se_carStop,
 		se_count123,

@@ -121,5 +121,8 @@ namespace Circuit
 
     //コース配列から選択したコースのポインタを取得
     CircuitUnion* GetChosenCircuit();
+
+    //選択したコースの番号を取得
+    int GetChosenCircuitIndex();
 }
 

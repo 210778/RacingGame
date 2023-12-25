@@ -390,3 +390,8 @@ Circuit::CircuitUnion* Circuit::GetChosenCircuit()
     else
         return nullptr;
 }
+
+int Circuit::GetChosenCircuitIndex()
+{
+    return chosenCircuit_;
+}

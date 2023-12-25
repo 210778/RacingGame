@@ -452,6 +452,8 @@ public:
         float GetMass() { return mass_; };
         //車両の質量のセッター
         void SetMass(float value) { mass_ = value; };
+        //ゴールしてるかどうか
+        bool GetGoalFlag() { return goalFlag_; };
         //ゴールしてるならtrueとポインタに順位を、してないならfalseを返してなにもしない
         bool GetIsGoalRanking(int* pRank)
         {
@@ -474,6 +476,7 @@ public:
         VehicleSize* GetVehicleSize() { return &Size; }
         //NPCから見たプレイヤーまでの距離
         void SetToPlayerVehicleLength(float value) { toPlayerVehicleLength_ = value; }
+
 
     //プレイヤー限定で実行する関数  
         //UIの初期化

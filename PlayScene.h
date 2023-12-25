@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/GameObject.h"
+#include "Music.h"
 
 class Vehicle;
 
@@ -17,6 +18,9 @@ class PlayScene : public GameObject
 	unsigned int	   standbySeconds_;	//何秒発射前に待つのか(単位：フレーム * 60)
 	bool startFlag_;	//スタートしたか
 	bool pauseFlag_;	//false -> 通常、 true -> ポーズ中
+	bool playerGoalFlag_; //プレイヤーはゴールしたか？
+
+	Music::MusicName playMusic_;//再生中の曲
 
 	enum RankName
 	{
