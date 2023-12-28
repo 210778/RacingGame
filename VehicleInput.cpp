@@ -18,13 +18,6 @@ namespace VehicleInput
 //初期化
 void VehicleInput::Initialize()
 {
-#if 0
-    //すべての項目を用意しておく。
-    for (int i = 0; i < (int)(Name::SizeMax); i++)
-    {
-        inputOperation_[(Name)i] = 0.0f;
-    }
-#endif
 }
 
 //更新
